@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hiroaki Okayasu — Developer · Creator · Dreamer</title>
+  <meta name="description" content="Hiroaki Okayasu — Developer, Creator, Dreamer. Exploring the intersection of technology, creativity, and human potential." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      /* Light (Orange) */
+      --bg-primary:    #F05A00;
+      --bg-secondary:  #D94E00;
+      --bg-tertiary:   #C04400;
+      --text-primary:  #FFFFFF;
+      --text-sub:      rgba(255,255,255,0.80);
+      --text-muted:    rgba(255,255,255,0.55);
+      --accent-line:   rgba(255,255,255,0.35);
+      --nav-bg:        rgba(240,90,0,0.0);
+      --nav-bg-scroll: rgba(210,75,0,0.85);
+      --btn-bg:        rgba(255,255,255,0.15);
+      --btn-border:    rgba(255,255,255,0.45);
+      --btn-hover-bg:  rgba(255,255,255,0.28);
+      --icon-bg:       rgba(255,255,255,0.18);
+      --icon-hover:    rgba(255,255,255,0.32);
+      --social-color:  rgba(255,255,255,0.75);
+      --social-hover:  #FFFFFF;
+      --scroll-color:  rgba(255,255,255,0.60);
+      --tagline-dot:   rgba(255,255,255,0.60);
+
+      /* Spline / clay object tinting for light mode */
+      --clay-filter: none;
+
+      /* Section colors */
+      --section-bg:      #FFFFFF;
+      --section-text:    #1a1a1a;
+      --section-sub:     #555;
+      --card-bg:         #F8F8F8;
+      --card-border:     rgba(0,0,0,0.08);
+      --card-hover:      #FFFFFF;
+      --tag-bg:          rgba(240,90,0,0.10);
+      --tag-text:        #C04400;
+      --divider:         rgba(0,0,0,0.08);
+
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'Inter', -apple-system, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary:    #060D1F;
+      --bg-secondary:  #091228;
+      --bg-tertiary:   #0C1730;
+      --text-primary:  #FFFFFF;
+      --text-sub:      rgba(255,255,255,0.70);
+      --text-muted:    rgba(255,255,255,0.40);
+      --accent-line:   #3B82F6;
+      --nav-bg:        rgba(6,13,31,0.0);
+      --nav-bg-scroll: rgba(6,13,31,0.90);
+      --btn-bg:        rgba(59,130,246,0.12);
+      --btn-border:    rgba(59,130,246,0.40);
+      --btn-hover-bg:  rgba(59,130,246,0.22);
+      --icon-bg:       rgba(255,255,255,0.06);
+      --icon-hover:    rgba(255,255,255,0.12);
+      --social-color:  #3B82F6;
+      --social-hover:  #FFFFFF;
+      --scroll-color:  rgba(255,255,255,0.40);
+      --tagline-dot:   #3B82F6;
+
+      --clay-filter: brightness(0.30) saturate(0.2) hue-rotate(195deg);
+
+      --section-bg:      #0C1420;
+      --section-text:    #F0F4FF;
+      --section-sub:     rgba(200,220,255,0.65);
+      --card-bg:         #111C30;
+      --card-border:     rgba(59,130,246,0.12);
+      --card-hover:      #162236;
+      --tag-bg:          rgba(59,130,246,0.12);
+      --tag-text:        #60A5FA;
+      --divider:         rgba(255,255,255,0.06);
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; border: none; background: none; font-family: var(--font-body); }
+
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2.5rem;
+      background: var(--nav-bg);
+      backdrop-filter: blur(0px);
+      transition: background var(--transition), backdrop-filter var(--transition);
+    }
+    .nav.scrolled {
+      background: var(--nav-bg-scroll);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+    .nav-logo-icon {
+      width: 34px; height: 34px;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: background var(--transition);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      transition: color var(--transition);
+      position: relative;
+      padding-bottom: 2px;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0;
+      width: 0; height: 1.5px;
+      background: var(--text-primary);
+      transition: width var(--transition);
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      color: var(--text-primary);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 20px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .theme-toggle:hover { background: var(--btn-hover-bg); }
+    .theme-toggle-icon { font-size: 13px; }
+
+    /* Hamburger (mobile) */
+    .nav-hamburger {
+      width: 38px; height: 38px;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: var(--radius-sm);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 9px;
+      transition: background var(--transition);
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 100%; height: 1.5px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: all var(--transition);
+    }
+    .nav-hamburger:hover { background: var(--btn-hover-bg); }
+
+    /* ============================================================
+       HERO SECTION
+    ============================================================ */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: var(--bg-primary);
+      transition: background var(--transition);
+    }
+
+    /* ─── HERO PHOTO ─────────────────────────────────────────── */
+    .hero-photo {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      height: 92%;
+      width: auto;
+      z-index: 2;
+      pointer-events: none;
+
+      /* 黒背景を透過させる: screen で背景と合成 */
+      mix-blend-mode: screen;
+      opacity: 0.82;
+
+      /* フェードイン */
+      animation: heroPhotoIn 1.2s cubic-bezier(0.4,0,0.2,1) both;
+      animation-delay: 0.3s;
+
+      /* 右端から自然に配置 */
+      object-fit: contain;
+      object-position: bottom right;
+      max-width: 52%;
+    }
+
+    /* ダークモード: 少し明るく＆青みを足す */
+    [data-theme="dark"] .hero-photo {
+      mix-blend-mode: screen;
+      opacity: 0.55;
+      filter: brightness(1.1) contrast(1.05);
+    }
+
+    /* モバイル: 小さめにして後ろに */
+    @media (max-width: 768px) {
+      .hero-photo {
+        height: 70%;
+        max-width: 70%;
+        opacity: 0.45;
+        right: -5%;
+      }
+    }
+
+    @keyframes heroPhotoIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 0.82; transform: translateX(0); }
+    }
+    [data-theme="dark"] .hero-photo { animation-name: heroPhotoInDark; }
+    @keyframes heroPhotoInDark {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 0.55; transform: translateX(0); }
+    }
+
+    /* ─── SPLINE / 3D SCENE CONTAINER ───────────────────────────
+       Splineを導入するときは、この div の中身を
+       <spline-viewer url="YOUR_SPLINE_URL"></spline-viewer>
+       に置き換えるだけでOK。
+       スクリプト: <script type="module" src="https://unpkg.com/@splinetool/viewer@latest/build/spline-viewer.js"></script>
+    ──────────────────────────────────────────────────────────── */
+    #spline-container {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* 現在の絵文字ベースのplaceholder scene */
+    .emoji-scene {
+      position: absolute;
+      inset: 0;
+      filter: var(--clay-filter);
+      transition: filter var(--transition);
+    }
+
+    .clay-obj {
+      position: absolute;
+      font-style: normal;
+      user-select: none;
+      line-height: 1;
+      animation: floatY 7s ease-in-out infinite;
+      will-change: transform;
+    }
+
+    .obj-sun {
+      font-size: clamp(140px, 22vw, 220px);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -54%);
+      animation: floatSun 9s ease-in-out infinite;
+      filter: none; /* sun は常にオリジナル色 */
+    }
+    [data-theme="dark"] .obj-sun {
+      filter: brightness(0.18) saturate(0.1);
+    }
+
+    .obj-laptop  { font-size: clamp(80px,12vw,130px); top:12%; right:7%;  animation-delay:-1.0s; }
+    .obj-camera  { font-size: clamp(70px,10vw,105px); top:10%; left:9%;   animation-delay:-2.2s; }
+    .obj-guitar  { font-size: clamp(90px,13vw,140px); bottom:10%; left:4%; animation-delay:-3.5s; }
+    .obj-racket  { font-size: clamp(70px,10vw,100px); top:30%; right:3%;  animation-delay:-1.8s; }
+    .obj-coffee  { font-size: clamp(65px, 9vw, 95px); bottom:14%; right:8%; animation-delay:-4.2s; }
+    .obj-book    { font-size: clamp(60px, 8vw, 90px); bottom:10%; right:22%; animation-delay:-2.8s; }
+
+    .obj-ball { border-radius: 50%; background: rgba(0,0,0,0.25); }
+    .obj-b1 { width:18px;height:18px; top:22%; left:32%; animation-delay:-0.6s; }
+    .obj-b2 { width:12px;height:12px; top:58%; left:7%;  animation-delay:-3.8s; }
+    .obj-b3 { width:15px;height:15px; top:8%;  right:28%; animation-delay:-1.4s; }
+    .obj-b4 { width:22px;height:22px; bottom:28%; right:2%; animation-delay:-5.0s; }
+    .obj-b5 { width:10px;height:10px; top:70%; right:33%; animation-delay:-2.0s; }
+
+    [data-theme="dark"] .obj-ball { background: rgba(30,60,120,0.6); }
+
+    /* Dark mode: blue glow dots */
+    .glow-dot {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transition);
+    }
+    [data-theme="dark"] .glow-dot {
+      opacity: 1;
+      background: #3B82F6;
+      box-shadow: 0 0 18px 6px rgba(59,130,246,0.55);
+      animation: glowPulse 3.5s ease-in-out infinite;
+    }
+    .gd1 { width:8px;height:8px; top:40%; left:36%; animation-delay:0s; }
+    .gd2 { width:6px;height:6px; top:62%; left:52%; animation-delay:-1.8s; }
+    .gd3 { width:10px;height:10px; top:32%; left:63%; animation-delay:-3.2s; }
+    .gd4 { width:5px;height:5px;  top:20%; left:48%; animation-delay:-0.9s; }
+
+    @keyframes floatY {
+      0%,100% { transform: translateY(0)   rotate(0deg); }
+      50%      { transform: translateY(-14px) rotate(2deg); }
+    }
+    @keyframes floatSun {
+      0%,100% { transform: translate(-50%,-54%) scale(1.00); }
+      50%      { transform: translate(-50%,-56%) scale(1.02); }
+    }
+    @keyframes glowPulse {
+      0%,100% { opacity:0.35; transform:scale(1); }
+      50%      { opacity:1;    transform:scale(1.6); }
+    }
+
+    /* ─── HERO CONTENT ─────────────────────────────────────────── */
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 5rem 1.5rem 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Dark mode only: eyebrow text (top-left) */
+    .hero-eyebrow {
+      position: absolute;
+      top: calc(50vh - 260px);
+      left: clamp(-80px, -5vw, -40px);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      opacity: 0;
+      transition: opacity var(--transition);
+      pointer-events: none;
+    }
+    [data-theme="dark"] .hero-eyebrow { opacity: 1; }
+    .eyebrow-bar {
+      width: 2px;
+      height: 56px;
+      background: #3B82F6;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .eyebrow-text {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      line-height: 1.9;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      text-align: left;
+    }
+
+    .hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(56px, 11vw, 130px);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+      margin-bottom: 0;
+    }
+    [data-theme="dark"] .hero-name {
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-accent-line {
+      width: 48px; height: 2px;
+      background: var(--accent-line);
+      margin: 1.1rem auto 1.0rem;
+      transition: background var(--transition);
+    }
+
+    .hero-tagline {
+      font-size: clamp(10px,1.8vw,13px);
+      letter-spacing: 0.28em;
+      font-weight: 500;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      margin-bottom: 2.2rem;
+    }
+    .tagline-dot { color: var(--tagline-dot); margin: 0 0.6em; }
+
+    /* CTA button (light only) */
+    .hero-cta {
+      display: inline-block;
+      background: var(--btn-bg);
+      border: 1.5px solid var(--btn-border);
+      color: var(--text-primary);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 14px 38px;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), transform 0.15s;
+      font-family: var(--font-body);
+      margin-bottom: 2.4rem;
+    }
+    .hero-cta:hover {
+      background: var(--btn-hover-bg);
+      border-color: rgba(255,255,255,0.8);
+      transform: translateY(-2px);
+    }
+    [data-theme="dark"] .hero-cta {
+      margin-bottom: 0;
+    }
+
+    /* Quick-nav icon buttons (light only) */
+    .hero-quick-nav {
+      display: flex;
+      gap: 10px;
+      transition: opacity var(--transition);
+    }
+    [data-theme="dark"] .hero-quick-nav { opacity: 0; pointer-events: none; position: absolute; }
+
+    .quick-btn {
+      width: 50px; height: 50px;
+      background: var(--icon-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      backdrop-filter: blur(6px);
+      transition: background var(--transition), transform 0.15s;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+    .quick-btn:hover {
+      background: var(--icon-hover);
+      transform: translateY(-3px);
+    }
+    .quick-btn svg { width:20px;height:20px;fill:currentColor; }
+
+    /* Social bar (dark only) */
+    .social-bar {
+      position: absolute;
+      left: 2.5rem;
+      bottom: 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 20;
+      opacity: 0;
+      transition: opacity var(--transition);
+      pointer-events: none;
+    }
+    [data-theme="dark"] .social-bar { opacity: 1; pointer-events: auto; }
+
+    .social-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      color: var(--social-color);
+      transition: color var(--transition), transform 0.15s;
+    }
+    .social-link:hover { color: var(--social-hover); transform: translateX(4px); }
+    .social-link svg { width:18px;height:18px;fill:currentColor; }
+
+    /* Scroll hint */
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.2rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--scroll-color);
+      z-index: 20;
+    }
+    .scroll-mouse {
+      width: 20px; height: 32px;
+      border: 1.5px solid var(--scroll-color);
+      border-radius: 10px;
+      display: flex; justify-content: center;
+      padding-top: 5px;
+    }
+    .scroll-wheel {
+      width: 2.5px; height: 6px;
+      background: var(--scroll-color);
+      border-radius: 2px;
+      animation: scrollWheel 1.6s ease-in-out infinite;
+    }
+    @keyframes scrollWheel {
+      0%   { transform:translateY(0); opacity:1; }
+      75%  { transform:translateY(9px); opacity:0; }
+      100% { transform:translateY(0); opacity:0; }
+    }
+
+    /* Bottom left label (light only) */
+    .hero-bottom-label {
+      position: absolute;
+      bottom: 2.5rem; left: 2.5rem;
+      font-size: 10px;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      z-index: 20;
+      transition: opacity var(--transition);
+    }
+    [data-theme="dark"] .hero-bottom-label { opacity: 0; }
+
+    /* ============================================================
+       SECTION COMMONS
+    ============================================================ */
+    .section {
+      background: var(--section-bg);
+      color: var(--section-text);
+      transition: background var(--transition), color var(--transition);
+      padding: 7rem 0;
+    }
+    .section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2.5rem;
+    }
+    .section-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #F05A00;
+      margin-bottom: 0.8rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    [data-theme="dark"] .section-eyebrow { color: #3B82F6; }
+    .eyebrow-dash {
+      display: inline-block;
+      width: 28px; height: 1.5px;
+      background: currentColor;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--section-text);
+      margin-bottom: 1.2rem;
+    }
+    .section-lead {
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--section-sub);
+      max-width: 560px;
+    }
+
+    /* ============================================================
+       ABOUT SECTION
+    ============================================================ */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+      margin-top: 4rem;
+    }
+    .about-visual {
+      aspect-ratio: 3/4;
+      border-radius: var(--radius-lg);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-visual-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      border-radius: var(--radius-lg);
+      filter: grayscale(15%);
+      transition: filter var(--transition), transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    .about-visual:hover .about-visual-photo {
+      filter: grayscale(0%);
+      transform: scale(1.03);
+    }
+    /* オーバーレイ: ライトモードはオレンジ、ダークモードはブルー */
+    .about-visual::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(
+        to top,
+        rgba(240,90,0,0.35) 0%,
+        rgba(240,90,0,0.05) 50%,
+        transparent 100%
+      );
+      pointer-events: none;
+      transition: background var(--transition);
+    }
+    [data-theme="dark"] .about-visual::after {
+      background: linear-gradient(
+        to top,
+        rgba(59,130,246,0.30) 0%,
+        rgba(6,13,31,0.10) 50%,
+        transparent 100%
+      );
+    }
+    /* ── Spline差し替えポイント: about-visual の中身を置換 ── */
+    .about-visual-placeholder {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; width: 100%; height: 100%;
+      padding: 2rem;
+    }
+    .about-emoji-stack {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      font-size: 52px;
+    }
+    .about-caption {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--section-sub);
+      margin-top: 8px;
+    }
+
+    .about-text h3 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--section-text);
+      margin-bottom: 1rem;
+    }
+    .about-text p {
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--section-sub);
+      margin-bottom: 1rem;
+    }
+    .about-tags {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 1.5rem;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      padding: 5px 13px;
+      border-radius: 20px;
+    }
+
+    /* ============================================================
+       SKILLS SECTION
+    ============================================================ */
+    .skills-section {
+      background: var(--bg-primary);
+      padding: 7rem 0;
+      transition: background var(--transition);
+    }
+    .skills-section .section-title,
+    .skills-section .section-lead { color: var(--text-primary); }
+    .skills-section .section-lead { color: var(--text-sub); }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 3.5rem;
+    }
+    .skill-card {
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      backdrop-filter: blur(8px);
+      transition: background var(--transition), transform 0.2s;
+    }
+    .skill-card:hover {
+      background: var(--btn-hover-bg);
+      transform: translateY(-4px);
+    }
+    .skill-card-icon { font-size: 36px; margin-bottom: 1rem; }
+    .skill-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+    .skill-card-desc {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-sub);
+    }
+    .skill-card-list {
+      margin-top: 1rem;
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .skill-pill {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      background: rgba(255,255,255,0.10);
+      color: var(--text-primary);
+      border: 1px solid rgba(255,255,255,0.20);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    [data-theme="dark"] .skill-pill {
+      background: rgba(59,130,246,0.10);
+      border-color: rgba(59,130,246,0.25);
+    }
+
+    /* ============================================================
+       WORKS SECTION
+    ============================================================ */
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-top: 3.5rem;
+    }
+    .work-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: background var(--transition), border-color var(--transition), transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .work-card:hover {
+      background: var(--card-hover);
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.10);
+    }
+    [data-theme="dark"] .work-card:hover {
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .work-card-thumb {
+      aspect-ratio: 16/9;
+      background: var(--bg-primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .work-card-thumb::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 60%);
+    }
+    .work-card-body { padding: 1.5rem; }
+    .work-card-tag {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--tag-text);
+      margin-bottom: 0.5rem;
+    }
+    .work-card-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--section-text);
+      margin-bottom: 0.5rem;
+      line-height: 1.35;
+    }
+    .work-card-desc {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--section-sub);
+    }
+    .work-card-footer {
+      padding: 0 1.5rem 1.5rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .work-tech {
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      padding: 3px 9px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+
+    /* ============================================================
+       JOURNAL (BLOG) SECTION
+    ============================================================ */
+    .journal-section { background: var(--bg-secondary); padding: 7rem 0; transition: background var(--transition); }
+    .journal-section .section-title,
+    .journal-section .section-lead { color: var(--text-primary); }
+    .journal-section .section-lead { color: var(--text-sub); }
+    .journal-section .section-eyebrow { color: rgba(255,255,255,0.7); }
+
+    .journal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 3.5rem;
+    }
+    .journal-card {
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: var(--radius-md);
+      padding: 1.8rem;
+      backdrop-filter: blur(8px);
+      transition: background var(--transition), transform 0.2s;
+      cursor: pointer;
+    }
+    .journal-card:hover { background: var(--btn-hover-bg); transform: translateY(-4px); }
+    .journal-date {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.7rem;
+    }
+    .journal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+      margin-bottom: 0.7rem;
+    }
+    .journal-excerpt {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-sub);
+    }
+    .journal-arrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 1.2rem;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      transition: gap 0.2s, color 0.2s;
+    }
+    .journal-card:hover .journal-arrow { gap: 10px; color: var(--text-primary); }
+
+    /* ============================================================
+       CONTACT SECTION
+    ============================================================ */
+    .contact-section {
+      background: var(--section-bg);
+      padding: 7rem 0;
+      text-align: center;
+      transition: background var(--transition);
+    }
+    .contact-section .section-eyebrow { justify-content: center; }
+    .contact-section .section-title { color: var(--section-text); }
+    .contact-section .section-lead { color: var(--section-sub); margin: 0 auto 3rem; text-align: center; }
+    .contact-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 30px;
+      border-radius: 40px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .contact-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+    .contact-btn-primary {
+      background: #F05A00;
+      color: #fff;
+      border: none;
+    }
+    [data-theme="dark"] .contact-btn-primary { background: #3B82F6; }
+    .contact-btn-secondary {
+      background: transparent;
+      color: var(--section-text);
+      border: 1.5px solid var(--divider);
+    }
+    .contact-btn-secondary:hover { border-color: #F05A00; color: #F05A00; }
+    [data-theme="dark"] .contact-btn-secondary:hover { border-color: #3B82F6; color: #3B82F6; }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      background: var(--bg-tertiary);
+      padding: 2rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      transition: background var(--transition);
+    }
+    .footer-copy {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .footer-links {
+      display: flex; gap: 1.8rem; list-style: none;
+    }
+    .footer-links a {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      transition: color var(--transition);
+    }
+    .footer-links a:hover { color: var(--text-primary); }
+
+    /* ============================================================
+       SCROLL REVEAL ANIMATION
+    ============================================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.10s; }
+    .reveal-delay-2 { transition-delay: 0.20s; }
+    .reveal-delay-3 { transition-delay: 0.30s; }
+    .reveal-delay-4 { transition-delay: 0.40s; }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+      .theme-toggle span { display: none; }
+
+      .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .about-visual { max-width: 320px; margin: 0 auto; }
+
+      .hero-eyebrow { display: none; }
+      .social-bar { left: 1rem; bottom: 2rem; }
+      .hero-bottom-label { left: 1rem; }
+
+      footer { flex-direction: column; text-align: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .clay-obj, .glow-dot, .scroll-wheel { animation: none !important; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+  ============================================================ -->
+  <nav class="nav" id="nav">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">☀️</div>
+      Hiroaki Okayasu
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#works">Works</a></li>
+      <li><a href="#journal">Journal</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" aria-label="テーマ切り替え">
+        <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <button class="nav-hamburger" id="hamburger" aria-label="メニューを開く">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       HERO
+  ============================================================ -->
+  <section class="hero" id="hero">
+
+    <!-- ★ SPLINE差し替えポイント ★
+         ↓ この div (#spline-container) の中身をSplineに置換する
+         現在: 絵文字ベースのplaceholder
+         将来: <spline-viewer url="https://prod.spline.design/YOUR-ID/scene.splinecode"></spline-viewer>
+    -->
+    <div id="spline-container">
+      <div class="emoji-scene">
+        <!-- Sun (centerpiece) -->
+        <span class="clay-obj obj-sun" aria-hidden="true">☀️</span>
+        <!-- Objects -->
+        <span class="clay-obj obj-laptop" aria-hidden="true">💻</span>
+        <span class="clay-obj obj-camera" aria-hidden="true">📷</span>
+        <span class="clay-obj obj-guitar" aria-hidden="true">🎸</span>
+        <span class="clay-obj obj-racket" aria-hidden="true">🎾</span>
+        <span class="clay-obj obj-coffee" aria-hidden="true">☕</span>
+        <span class="clay-obj obj-book"   aria-hidden="true">📚</span>
+        <!-- Floating balls -->
+        <div class="clay-obj obj-ball obj-b1" aria-hidden="true"></div>
+        <div class="clay-obj obj-ball obj-b2" aria-hidden="true"></div>
+        <div class="clay-obj obj-ball obj-b3" aria-hidden="true"></div>
+        <div class="clay-obj obj-ball obj-b4" aria-hidden="true"></div>
+        <div class="clay-obj obj-ball obj-b5" aria-hidden="true"></div>
+        <!-- Dark-mode glow dots -->
+        <div class="glow-dot gd1" aria-hidden="true"></div>
+        <div class="glow-dot gd2" aria-hidden="true"></div>
+        <div class="glow-dot gd3" aria-hidden="true"></div>
+        <div class="glow-dot gd4" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <!-- ★ 写真: mix-blend-mode:screen で黒背景が透過し自然に溶け込む
+         GitHub Pages では hiroaki.png を index.html と同じフォルダに置くだけでOK -->
+    <!-- <img
+      class="hero-photo"
+      src="hiroaki.png"
+      alt="Hiroaki Okayasu"
+      loading="eager"
+      decoding="async"
+    /> -->
+
+    <!-- Eyebrow text (dark only) -->
+    <div class="hero-eyebrow" aria-hidden="true">
+      <div class="eyebrow-bar"></div>
+      <div class="eyebrow-text">
+        Exploring the intersection of<br>
+        technology, creativity,<br>
+        and human potential.
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="hero-content">
+      <h1 class="hero-name">HIROAKI<br>OKAYASU</h1>
+      <div class="hero-accent-line"></div>
+      <p class="hero-tagline">
+        Creator <span class="tagline-dot">•</span>
+        Developer <span class="tagline-dot">•</span>
+        Dreamer
+      </p>
+      <button class="hero-cta" onclick="document.getElementById('works').scrollIntoView({behavior:'smooth'})">
+        Explore My World
+      </button>
+      <!-- Quick-nav (light only) -->
+      <nav class="hero-quick-nav" aria-label="クイックナビ">
+        <a href="#about" class="quick-btn" title="About">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4z"/></svg>
+        </a>
+        <a href="#skills" class="quick-btn" title="Skills">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+        </a>
+        <a href="#works" class="quick-btn" title="Works">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.53 15.47 0 12.36 0c-1.73 0-3.24.85-4.19 2.15L12 6H4C2.9 6 2 6.9 2 8v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
+        </a>
+        <a href="#journal" class="quick-btn" title="Journal">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 4h2v5l-1-.75L9 9V4zm9 16H6V4h1v9l3-2.25L13 13V4h5v16z"/></svg>
+        </a>
+        <a href="#contact" class="quick-btn" title="Contact">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Social bar (dark only) -->
+    <div class="social-bar">
+      <a href="https://github.com/" class="social-link" aria-label="GitHub" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </a>
+      <a href="https://twitter.com/" class="social-link" aria-label="X / Twitter" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+      <a href="https://linkedin.com/" class="social-link" aria-label="LinkedIn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </a>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" aria-hidden="true">
+      <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+      Scroll
+    </div>
+
+    <!-- Bottom label (light only) -->
+    <span class="hero-bottom-label" aria-hidden="true">Code. Create. Inspire.</span>
+  </section>
+
+  <!-- ============================================================
+       ABOUT
+  ============================================================ -->
+  <section class="section" id="about">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal"><span class="eyebrow-dash"></span>About</p>
+      <h2 class="section-title reveal reveal-delay-1">Developer, Creator,<br>and Lifelong Explorer</h2>
+      <p class="section-lead reveal reveal-delay-2">
+        テクノロジーと創造性の交差点で活動するフリーランス開発者。<br>
+        自動化・アプリ開発・コンテンツ制作を通じて、人々の可能性を広げることを目指しています。
+      </p>
+
+      <div class="about-grid">
+        <!-- ★ SPLINE差し替えポイント ★
+             .about-visual の中身を Spline embed に置換
+             現在は実写プロフィール写真を使用 -->
+        <div class="about-visual reveal reveal-delay-1">
+          <img
+            class="about-visual-photo"
+            src="hiroaki.png"
+            alt="Hiroaki Okayasu — Developer, Creator, Explorer"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+
+        <div class="about-text reveal reveal-delay-2">
+          <h3>Hi, I'm Hiroaki.</h3>
+          <p>
+            Python・JavaScript・PHP を中心に、業務自動化からモバイルアプリまで幅広く手がけています。
+            現在は Notion × Gemini API × Playwright を組み合わせた記事自動投稿システムや、
+            Amazon/楽天の価格比較 Chrome 拡張などを開発中。
+          </p>
+          <p>
+            コードを書かないときは、カメラを持って街を歩いたり、テニスコートに立ったり、
+            ギターを弾いたりしています。
+          </p>
+          <div class="about-tags">
+            <span class="tag">Python</span>
+            <span class="tag">JavaScript</span>
+            <span class="tag">PHP</span>
+            <span class="tag">React / Next.js</span>
+            <span class="tag">Notion API</span>
+            <span class="tag">Playwright</span>
+            <span class="tag">Chrome Extension</span>
+            <span class="tag">note.com</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SKILLS
+  ============================================================ -->
+  <section class="skills-section" id="skills">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal"><span class="eyebrow-dash"></span>Skills</p>
+      <h2 class="section-title reveal reveal-delay-1">What I Build</h2>
+      <p class="section-lead reveal reveal-delay-2">得意とする技術領域と、その先にある価値を届けるための道具たち。</p>
+
+      <div class="skills-grid">
+        <div class="skill-card reveal reveal-delay-1">
+          <div class="skill-card-icon">⚙️</div>
+          <div class="skill-card-title">Automation Systems</div>
+          <div class="skill-card-desc">Notionを中心に据えたデータ連携・自動化パイプラインの設計・実装。</div>
+          <div class="skill-card-list">
+            <span class="skill-pill">Python</span>
+            <span class="skill-pill">Playwright</span>
+            <span class="skill-pill">Gemini API</span>
+            <span class="skill-pill">GAS</span>
+          </div>
+        </div>
+        <div class="skill-card reveal reveal-delay-2">
+          <div class="skill-card-icon">🌐</div>
+          <div class="skill-card-title">Web / App Development</div>
+          <div class="skill-card-desc">React・Next.js・Supabase によるフルスタック開発。Chrome 拡張機能の設計・公開も。</div>
+          <div class="skill-card-list">
+            <span class="skill-pill">Next.js</span>
+            <span class="skill-pill">Supabase</span>
+            <span class="skill-pill">TypeScript</span>
+            <span class="skill-pill">Chrome Ext.</span>
+          </div>
+        </div>
+        <div class="skill-card reveal reveal-delay-3">
+          <div class="skill-card-icon">✍️</div>
+          <div class="skill-card-title">Content Creation</div>
+          <div class="skill-card-desc">note.com での技術記事・体験記の執筆。AI と自動化を活用した効率的な発信。</div>
+          <div class="skill-card-list">
+            <span class="skill-pill">note.com</span>
+            <span class="skill-pill">Technical Writing</span>
+            <span class="skill-pill">AI-assisted</span>
+          </div>
+        </div>
+        <div class="skill-card reveal reveal-delay-4">
+          <div class="skill-card-icon">📷</div>
+          <div class="skill-card-title">Photography</div>
+          <div class="skill-card-desc">日常の瞬間をレンズで切り取る。カメラと旅がアイデアの源泉。</div>
+          <div class="skill-card-list">
+            <span class="skill-pill">Mirrorless</span>
+            <span class="skill-pill">Street</span>
+            <span class="skill-pill">Portrait</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       WORKS
+  ============================================================ -->
+  <section class="section" id="works">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal"><span class="eyebrow-dash"></span>Works</p>
+      <h2 class="section-title reveal reveal-delay-1">Selected Projects</h2>
+      <p class="section-lead reveal reveal-delay-2">課題を見つけて、ツールを作って、仕組みを変える。</p>
+
+      <div class="works-grid">
+        <article class="work-card reveal reveal-delay-1">
+          <div class="work-card-thumb">🤖</div>
+          <div class="work-card-body">
+            <p class="work-card-tag">Automation</p>
+            <h3 class="work-card-title">note 自動投稿システム</h3>
+            <p class="work-card-desc">Notion → Gemini API → Playwright のパイプラインで記事を自動生成・投稿。Queue 管理・サムネイル自動生成まで対応。</p>
+          </div>
+          <div class="work-card-footer">
+            <span class="work-tech">Python</span>
+            <span class="work-tech">Notion API</span>
+            <span class="work-tech">Playwright</span>
+          </div>
+        </article>
+
+        <article class="work-card reveal reveal-delay-2">
+          <div class="work-card-thumb">🛒</div>
+          <div class="work-card-body">
+            <p class="work-card-tag">Chrome Extension</p>
+            <h3 class="work-card-title">Amazon / 楽天 価格比較拡張</h3>
+            <p class="work-card-desc">Amazon 商品ページを開くだけで楽天の最安値を取得・比較表示。Rakuten API v2 対応済み。</p>
+          </div>
+          <div class="work-card-footer">
+            <span class="work-tech">JavaScript</span>
+            <span class="work-tech">Rakuten API</span>
+            <span class="work-tech">Chrome MV3</span>
+          </div>
+        </article>
+
+        <article class="work-card reveal reveal-delay-3">
+          <div class="work-card-thumb">📄</div>
+          <div class="work-card-body">
+            <p class="work-card-tag">Automation</p>
+            <h3 class="work-card-title">請求書自動発行システム</h3>
+            <p class="work-card-desc">Notion × GAS × Gmail × Drive の連携で、請求書 PDF の生成・送付・保存を全自動化。</p>
+          </div>
+          <div class="work-card-footer">
+            <span class="work-tech">GAS</span>
+            <span class="work-tech">Google Drive</span>
+            <span class="work-tech">Notion</span>
+          </div>
+        </article>
+
+        <article class="work-card reveal reveal-delay-4">
+          <div class="work-card-thumb">🎾</div>
+          <div class="work-card-body">
+            <p class="work-card-tag">Web App</p>
+            <h3 class="work-card-title">ガット張り記録アプリ</h3>
+            <p class="work-card-desc">ラケットのガット張り履歴を管理するモバイル対応 Web アプリ。Next.js + Supabase 構成。</p>
+          </div>
+          <div class="work-card-footer">
+            <span class="work-tech">Next.js</span>
+            <span class="work-tech">Supabase</span>
+            <span class="work-tech">Capacitor</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       JOURNAL
+  ============================================================ -->
+  <section class="journal-section" id="journal">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal"><span class="eyebrow-dash"></span>Journal</p>
+      <h2 class="section-title reveal reveal-delay-1">Latest Writing</h2>
+      <p class="section-lead reveal reveal-delay-2">note.com で書いている技術記事・日常の記録。</p>
+
+      <div class="journal-grid">
+        <article class="journal-card reveal reveal-delay-1">
+          <p class="journal-date">2025 · Automation</p>
+          <h3 class="journal-title">Notion × Playwright で記事投稿を完全自動化した話</h3>
+          <p class="journal-excerpt">Queue 管理から Gemini による本文生成、サムネイル作成まで——実装の全貌と詰まったポイントを公開します。</p>
+          <span class="journal-arrow">Read on note →</span>
+        </article>
+
+        <article class="journal-card reveal reveal-delay-2">
+          <p class="journal-date">2025 · Chrome Extension</p>
+          <h3 class="journal-title">Amazon で開いたら楽天の値段が出る拡張を作った</h3>
+          <p class="journal-excerpt">Rakuten API v2 への移行と、検索精度を上げるためのヒューリスティクス設計について。</p>
+          <span class="journal-arrow">Read on note →</span>
+        </article>
+
+        <article class="journal-card reveal reveal-delay-3">
+          <p class="journal-date">2025 · English</p>
+          <h3 class="journal-title">TOEIC / IELTS / TOEFL iBT 徹底比較 2025年版</h3>
+          <p class="journal-excerpt">2026年1月の TOEFL iBT 大改訂を踏まえた最新版。自分の目的に合う試験の選び方を整理しました。</p>
+          <span class="journal-arrow">Read on note →</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CONTACT
+  ============================================================ -->
+  <section class="contact-section" id="contact">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal"><span class="eyebrow-dash"></span>Contact</p>
+      <h2 class="section-title reveal reveal-delay-1">Let's Build Something.</h2>
+      <p class="section-lead reveal reveal-delay-2">
+        お仕事のご依頼・コラボレーション・ご質問など、お気軽にどうぞ。
+      </p>
+      <div class="contact-links reveal reveal-delay-3">
+        <a href="mailto:hello@hiroaki.dev" class="contact-btn contact-btn-primary">
+          ✉ メールを送る
+        </a>
+        <a href="https://twitter.com/" class="contact-btn contact-btn-secondary" target="_blank" rel="noopener">
+          𝕏 Twitter / X
+        </a>
+        <a href="https://note.com/" class="contact-btn contact-btn-secondary" target="_blank" rel="noopener">
+          📝 note.com
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer>
+    <p class="footer-copy">© 2025 Hiroaki Okayasu. All rights reserved.</p>
+    <ul class="footer-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#works">Works</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </footer>
+
+  <!-- ============================================================
+       SCRIPTS
+  ============================================================ -->
+  <script>
+    // ── Theme Toggle ──────────────────────────────────────────────
+    const html       = document.documentElement;
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon   = document.getElementById('themeIcon');
+    const themeLabel  = document.getElementById('themeLabel');
+
+    // ローカルストレージで保持
+    const saved = localStorage.getItem('theme');
+    if (saved) setTheme(saved);
+
+    themeToggle.addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      setTheme(next);
+      localStorage.setItem('theme', next);
+    });
+
+    function setTheme(t) {
+      html.setAttribute('data-theme', t);
+      if (t === 'dark') {
+        themeIcon.textContent  = '☀️';
+        themeLabel.textContent = 'Light';
+      } else {
+        themeIcon.textContent  = '🌙';
+        themeLabel.textContent = 'Dark';
+      }
+    }
+
+    // ── Nav scroll shadow ─────────────────────────────────────────
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    // ── Scroll Reveal ─────────────────────────────────────────────
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    revealEls.forEach(el => io.observe(el));
+
+    // ── Hamburger (mobile) ────────────────────────────────────────
+    // 簡易版: クリックでナビリンクをトグル
+    const hamburger = document.getElementById('hamburger');
+    const navLinks  = document.querySelector('.nav-links');
+    hamburger.addEventListener('click', () => {
+      const open = navLinks.style.display === 'flex';
+      navLinks.style.display = open ? '' : 'flex';
+      navLinks.style.flexDirection = 'column';
+      navLinks.style.position = 'absolute';
+      navLinks.style.top = '64px';
+      navLinks.style.left = '0'; navLinks.style.right = '0';
+      navLinks.style.padding = '1.5rem 2.5rem';
+      navLinks.style.background = 'var(--nav-bg-scroll)';
+      navLinks.style.backdropFilter = 'blur(16px)';
+      if (open) navLinks.removeAttribute('style');
+    });
+
+    // メニュー内リンクをクリックしたら閉じる
+    navLinks.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => navLinks.removeAttribute('style'));
+    });
+  </script>
+
+  <!--
+  ★ Spline 導入時はここに追加:
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@latest/build/spline-viewer.js"></script>
+  そして #spline-container の中身を以下に変更:
+  <spline-viewer url="https://prod.spline.design/YOUR-SCENE-ID/scene.splinecode"
+                 style="width:100%;height:100%;"></spline-viewer>
+  -->
+
+</body>
+</html>
