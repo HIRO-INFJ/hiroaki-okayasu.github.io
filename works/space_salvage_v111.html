@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cosmic Repair Rogue</title>
+<style>
+:root {
+  --bg:       #050a12;
+  --panel:    #0c1624;
+  --primary:  #00f0ff;
+  --pdim:     #007a8a;
+  --accent:   #ff9900;
+  --danger:   #ff3333;
+  --success:  #33cc33;
+  --text:     #e0f7fc;
+  --tdark:    #6b8aaa;
+  --border:   #1a3050;
+}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;
+  font-family:'Courier New',monospace,sans-serif;-webkit-tap-highlight-color:transparent;}
+html,body{
+  height:100%;width:100%;overflow:hidden;
+  background:var(--bg);color:var(--text);
+  /* Android Chrome のアドレスバー・ナビバーを除いた高さを使う */
+  height: 100dvh;
+}
+body{display:flex;justify-content:center;align-items:flex-start;}
+
+#app{
+  width:100%;max-width:480px;
+  /* dvh: dynamic viewport height → Android下部ナビバーを自動的に除外 */
+  height:100dvh;
+  background:var(--panel);border:1px solid var(--pdim);
+  box-shadow:0 0 30px rgba(0,240,255,.12);
+  display:flex;flex-direction:column;position:relative;overflow:hidden;
+  /* iOS Safari の「ノッチ/ホームインジケータ」対応 */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ========== SCREENS ========== */
+.screen{display:none;flex-direction:column;width:100%;flex:1;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* ========== STATUS BAR ========== */
+#status-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;
+  background:rgba(0,0,0,.5);border-bottom:1px solid var(--border);
+  font-size:.78rem;flex-shrink:0;
+}
+.sb-item{display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.sb-label{color:var(--tdark);font-size:.7rem;}
+.sb-val{color:var(--primary);}
+.hp-track{
+  width:90px;height:10px;background:#0a1520;border:1px solid var(--pdim);
+  border-radius:3px;overflow:hidden;
+}
+.hp-fill{height:100%;background:var(--success);border-radius:3px;transition:width .3s,background .3s;}
+.hp-fill.warn{background:var(--accent);}
+.hp-fill.crit{background:var(--danger);}
+.sb-sep{color:var(--border);margin:0 2px;}
+
+/* ========== TITLE ========== */
+#title-screen{
+  justify-content:center;align-items:center;
+  padding:20px;gap:14px;
+  background:radial-gradient(ellipse at 50% 55%,#091825 0%,var(--bg) 70%);
+}
+.title-logo{
+  font-size:2rem;font-weight:bold;color:var(--primary);
+  text-shadow:0 0 18px rgba(0,240,255,.5);letter-spacing:2px;
+  text-align:center;
+}
+.title-sub{font-size:.85rem;color:var(--tdark);text-align:center;}
+.title-ship{font-size:56px;filter:drop-shadow(0 0 14px var(--primary));
+  animation:float 3.5s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.record-box{
+  background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:6px;
+  padding:12px 18px;width:80%;max-width:300px;font-size:.85rem;
+  line-height:1.9;
+}
+.record-box span{color:var(--accent);}
+.difficulty-label{font-size:.8rem;color:var(--tdark);letter-spacing:1px;text-align:center;}
+.diff-buttons{display:flex;gap:10px;width:100%;max-width:320px;}
+
+/* ========== BUTTONS ========== */
+.btn{
+  background:var(--pdim);color:var(--bg);
+  border:none;padding:14px 16px;
+  font-size:1rem;font-weight:bold;border-radius:5px;
+  cursor:pointer;width:100%;text-align:center;
+  box-shadow:0 4px 0 rgba(0,0,0,.4);
+  transition:transform .1s,box-shadow .1s,background .1s;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.4);background:var(--primary);}
+.btn-danger{background:#7a1515;color:var(--text);}
+.btn-danger:active{background:var(--danger);}
+.btn-success{background:#145a14;color:var(--text);}
+.btn-success:active{background:var(--success);}
+.btn-easy{background:#0a4a6a;color:var(--primary);border:1px solid var(--pdim);}
+.btn-easy:active{background:#0d7a9a;}
+.btn-normal{background:#4a2a00;color:var(--accent);border:1px solid #7a5010;}
+.btn-normal:active{background:#8a5a00;}
+.btn-sm{padding:10px 14px;font-size:.85rem;}
+
+/* ========== MAIN SCREEN ========== */
+#main-screen{padding:10px 12px 0 12px;gap:8px;}
+
+/* action-area は画面下部に固定し、ナビバーと干渉しない余白を確保 */
+#action-area{
+  display:flex;flex-direction:column;gap:8px;flex-shrink:0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+}
+
+.event-card{
+  background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:6px;
+  padding:14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;
+}
+.event-title{font-size:1.1rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;}
+.event-desc{font-size:.9rem;line-height:1.5;color:var(--text);}
+.event-badge{
+  display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:10px;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.badge-warn{background:rgba(255,153,0,.2);color:var(--accent);border:1px solid rgba(255,153,0,.4);}
+.badge-good{background:rgba(51,204,51,.2);color:var(--success);border:1px solid rgba(51,204,51,.4);}
+.badge-boss{background:rgba(255,51,51,.2);color:var(--danger);border:1px solid rgba(255,51,51,.4);}
+
+.sys-box{
+  background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:5px;
+  padding:8px 10px;font-size:.78rem;flex-shrink:0;
+}
+.sys-ok{color:var(--success);}
+.sys-broken{color:var(--danger);animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+#log-box{
+  flex:1;min-height:0;overflow-y:auto;
+  background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:5px;
+  padding:6px 8px;font-size:.75rem;
+}
+.log-entry{padding:2px 0 2px 6px;border-left:2px solid var(--pdim);margin-bottom:3px;line-height:1.4;}
+.log-dmg{border-left-color:var(--danger);color:#ff9999;}
+.log-heal{border-left-color:var(--success);color:#99ff99;}
+.log-sys{border-left-color:var(--accent);color:var(--accent);}
+
+#action-area{display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+
+/* ========== REPAIR SCREEN ========== */
+#repair-screen{
+  padding:10px 12px max(12px, env(safe-area-inset-bottom, 12px)) 12px;
+  gap:8px;
+}
+.repair-header{text-align:center;flex-shrink:0;}
+.repair-title{font-size:1rem;color:var(--accent);margin-bottom:2px;}
+.repair-instr{font-size:.8rem;color:var(--tdark);}
+
+.timer-wrap{flex-shrink:0;}
+.timer-bg{height:8px;background:#0a1520;border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.timer-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .1s linear;}
+.timer-label{font-size:.7rem;color:var(--tdark);text-align:right;margin-top:2px;}
+
+#game-play-area{
+  flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;
+  padding:12px;min-height:0;overflow:hidden;position:relative;
+}
+
+/* ========== UPGRADE SCREEN ========== */
+#upgrade-screen{
+  padding:14px 12px max(14px, env(safe-area-inset-bottom, 14px)) 12px;
+  gap:10px;
+}
+.upgrade-screen-title{font-size:1.1rem;color:var(--primary);text-align:center;letter-spacing:1px;}
+.upgrade-screen-sub{font-size:.78rem;color:var(--tdark);text-align:center;}
+.upgrade-list{display:flex;flex-direction:column;gap:10px;flex:1;overflow-y:auto;}
+.upgrade-card{
+  background:rgba(0,240,255,.04);border:1px solid var(--border);border-radius:8px;
+  padding:14px 14px 14px 12px;cursor:pointer;
+  transition:background .15s,border-color .15s,transform .1s;
+  display:flex;align-items:center;gap:14px;
+}
+.upgrade-card:active{background:rgba(0,240,255,.12);border-color:var(--pdim);transform:scale(.98);}
+.up-emoji{font-size:2rem;flex-shrink:0;width:44px;text-align:center;
+  filter:drop-shadow(0 0 6px rgba(0,240,255,.4));}
+.up-body{display:flex;flex-direction:column;gap:3px;}
+.up-title{color:var(--primary);font-size:.9rem;font-weight:bold;}
+.up-desc{font-size:.78rem;color:var(--tdark);line-height:1.4;}
+
+/* ========== RESULT SCREEN ========== */
+#result-screen{
+  justify-content:center;align-items:center;
+  padding:24px 24px max(24px, env(safe-area-inset-bottom, 24px)) 24px;
+  gap:16px;
+  background:radial-gradient(ellipse at 50% 40%,#1a0505 0%,var(--bg) 70%);
+}
+#result-screen.win{background:radial-gradient(ellipse at 50% 40%,#041a08 0%,var(--bg) 70%);}
+.result-icon{font-size:60px;filter:drop-shadow(0 0 20px currentColor);}
+.result-title{font-size:2rem;letter-spacing:2px;text-align:center;}
+.result-stats{
+  background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:6px;
+  padding:14px 20px;width:100%;max-width:300px;
+  font-size:.85rem;line-height:2;
+}
+.result-stats span{color:var(--accent);}
+.new-best{font-size:.8rem;color:var(--accent);letter-spacing:2px;animation:blink 1s infinite;}
+
+/* ========== MINIGAME: 順番押し ========== */
+.seq-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;width:100%;max-width:280px;
+}
+.seq-btn{
+  aspect-ratio:1;font-size:1.4rem;
+  display:flex;justify-content:center;align-items:center;
+  background:#0d1e30;border:2px solid var(--pdim);color:var(--primary);
+  border-radius:8px;cursor:pointer;transition:background .1s;
+}
+.seq-btn:active{background:var(--pdim);}
+.seq-done{opacity:.25;pointer-events:none;}
+
+/* ========== MINIGAME: 配線 ========== */
+.wire-wrap{display:flex;justify-content:space-between;width:100%;height:220px;position:relative;}
+.wire-col{display:flex;flex-direction:column;justify-content:space-around;z-index:10;}
+.wire-node{
+  width:38px;height:38px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.5);
+  display:flex;justify-content:center;align-items:center;
+  font-size:.75rem;font-weight:bold;color:#000;cursor:pointer;
+  transition:transform .1s,box-shadow .1s;
+}
+.wire-node.selected{transform:scale(1.25);box-shadow:0 0 12px #fff;}
+.wire-node.done{opacity:.4;pointer-events:none;}
+.wire-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;}
+
+/* ========== MINIGAME: 算数 ========== */
+.math-q{font-size:2rem;color:var(--primary);margin-bottom:16px;text-align:center;}
+.math-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+
+/* ========== MINIGAME: 記憶 ========== */
+.mem-grid{display:grid;gap:5px;}
+.mem-tile{
+  background:#0d1e30;border:1px solid var(--border);border-radius:4px;cursor:pointer;
+  transition:background .15s;
+}
+.mem-show{background:var(--primary);}
+.mem-ok  {background:var(--success);}
+.mem-ng  {background:var(--danger);}
+
+/* ========== MINIGAME: スイッチ ========== */
+.sw-wrap{display:flex;justify-content:space-around;align-items:center;width:100%;flex-wrap:wrap;gap:12px;}
+.sw-item{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.sw-target{font-size:.75rem;color:var(--accent);}
+.dial{
+  width:58px;height:58px;border-radius:50%;
+  background:#1020 35;border:3px solid var(--pdim);
+  position:relative;cursor:pointer;transition:transform .2s ease;
+}
+.dial::after{
+  content:'';position:absolute;width:5px;height:22px;
+  background:var(--primary);top:6px;left:calc(50% - 2.5px);border-radius:3px;
+}
+.dial.match{border-color:var(--success);box-shadow:0 0 10px var(--success);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- STATUS BAR -->
+  <div id="status-bar" style="display:none">
+    <div class="sb-item">
+      <div class="sb-label">HP</div>
+      <div class="hp-track"><div class="hp-fill" id="hp-fill"></div></div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-label">LV</div>
+      <div class="sb-val" id="sb-lv">1</div>
+    </div>
+    <div class="sb-sep">|</div>
+    <div class="sb-item">
+      <div class="sb-label">STAGE</div>
+      <div class="sb-val" id="sb-stage">1-1</div>
+    </div>
+    <div class="sb-sep">|</div>
+    <div class="sb-item" style="margin-left:auto">
+      <div class="sb-label">SCORE</div>
+      <div class="sb-val" id="sb-score">0</div>
+    </div>
+  </div>
+
+  <!-- TITLE -->
+  <div id="title-screen" class="screen active">
+    <div class="title-logo">COSMIC REPAIR</div>
+    <div class="title-sub">宇宙船修理ローグライト</div>
+    <div class="title-ship">🚀</div>
+    <div class="record-box">
+      <div>EASY HIGH SCORE：<span id="hi-easy">0</span></div>
+      <div>NORMAL HIGH SCORE：<span id="hi-normal">0</span></div>
+    </div>
+    <div class="difficulty-label">── DIFFICULTY ──</div>
+    <div class="diff-buttons">
+      <button class="btn btn-easy" onclick="game.start('easy')">EASY<br><small style="font-weight:normal;font-size:.7rem">5 STAGES / ~10 min</small></button>
+      <button class="btn btn-normal" onclick="game.start('normal')">NORMAL<br><small style="font-weight:normal;font-size:.7rem">10 STAGES / ~30 min</small></button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main-screen" class="screen">
+    <div class="event-card">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="event-title" id="ev-title">—</div>
+        <div class="event-badge" id="ev-badge"></div>
+      </div>
+      <div class="event-desc" id="ev-desc">—</div>
+    </div>
+
+    <div class="sys-box" id="sys-box">ALL SYSTEMS NOMINAL</div>
+
+    <div id="log-box"></div>
+
+    <div id="action-area"></div>
+  </div>
+
+  <!-- REPAIR -->
+  <div id="repair-screen" class="screen">
+    <div class="repair-header">
+      <div class="repair-title" id="rp-title">SYSTEM REPAIR</div>
+      <div class="repair-instr" id="rp-instr">—</div>
+    </div>
+    <div class="timer-wrap">
+      <div class="timer-bg"><div class="timer-fill" id="timer-fill"></div></div>
+      <div class="timer-label" id="timer-label"></div>
+    </div>
+    <div id="game-play-area"></div>
+  </div>
+
+  <!-- UPGRADE -->
+  <div id="upgrade-screen" class="screen">
+    <div class="upgrade-screen-title">⬡ SYSTEM UPGRADE</div>
+    <div class="upgrade-screen-sub">強化モジュールを1つ選択してください</div>
+    <div class="upgrade-list" id="upgrade-list"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-screen" class="screen">
+    <div class="result-icon" id="res-icon">💀</div>
+    <div class="result-title" id="res-title">SYSTEM FAILURE</div>
+    <div class="result-stats">
+      <div>難易度：<span id="res-diff">—</span></div>
+      <div>到達ステージ：<span id="res-stage">1-1</span></div>
+      <div>最終スコア：<span id="res-score">0</span></div>
+    </div>
+    <div class="new-best" id="res-best" style="display:none">★ NEW HIGH SCORE ★</div>
+    <button class="btn" onclick="game.showTitle()">TITLE へ戻る</button>
+    <button class="btn btn-sm" style="width:auto;padding:10px 24px" id="res-retry" onclick="game.retry()">もう一度</button>
+  </div>
+
+</div><!-- #app -->
+
+<script>
+// ================================================================
+// SOUND
+// ================================================================
+const Sound = {
+  ctx: null,
+  init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+  play(type) {
+    try { this.init(); } catch(e) { return; }
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.connect(g); g.connect(this.ctx.destination);
+    const t = this.ctx.currentTime;
+    const cfg = {
+      click:   () => { o.type='sine'; o.frequency.setValueAtTime(500,t); o.frequency.exponentialRampToValueAtTime(150,t+.1); g.gain.setValueAtTime(.08,t); g.gain.exponentialRampToValueAtTime(.001,t+.1); o.start(t); o.stop(t+.1); },
+      success: () => { o.type='triangle'; [523,659,784,1047].forEach((f,i)=>o.frequency.setValueAtTime(f,t+i*.08)); g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.4); o.start(t); o.stop(t+.4); },
+      fail:    () => { o.type='sawtooth'; o.frequency.setValueAtTime(200,t); o.frequency.linearRampToValueAtTime(80,t+.4); g.gain.setValueAtTime(.15,t); g.gain.exponentialRampToValueAtTime(.001,t+.4); o.start(t); o.stop(t+.4); },
+      warn:    () => { o.type='square'; o.frequency.setValueAtTime(440,t); o.frequency.setValueAtTime(330,t+.15); g.gain.setValueAtTime(.1,t); g.gain.exponentialRampToValueAtTime(.001,t+.3); o.start(t); o.stop(t+.3); },
+      level:   () => { o.type='square'; o.frequency.setValueAtTime(300,t); o.frequency.exponentialRampToValueAtTime(1200,t+.4); g.gain.setValueAtTime(.08,t); g.gain.exponentialRampToValueAtTime(.001,t+.5); o.start(t); o.stop(t+.5); },
+    };
+    if (cfg[type]) cfg[type]();
+  }
+};
+
+// ================================================================
+// CONFIG
+// ================================================================
+const DIFF_CFG = {
+  easy: {
+    label: 'EASY',
+    stages: 5,          // 5ステージクリアで終了
+    eventsPerStage: 2,  // 通常イベント数
+    bossEnabled: false,
+    startHp: 10, maxHp: 12,
+    repairBaseTimes: [18, 15],
+    repairDmg: 1,
+    eventDmgMult: 0.7,
+    scoreKey: 'cc_hi_easy',
+  },
+  normal: {
+    label: 'NORMAL',
+    stages: 10,         // 10ステージクリアで終了
+    eventsPerStage: 3,
+    bossEnabled: true,
+    startHp: 10, maxHp: 15,
+    repairBaseTimes: [15, 12, 10, 8],
+    repairDmg: 1,
+    eventDmgMult: 1.0,
+    scoreKey: 'cc_hi_normal',
+  },
+};
+
+const SYSTEMS = ["エンジン", "シールド", "武器", "通信", "電力"];
+const DIRECTIONS = ["UP", "RIGHT", "DOWN", "LEFT"];
+
+const UPGRADE_POOL = [
+  { id:"hp",          emoji:"❤️",  name:"予備ハート増設",   desc:"最大HP+2・即時回復" },
+  { id:"repair_time", emoji:"⏱️",  name:"高速ハンダ",        desc:"修理制限時間 +30%" },
+  { id:"dmg_cut",     emoji:"🛡️",  name:"防爆シールド",      desc:"被ダメージ -1（最低1）" },
+  { id:"reward_up",   emoji:"💰",  name:"ジャンク回収機",    desc:"獲得スコア +25%" },
+  { id:"auto_heal",   emoji:"🔋",  name:"オート自己診断",    desc:"修理成功時 HP+1 自動回復" },
+  { id:"repair_time", emoji:"⚡",  name:"過充電スパナ",      desc:"修理制限時間 +20%" },
+  { id:"hp",          emoji:"💊",  name:"緊急医療キット",    desc:"最大HP+3・即時回復" },
+  { id:"dmg_cut",     emoji:"🪖",  name:"装甲プレート",      desc:"被ダメージ -1（最低1）" },
+];
+
+const EVENTS_POOL = [
+  { title:"敵襲",       badge:"warn", desc:"敵艦から奇襲。シールドと武器が被弾！",            dmg:2, faults:["シールド","武器"],  score:0  },
+  { title:"隕石帯",     badge:"warn", desc:"微小デブリ群と衝突。エンジンに負荷！",             dmg:1, faults:["エンジン"],         score:0  },
+  { title:"宇宙嵐",     badge:"warn", desc:"電磁パルスが直撃。通信・電力が乱れる！",           dmg:1, faults:["通信","電力"],      score:0  },
+  { title:"漂流コンテナ",badge:"good",desc:"廃棄コンテナを回収。資源を得た。",                 dmg:0, faults:[],                  score:120},
+  { title:"友好商船",    badge:"good",desc:"友好的な商船と接触。物資を融通してもらった。",      dmg:-3,faults:[],                  score:60 },
+  { title:"古代データ", badge:"good", desc:"古い航路標識をハック。貴重なデータを入手！",       dmg:0, faults:[],                  score:250},
+  { title:"静寂",       badge:"",    desc:"漆黒の虚無が広がる。束の間の安息…",                dmg:-1,faults:[],                  score:30 },
+  { title:"宇宙生命体", badge:"warn", desc:"謎の生命体が船体に付着。システムに異常！",         dmg:1, faults:["シールド","エンジン"],score:0 },
+];
+
+const BOSS_EVENT = {
+  title:"⚠ ゲートキーパー", badge:"boss",
+  desc:"セクター境界の巨大巡洋艦が立ちはだかる！集中砲火を受ける！",
+  dmg:3, faults:["シールド","武器","エンジン"], score:500,
+};
+
+// ================================================================
+// STATE
+// ================================================================
+let S = null;   // game state
+let diff = null; // current difficulty config
+
+// ================================================================
+// GAME
+// ================================================================
+const game = {
+  start(diffKey) {
+    Sound.play('click');
+    diff = DIFF_CFG[diffKey];
+    S = {
+      diffKey,
+      hp: diff.startHp,
+      maxHp: diff.maxHp,
+      stage: 1,
+      eventIdx: 0,      // current event within stage (0..eventsPerStage-1, then boss if enabled)
+      repairLv: 1,
+      score: 0,
+      upgrades: { hp:0, repair_time:1.0, dmg_cut:0, reward_up:1.0, auto_heal:0 },
+      broken: [],
+      ended: false,
+    };
+    document.getElementById('status-bar').style.display = '';
+    this.clearLog();
+    this.log('システム起動。航海を開始します。', 'sys');
+    this.showScreen('main-screen');
+    this.nextEvent();
+    this.saveProgress();
+  },
+
+  retry() {
+    if (!diff) return;
+    const key = Object.keys(DIFF_CFG).find(k => DIFF_CFG[k] === diff);
+    this.start(key);
+  },
+
+  showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  },
+
+  showTitle() {
+    Sound.play('click');
+    document.getElementById('status-bar').style.display = 'none';
+    this.updateHiScoreDisplay();
+    this.showScreen('title-screen');
+  },
+
+  updateUI() {
+    if (!S) return;
+    // HP bar
+    const pct = Math.max(0, S.hp / S.maxHp * 100);
+    const fill = document.getElementById('hp-fill');
+    fill.style.width = pct + '%';
+    fill.className = 'hp-fill' + (pct <= 25 ? ' crit' : pct <= 50 ? ' warn' : '');
+    // status bar
+    document.getElementById('sb-lv').textContent    = S.repairLv;
+    document.getElementById('sb-score').textContent = S.score;
+    const isBoss = diff.bossEnabled && S.eventIdx >= diff.eventsPerStage;
+    document.getElementById('sb-stage').textContent = `${S.stage}-${isBoss ? 'BOSS' : S.eventIdx + 1}`;
+    // sys box
+    const box = document.getElementById('sys-box');
+    if (S.broken.length === 0) {
+      box.innerHTML = '<span class="sys-ok">■ ALL SYSTEMS NOMINAL</span>';
+    } else {
+      box.innerHTML = S.broken.map(s=>`<span class="sys-broken">▲ ${s} 故障中</span>`).join(' &nbsp; ');
+    }
+  },
+
+  log(msg, type='') {
+    const box = document.getElementById('log-box');
+    const d = document.createElement('div');
+    d.className = 'log-entry' + (type==='dmg' ? ' log-dmg' : type==='heal' ? ' log-heal' : type==='sys' ? ' log-sys' : '');
+    d.textContent = msg;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+  },
+  clearLog() { document.getElementById('log-box').innerHTML = ''; },
+
+  // ---- event flow ----
+  nextEvent() {
+    this.updateUI();
+    const act = document.getElementById('action-area');
+    act.innerHTML = '';
+
+    if (S.hp <= 0) { this.gameOver(); return; }
+
+    // broken systems first
+    if (S.broken.length > 0) {
+      document.getElementById('ev-title').textContent = '警告：故障発生';
+      document.getElementById('ev-badge').className = 'event-badge badge-warn';
+      document.getElementById('ev-badge').textContent = 'ALERT';
+      document.getElementById('ev-desc').textContent  = '次のジャンプ前にすべてのシステムを修理してください。';
+      Sound.play('warn');
+      S.broken.forEach(sys => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-danger';
+        b.textContent = `⚙ ${sys} を修理する`;
+        b.onclick = () => { Sound.play('click'); mg.start(sys); };
+        act.appendChild(b);
+      });
+      return;
+    }
+
+    // pick event
+    const isBossSlot = diff.bossEnabled && S.eventIdx >= diff.eventsPerStage;
+    const ev = isBossSlot ? BOSS_EVENT : EVENTS_POOL[Math.floor(Math.random() * EVENTS_POOL.length)];
+
+    document.getElementById('ev-title').textContent = ev.title;
+    const badgeEl = document.getElementById('ev-badge');
+    if (ev.badge) {
+      badgeEl.className = 'event-badge badge-' + ev.badge;
+      badgeEl.textContent = ev.badge.toUpperCase();
+    } else {
+      badgeEl.className = '';
+      badgeEl.textContent = '';
+    }
+    document.getElementById('ev-desc').textContent = ev.desc;
+
+    const btn = document.createElement('button');
+    btn.className = isBossSlot ? 'btn btn-danger' : 'btn';
+    btn.textContent = isBossSlot ? '戦闘開始！' : '状況を解決する →';
+    btn.onclick = () => { Sound.play('click'); this.resolveEvent(ev); };
+    act.appendChild(btn);
+  },
+
+  resolveEvent(ev) {
+    // damage / heal
+    let dmg = Math.round((ev.dmg || 0) * diff.eventDmgMult);
+    if (dmg > 0) {
+      dmg = Math.max(1, dmg - S.upgrades.dmg_cut);
+      S.hp = Math.max(0, S.hp - dmg);
+      this.log(`被害：${ev.title} でダメージ ${dmg}`, 'dmg');
+    } else if (dmg < 0) {
+      const h = Math.abs(dmg);
+      S.hp = Math.min(S.maxHp, S.hp + h);
+      this.log(`回復：HP +${h}`, 'heal');
+    }
+
+    // score
+    if (ev.score) {
+      const gain = Math.floor(ev.score * S.upgrades.reward_up);
+      S.score += gain;
+      this.log(`スコア +${gain}`);
+    }
+
+    // faults
+    if (ev.faults && ev.faults.length > 0) {
+      ev.faults.forEach(f => { if (!S.broken.includes(f)) S.broken.push(f); });
+      this.log(`故障：${ev.faults.join('・')}`, 'sys');
+      Sound.play('warn');
+    }
+
+    // if no faults → advance immediately
+    if (S.broken.length === 0) {
+      this.afterRepairOrNoFault();
+    } else {
+      this.nextEvent(); // show repair prompts
+    }
+  },
+
+  afterRepairOrNoFault() {
+    if (S.hp <= 0) { this.gameOver(); return; }
+    S.eventIdx++;
+    const totalSlots = diff.eventsPerStage + (diff.bossEnabled ? 1 : 0);
+    if (S.eventIdx >= totalSlots) {
+      // stage clear
+      S.eventIdx = 0;
+      S.stage++;
+      if (S.stage > diff.stages) {
+        this.gameClear(); return;
+      }
+      // raise repair lv (cap at 4)
+      S.repairLv = Math.min(4, S.stage);
+      this.log(`セクター突破！修理難易度 Lv${S.repairLv} に上昇。`, 'sys');
+      Sound.play('level');
+      this.saveProgress();
+      this.showUpgradeScreen();
+    } else {
+      this.saveProgress();
+      this.nextEvent();
+    }
+  },
+
+  // repair succeeded
+  repairSuccess(sys) {
+    S.broken = S.broken.filter(s => s !== sys);
+    S.score += 50 * S.repairLv;
+    if (S.upgrades.auto_heal > 0) {
+      S.hp = Math.min(S.maxHp, S.hp + S.upgrades.auto_heal);
+      this.log(`自動修復 HP+${S.upgrades.auto_heal}`, 'heal');
+    }
+    this.log(`修理成功：${sys}`, 'heal');
+    if (S.broken.length === 0) {
+      this.afterRepairOrNoFault();
+    } else {
+      this.nextEvent();
+    }
+  },
+
+  // repair failed
+  repairFail(sys, reason) {
+    const pen = diff.repairDmg;
+    S.hp = Math.max(0, S.hp - pen);
+    this.log(`修理失敗：${sys}（${reason}）HP -${pen}`, 'dmg');
+    if (S.hp <= 0) { this.gameOver(); return; }
+    this.nextEvent(); // let player retry the repair
+  },
+
+  // ---- upgrade ----
+  showUpgradeScreen() {
+    this.showScreen('upgrade-screen');
+    // ステージクリア情報をサブタイトルに反映
+    const clearedStage = S.stage - 1; // advanceStage後なので -1 が突破したステージ
+    document.querySelector('.upgrade-screen-sub').textContent =
+      `STAGE ${clearedStage} クリア！強化モジュールを1つ選択`;
+    const list = document.getElementById('upgrade-list');
+    list.innerHTML = '';
+    const pool = [...UPGRADE_POOL].sort(()=>Math.random()-.5).slice(0, 3);
+    pool.forEach(up => {
+      const card = document.createElement('div');
+      card.className = 'upgrade-card';
+      card.innerHTML = `
+        <div class="up-emoji">${up.emoji}</div>
+        <div class="up-body">
+          <div class="up-title">${up.name}</div>
+          <div class="up-desc">${up.desc}</div>
+        </div>`;
+      card.onclick = () => { Sound.play('click'); this.applyUpgrade(up); };
+      list.appendChild(card);
+    });
+  },
+
+  applyUpgrade(up) {
+    // HP系はdescから数値を読む（+2 or +3）
+    const hpGain = up.desc.includes('+3') ? 3 : 2;
+    const rtMult = up.desc.includes('+20%') ? 1.2 : 1.3;
+    switch(up.id) {
+      case 'hp':
+        S.maxHp += hpGain; S.hp = Math.min(S.maxHp, S.hp + hpGain);
+        this.log(`${up.emoji} ${up.name}：最大HP +${hpGain}`, 'heal'); break;
+      case 'repair_time':
+        S.upgrades.repair_time *= rtMult;
+        this.log(`${up.emoji} ${up.name}：修理時間延長`); break;
+      case 'dmg_cut':
+        S.upgrades.dmg_cut += 1;
+        this.log(`${up.emoji} ${up.name}：ダメージ軽減 +1`); break;
+      case 'reward_up':
+        S.upgrades.reward_up *= 1.25;
+        this.log(`${up.emoji} ${up.name}：スコア +25%`); break;
+      case 'auto_heal':
+        S.upgrades.auto_heal += 1;
+        this.log(`${up.emoji} ${up.name}：修理後 HP自動回復 +1`, 'heal'); break;
+    }
+    this.showScreen('main-screen');
+    this.nextEvent();
+  },
+
+  // ---- end states ----
+  gameOver() {
+    Sound.play('fail');
+    this.endScreen(false);
+  },
+  gameClear() {
+    Sound.play('success');
+    S.score += S.hp * 50; // HP bonus
+    this.log(`クリアボーナス HP×50 = +${S.hp * 50}`);
+    this.endScreen(true);
+  },
+  endScreen(win) {
+    S.ended = true;
+    const screen = document.getElementById('result-screen');
+    screen.className = 'screen' + (win ? ' win' : '');
+    document.getElementById('res-icon').textContent  = win ? '🎉' : '💀';
+    document.getElementById('res-title').textContent = win ? 'MISSION COMPLETE' : 'SYSTEM FAILURE';
+    document.getElementById('res-title').style.color = win ? 'var(--success)' : 'var(--danger)';
+    document.getElementById('res-diff').textContent  = diff.label;
+    document.getElementById('res-stage').textContent = `${S.stage} ステージ`;
+    document.getElementById('res-score').textContent = S.score;
+    document.getElementById('res-retry').textContent = `もう一度 (${diff.label})`;
+
+    const hiKey = diff.scoreKey;
+    const prev = parseInt(localStorage.getItem(hiKey) || '0', 10);
+    const isNew = S.score > prev;
+    if (isNew) localStorage.setItem(hiKey, S.score);
+    document.getElementById('res-best').style.display = isNew ? '' : 'none';
+    localStorage.removeItem('cc_progress');
+    this.showScreen('result-screen');
+  },
+
+  // ---- persistence ----
+  saveProgress() {
+    if (!S || S.ended) return;
+    localStorage.setItem('cc_progress', JSON.stringify({ S, diffKey: S.diffKey }));
+  },
+  loadProgress() {
+    try {
+      const raw = localStorage.getItem('cc_progress');
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      diff = DIFF_CFG[data.diffKey];
+      S = data.S;
+      return true;
+    } catch(e) { return false; }
+  },
+  updateHiScoreDisplay() {
+    document.getElementById('hi-easy').textContent   = localStorage.getItem('cc_hi_easy')   || 0;
+    document.getElementById('hi-normal').textContent = localStorage.getItem('cc_hi_normal') || 0;
+  },
+};
+
+// ================================================================
+// MINI GAMES
+// ================================================================
+const mg = {
+  sys:   '',
+  type:  1,
+  timer: null,
+  timeLeft: 0,
+  maxTime:  0,
+  locked: false,
+
+  start(sysName) {
+    this.sys    = sysName;
+    this.type   = Math.floor(Math.random() * 5) + 1;
+    this.locked = false;
+    document.getElementById('rp-title').textContent = `${sysName} 修理`;
+    game.showScreen('repair-screen');
+    this.initGame();
+    this.startTimer();
+  },
+
+  startTimer() {
+    const times = diff.repairBaseTimes;
+    const idx = Math.min(S.repairLv - 1, times.length - 1);
+    this.maxTime  = times[idx] * S.upgrades.repair_time;
+    this.timeLeft = this.maxTime;
+    if (this.timer) clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      if (this.locked) return;
+      this.timeLeft = Math.max(0, this.timeLeft - .1);
+      const pct = this.timeLeft / this.maxTime * 100;
+      const fill = document.getElementById('timer-fill');
+      if (fill) {
+        fill.style.width = pct + '%';
+        fill.style.background = pct < 30 ? 'var(--danger)' : pct < 60 ? 'var(--accent)' : 'var(--accent)';
+      }
+      const lbl = document.getElementById('timer-label');
+      if (lbl) lbl.textContent = `残り ${this.timeLeft.toFixed(1)}s`;
+      if (this.timeLeft <= 0) this.end(false, 'タイムアップ');
+    }, 100);
+  },
+
+  stopTimer() { if (this.timer) { clearInterval(this.timer); this.timer = null; } },
+
+  end(ok, reason='') {
+    if (this.locked) return;
+    this.locked = true;
+    this.stopTimer();
+    game.showScreen('main-screen');
+    if (ok) {
+      Sound.play('success');
+      game.repairSuccess(this.sys);
+    } else {
+      Sound.play('fail');
+      game.repairFail(this.sys, reason);
+    }
+  },
+
+  initGame() {
+    const area = document.getElementById('game-play-area');
+    area.innerHTML = '';
+    const instr = document.getElementById('rp-instr');
+    switch(this.type) {
+      case 1: this.initSeq(area, instr);    break;
+      case 2: this.initWire(area, instr);   break;
+      case 3: this.initMath(area, instr);   break;
+      case 4: this.initMemory(area, instr); break;
+      case 5: this.initSwitch(area, instr); break;
+    }
+  },
+
+  // ---- 1. 順番押し ----
+  initSeq(area, instr) {
+    instr.textContent = '数字を小さい順にタップしてください';
+    const counts = [3, 5, 7, 9];
+    const count  = counts[Math.min(S.repairLv - 1, 3)];
+    const roman  = ['','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ'];
+    const useR   = S.repairLv >= 4;
+    const nums   = Array.from({length: count}, (_,i) => i + 1).sort(() => Math.random() - .5);
+
+    let next = 1;
+    const grid = document.createElement('div');
+    grid.className = 'seq-grid';
+
+    nums.forEach(n => {
+      const btn = document.createElement('button');
+      btn.className = 'seq-btn';
+      btn.textContent = useR ? roman[n] : n;
+      btn.dataset.val = n;
+      btn.onclick = () => {
+        if (this.locked) return;
+        Sound.play('click');
+        if (+btn.dataset.val === next) {
+          btn.classList.add('seq-done');
+          next++;
+          if (next > count) this.end(true);
+        } else {
+          this.end(false, '順番が違います');
+        }
+      };
+      grid.appendChild(btn);
+    });
+    area.appendChild(grid);
+  },
+
+  // ---- 2. 配線 ----
+  initWire(area, instr) {
+    instr.textContent = '同じ番号の端子をタップして接続してください';
+    const nMap  = [3, 4, 5, 5];
+    const n     = nMap[Math.min(S.repairLv - 1, 3)];
+    const COLORS= ['#ff4444','#44cc44','#00e0ff','#ffaa00','#cc44ff'];
+
+    const shuffle = arr => [...arr].sort(() => Math.random() - .5);
+    const lefts   = shuffle(Array.from({length:n},(_,i)=>i));
+    const rights  = shuffle(Array.from({length:n},(_,i)=>i));
+
+    const wrap  = document.createElement('div'); wrap.className = 'wire-wrap';
+    const lcol  = document.createElement('div'); lcol.className = 'wire-col';
+    const rcol  = document.createElement('div'); rcol.className = 'wire-col';
+    const svg   = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.className = 'wire-svg';
+
+    let sel = null; // { id, el }
+    let done = 0;
+    const self = this;
+
+    const makeNode = (id, side) => {
+      const el = document.createElement('div');
+      el.className = 'wire-node';
+      el.style.background = COLORS[id];
+      el.textContent = id + 1;
+      el.onclick = () => {
+        if (self.locked) return;
+        Sound.play('click');
+        if (!sel) {
+          sel = { id, el, side };
+          el.classList.add('selected');
+        } else if (sel.el === el) {
+          sel.el.classList.remove('selected');
+          sel = null;
+        } else if (sel.side === side) {
+          sel.el.classList.remove('selected');
+          sel = { id, el, side };
+          el.classList.add('selected');
+        } else {
+          sel.el.classList.remove('selected');
+          if (sel.id === id) {
+            // correct pair
+            const r1 = sel.el.getBoundingClientRect();
+            const r2 = el.getBoundingClientRect();
+            const sr = svg.getBoundingClientRect();
+            const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+            line.setAttribute('x1', r1.left + r1.width/2 - sr.left);
+            line.setAttribute('y1', r1.top  + r1.height/2 - sr.top);
+            line.setAttribute('x2', r2.left + r2.width/2 - sr.left);
+            line.setAttribute('y2', r2.top  + r2.height/2 - sr.top);
+            line.setAttribute('stroke', COLORS[id]);
+            line.setAttribute('stroke-width', '4');
+            svg.appendChild(line);
+            sel.el.classList.add('done');
+            el.classList.add('done');
+            sel = null;
+            done++;
+            if (done === n) self.end(true);
+          } else {
+            self.end(false, '配線ミス');
+          }
+        }
+      };
+      return el;
+    };
+
+    lefts.forEach(id  => lcol.appendChild(makeNode(id, 'left')));
+    rights.forEach(id => rcol.appendChild(makeNode(id, 'right')));
+
+    wrap.appendChild(lcol);
+    wrap.appendChild(svg);
+    wrap.appendChild(rcol);
+    area.appendChild(wrap);
+  },
+
+  // ---- 3. 算数 ----
+  initMath(area, instr) {
+    instr.textContent = '正しい答えを選んでください';
+    const lv = S.repairLv;
+    let q, ans;
+
+    const r = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+    if (lv === 1) {
+      const a=r(1,9), b=r(1,9); q=`${a} + ${b} = ?`; ans=a+b;
+    } else if (lv === 2) {
+      const a=r(10,80), b=r(10,80), op=Math.random()>.5?'+':'-';
+      const [x,y] = op==='-' ? (a>=b?[a,b]:[b,a]) : [a,b];
+      q=`${x} ${op} ${y} = ?`; ans= op==='+'? x+y : x-y;
+    } else if (lv === 3) {
+      const a=r(2,12), b=r(2,9); q=`${a} × ${b} = ?`; ans=a*b;
+    } else {
+      const a=r(2,5), b=r(2,5), c=r(2,5); q=`(${a} + ${b}) × ${c} = ?`; ans=(a+b)*c;
+    }
+
+    const qd = document.createElement('div'); qd.className='math-q'; qd.textContent=q;
+    area.appendChild(qd);
+
+    const opts = new Set([ans]);
+    while (opts.size < 4) { const d=Math.floor(Math.random()*10)-5; if(d&&ans+d>0) opts.add(ans+d); }
+    const grid = document.createElement('div'); grid.className='math-grid';
+    [...opts].sort(()=>Math.random()-.5).forEach(v => {
+      const b=document.createElement('button'); b.className='btn'; b.textContent=v;
+      b.onclick=()=>{ if(this.locked)return; Sound.play('click'); this.end(v===ans, '不正解'); };
+      grid.appendChild(b);
+    });
+    area.appendChild(grid);
+  },
+
+  // ---- 4. パターン記憶 ----
+  initMemory(area, instr) {
+    instr.textContent = '光ったマスを記憶して同じ場所をタップ';
+    const sides = [2,3,4,4];
+    const cnts  = [2,3,4,5];
+    const side  = sides[Math.min(S.repairLv-1,3)];
+    const cnt   = cnts[Math.min(S.repairLv-1,3)];
+    const total = side*side;
+
+    const grid = document.createElement('div');
+    grid.className = 'mem-grid';
+    grid.style.gridTemplateColumns = `repeat(${side},1fr)`;
+    grid.style.width  = '220px';
+    grid.style.height = '220px';
+
+    const tiles = [];
+    for (let i=0;i<total;i++) {
+      const d=document.createElement('div'); d.className='mem-tile'; tiles.push(d); grid.appendChild(d);
+    }
+    area.appendChild(grid);
+
+    const targets = [];
+    while (targets.length < cnt) { const x=Math.floor(Math.random()*total); if(!targets.includes(x)) targets.push(x); }
+
+    const self = this;
+    let answered = [];
+    let active = false;
+
+    // show pattern
+    setTimeout(()=>{
+      targets.forEach(i=>tiles[i].classList.add('mem-show'));
+      Sound.play('warn');
+      setTimeout(()=>{
+        targets.forEach(i=>tiles[i].classList.remove('mem-show'));
+        active = true;
+        tiles.forEach((t,i)=>{
+          t.onclick=()=>{
+            if(!active||self.locked) return;
+            Sound.play('click');
+            if (targets.includes(i)) {
+              t.classList.add('mem-ok');
+              if (!answered.includes(i)) answered.push(i);
+              if (answered.length === targets.length) { active=false; setTimeout(()=>self.end(true),250); }
+            } else {
+              t.classList.add('mem-ng');
+              active=false;
+              setTimeout(()=>self.end(false,'パターン不一致'),400);
+            }
+          };
+        });
+      }, 1200 + side * 200);
+    }, 600);
+  },
+
+  // ---- 5. スイッチ ----
+  initSwitch(area, instr) {
+    instr.textContent = 'ダイヤルをタップして目標の向きに合わせてください';
+    const nMap = [2,3,4,5];
+    const n    = nMap[Math.min(S.repairLv-1,3)];
+    const items = [];
+    const wrap  = document.createElement('div'); wrap.className='sw-wrap';
+
+    for (let i=0;i<n;i++) {
+      const targetIdx = Math.floor(Math.random()*4);
+      let curIdx; do { curIdx=Math.floor(Math.random()*4); } while(curIdx===targetIdx);
+
+      const item = document.createElement('div'); item.className='sw-item';
+      const label= document.createElement('div'); label.className='sw-target';
+      label.textContent = `目標: ${DIRECTIONS[targetIdx]}`;
+      const dial = document.createElement('div'); dial.className='dial';
+      dial.style.transform = `rotate(${curIdx*90}deg)`;
+
+      const state = { curIdx, targetIdx, dial };
+      items.push(state);
+
+      const self = this;
+      dial.onclick=()=>{
+        if(self.locked) return;
+        Sound.play('click');
+        state.curIdx=(state.curIdx+1)%4;
+        dial.style.transform=`rotate(${state.curIdx*90}deg)`;
+        dial.classList.toggle('match', state.curIdx===state.targetIdx);
+        if(items.every(s=>s.curIdx===s.targetIdx)) { setTimeout(()=>self.end(true),200); }
+      };
+      item.appendChild(label);
+      item.appendChild(dial);
+      wrap.appendChild(item);
+    }
+    area.appendChild(wrap);
+  },
+};
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('click', ()=>Sound.init(), {once:true});
+game.updateHiScoreDisplay();
+</script>
+</body>
+</html>

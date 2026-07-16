@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG v4 - 完成版</title>
+    <style>
+        body {
+            background-color: #202020;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        #game-container {
+            width: 640px;
+            max-width: 95%;
+            border: 4px outset #555;
+            background-color: #111;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* ヘッダー */
+        #header-info {
+            display: flex;
+            justify-content: space-between;
+            border: 2px solid #444;
+            background: #222;
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        /* メイン画面 */
+        #main-screen {
+            height: 200px;
+            border: 2px solid #fff;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .bg-battle { background: linear-gradient(#111 60%, #422 100%); }
+        .bg-town { background: linear-gradient(#111 60%, #224 100%); }
+        .bg-boss { background: linear-gradient(#311 50%, #600 100%); }
+
+        #sprite-area {
+            font-size: 80px;
+            text-align: center;
+        }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake {
+            0% { transform: translate(0, 0); } 20% { transform: translate(-6px, 6px); }
+            40% { transform: translate(6px, -6px); } 60% { transform: translate(-6px, 6px); }
+            80% { transform: translate(6px, -6px); } 100% { transform: translate(0, 0); }
+        }
+
+        /* ステータス */
+        #status-area {
+            border: 2px solid #fff;
+            background: #222;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            line-height: 1.4;
+        }
+
+        /* コマンドエリア */
+        #command-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            min-height: 100px;
+        }
+
+        button {
+            background: #333;
+            color: #fff;
+            border: 2px outset #777;
+            padding: 12px 8px;
+            font-family: inherit;
+            font-size: 15px;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.1s;
+        }
+        button:hover:not(:disabled) { background: #444; border-color: #999; }
+        button:active:not(:disabled) { border-style: inset; background: #222; }
+        button:disabled { opacity: 0.5; cursor: default; border-style: solid; }
+
+        /* メッセージログ */
+        #message-log {
+            height: 110px;
+            border: 2px solid #555;
+            background: #000;
+            padding: 8px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* 色定義 */
+        .yellow { color: #ffd700; } .red { color: #ff4444; }
+        .blue { color: #4488ff; } .green { color: #44ff44; }
+        .purple { color: #d044ff; } .orange { color: #ff8800; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="header-info">
+        <span>LV: <span id="val-lv" class="yellow">1</span></span>
+        <span>EXP: <span id="val-exp">0</span> / <span id="val-next">15</span></span>
+        <span>GOLD: <span id="val-gold" class="yellow">0</span> G</span>
+        <span>魔石: <span id="val-stone" class="purple">0</span> 個</span>
+    </div>
+
+    <div id="main-screen" class="bg-town">
+        <div id="sprite-area">🏰</div>
+    </div>
+
+    <div id="status-area">
+        <div>
+            <div>名前: 勇者</div>
+            <div>武器: <span id="val-weapon-name">ひのきのぼう</span> <span id="val-weapon-plus" class="blue"></span></div>
+        </div>
+        <div style="text-align: right;">
+            <div>HP: <span id="val-hp">30</span> / <span id="val-maxhp">30</span></div>
+            <div>攻撃力: <span id="val-total-atk">7</span></div>
+            <div>薬草: <span id="val-potion" class="green">3</span> 個</div>
+        </div>
+    </div>
+
+    <div id="command-area"></div>
+
+    <div id="message-log">
+        冒険をはじめよう！<br>まずは「冒険に出る」を選んで魔石を集めて武器を強化しよう。
+    </div>
+</div>
+
+<script>
+    // --- 設定データ ---
+    const GAME_STATE = { TOWN: 'town', BATTLE: 'battle', RESULT: 'result' };
+    let state = GAME_STATE.TOWN;
+
+    // 武器の進化段階
+    const WEAPON_TIERS = [
+        { name: "ひのきのぼう", baseAtk: 2 }, 
+        { name: "銅のつるぎ", baseAtk: 7 },   
+        { name: "鉄のやり", baseAtk: 15 },    
+        { name: "鋼のオノ", baseAtk: 25 },    
+        { name: "勇者のつるぎ", baseAtk: 40 } 
+    ];
+    const MAX_WEAPON_PLUS = 5; // +5まで強化可能、次は進化
+
+    const hero = {
+        name: "勇者",
+        lv: 1, exp: 0, nextExp: 15,
+        hp: 30, maxHp: 30,
+        baseAtk: 5,
+        gold: 0, stones: 0,
+        potions: 3,
+        weaponTier: 0,     
+        weaponPlus: 0,     
+        weaponBonusAtk: 0  
+    };
+
+    let currentEnemy = null;
+    let bossDefeated = { lv10: false, lv15: false };
+
+    // 敵データ
+    const enemies = [
+        { name: "スライム", sprite: "💧", hp: 12, atk: 5, exp: 3, gold: 10, dropRate: 0.15 },
+        { name: "ゴブリン", sprite: "👺", hp: 18, atk: 8, exp: 5, gold: 15, dropRate: 0.2 },
+        { name: "おおがらす", sprite: "🦅", hp: 25, atk: 12, exp: 8, gold: 20, dropRate: 0.25 },
+        { name: "オーク", sprite: "🐷", hp: 40, atk: 18, exp: 15, gold: 50, dropRate: 0.3 },
+        { name: "スケルトン", sprite: "💀", hp: 100, atk: 25, exp: 40, gold: 65, dropRate: 0.35 },
+        { name: "ゴーレム", sprite: "🗿", hp: 200, atk: 35, exp: 60, gold: 100, dropRate: 0.4 },
+        { name: "ドラゴン", sprite: "🐉", hp: 350, atk: 50, exp: 90, gold: 200, dropRate: 0.5 },
+        // 中ボス
+        { name: "キメラ", sprite: "🦅🦑", hp: 350, atk: 45, exp: 300, gold: 500, dropRate: 1.0, isBoss: true, bossLv: 10 },
+        { name: "キラーピエロ", sprite: "🤡🔪", hp: 1050, atk: 80, exp: 800, gold: 1500, dropRate: 1.0, isBoss: true, bossLv: 15 },
+        // 終末ボス
+        { name: "まおう", sprite: "👑😈👑", hp: 4000, atk: 110, exp: 999, gold: 5000, dropRate: 1.0 }
+    ];
+
+    // --- 初期化 ---
+    function init() {
+        renderTown();
+        updateStatus();
+    }
+
+    // --- 計算: 合計攻撃力 ---
+    function getTotalAttack() {
+        const currentWeaponBase = WEAPON_TIERS[hero.weaponTier].baseAtk;
+        return hero.baseAtk + currentWeaponBase + hero.weaponBonusAtk + hero.weaponPlus;
+    }
+
+    // --- 描画: 街 ---
+    function renderTown() {
+        state = GAME_STATE.TOWN;
+        document.getElementById('main-screen').className = 'bg-town';
+        document.getElementById('sprite-area').innerHTML = '🏰<div style="font-size:18px; margin-top:10px;">王国の拠点</div>';
+        
+        // 鍛冶屋ボタンのテキスト制御
+        let forgeText = "🔨 鍛冶屋 (強化)";
+        // 最大強化(MAX_WEAPON_PLUS) かつ 最後のティアではない場合、進化表示
+        if (hero.weaponPlus >= MAX_WEAPON_PLUS && hero.weaponTier < WEAPON_TIERS.length - 1) {
+            forgeText = "🔨 鍛冶屋 (進化↗️)";
+        }
+
+        document.getElementById('command-area').innerHTML = `
+            <button onclick="startBattle()">⚔️ 冒険に出る</button>
+            <button onclick="restInn()">🛏️ 宿屋 (500 G)</button>
+            <button onclick="upgradeWeapon()" id="btn-forge">${forgeText}</button>
+            <button onclick="boostAttack()">💪 力の解放 (魔石100)</button>
+        `;
+        log("街に戻ってきた。");
+        updateStatus();
+    }
+
+    // --- 処理: 戦闘開始 ---
+    function startBattle() {
+        state = GAME_STATE.BATTLE;
+        let bgClass = 'bg-battle';
+        let enemyData = null;
+
+        // 中ボス判定
+        if (hero.lv >= 10 && !bossDefeated.lv10) {
+            enemyData = enemies.find(e => e.isBoss && e.bossLv === 10);
+            bgClass = 'bg-boss';
+            log('<span class="red">強敵の気配がする...！</span>');
+        } else if (hero.lv >= 15 && !bossDefeated.lv15) {
+            enemyData = enemies.find(e => e.isBoss && e.bossLv === 15);
+            bgClass = 'bg-boss';
+            log('<span class="red">とてつもない邪気を感じる...！</span>');
+        } else {
+            // 通常敵選出
+            let maxIdx = 2; 
+            if (hero.lv >= 3) maxIdx = 3;
+            if (hero.lv >= 6) maxIdx = 4;
+            if (hero.lv >= 10) maxIdx = 5;
+            if (hero.lv >= 14) maxIdx = 6;
+            if (hero.lv >= 18) maxIdx = 7;
+            if (hero.lv >= 20) enemyData = enemies[9]; // まおう 
+
+            if (!enemyData) {
+                const normalEnemies = enemies.filter(e => !e.isBoss);
+                const idx = Math.floor(Math.random() * Math.min(maxIdx, normalEnemies.length));
+                enemyData = normalEnemies[idx];
+            }
+        }
+
+        document.getElementById('main-screen').className = bgClass;
+        currentEnemy = { 
+            ...enemyData, 
+            maxHp: enemyData.hp,
+            hp: enemyData.hp + Math.floor(Math.random() * hero.lv),
+        };
+
+        const sprite = document.getElementById('sprite-area');
+        sprite.innerHTML = currentEnemy.sprite;
+        sprite.classList.remove('shake');
+        
+        document.getElementById('command-area').innerHTML = `
+            <button onclick="actionAttack()">⚔️ たたかう</button>
+            <button onclick="actionHeal()">✨ かいふく (${hero.potions})</button>
+            <button onclick="actionRun()">💨 にげる</button>
+            <button disabled>---</button>
+        `;
+
+        log(`<strong>${currentEnemy.name}</strong> が あらわれた！`);
+    }
+
+    // --- 戦闘: 攻撃 ---
+    function actionAttack() {
+        if(state !== GAME_STATE.BATTLE) return;
+
+        const totalAtk = getTotalAttack();
+        let dmg = Math.floor(totalAtk * (0.8 + Math.random() * 0.4));
+        
+        let critMsg = "";
+        if (Math.random() < 0.15) { 
+            dmg = Math.floor(dmg * 1.5);
+            critMsg = '<br><span class="red">会心の一撃！</span>';
+        }
+
+        currentEnemy.hp -= dmg;
+        log(`${hero.name}の攻撃！${critMsg} ${currentEnemy.name}に <strong>${dmg}</strong> のダメージ！`);
+        
+        const sprite = document.getElementById('sprite-area');
+        sprite.classList.remove('shake');
+        void sprite.offsetWidth; 
+        sprite.classList.add('shake');
+
+        if (currentEnemy.hp <= 0) {
+            winBattle();
+        } else {
+            toggleCommands(false);
+            setTimeout(enemyTurn, 800);
+        }
+    }
+
+    // --- 戦闘: 回復 ---
+    function actionHeal() {
+        if(state !== GAME_STATE.BATTLE) return;
+        
+        if (hero.potions <= 0) {
+            log("薬草がもうない！");
+            return;
+        }
+
+        const healAmt = Math.floor(hero.maxHp * 0.5) + 10;
+        hero.hp = Math.min(hero.maxHp, hero.hp + healAmt);
+        hero.potions--;
+        
+        log(`${hero.name}は薬草を使った！ HPが <span class="green">${healAmt}</span> 回復した。(残り ${hero.potions}個)`);
+        updateStatus();
+        
+        // ボタンの表示更新
+        const btns = document.querySelectorAll('#command-area button');
+        if(btns[1]) btns[1].innerText = `✨ かいふく (${hero.potions})`;
+
+        toggleCommands(false);
+        setTimeout(enemyTurn, 800);
+    }
+
+    // --- 戦闘: 逃げる ---
+    function actionRun() {
+        if(state !== GAME_STATE.BATTLE) return;
+        if(currentEnemy.isBoss) {
+            log("ボスからは逃げられない！");
+            return;
+        }
+
+        // 逃走成功率 40%
+        if (Math.random() < 0.4) {
+            log(`${hero.name}は逃げ出した！`);
+            toggleCommands(false);
+            setTimeout(() => { renderTown(); }, 800);
+        } else {
+            log(`${hero.name}は逃げ出せなかった...`);
+            toggleCommands(false);
+            setTimeout(enemyTurn, 800);
+        }
+    }
+
+    // --- 敵ターン ---
+    function enemyTurn() {
+        if(state !== GAME_STATE.BATTLE || currentEnemy.hp <= 0) return;
+
+        let dmg = Math.max(1, Math.floor(currentEnemy.atk - (hero.lv * 0.8) + Math.random() * 5));
+        hero.hp -= dmg;
+        log(`${currentEnemy.name}の攻撃！ <span class="red">${dmg}</span> のダメージを受けた！`);
+        updateStatus();
+
+        if (hero.hp <= 0) {
+            hero.hp = 0;
+            updateStatus();
+            log(`<span class="red" style="font-size:1.2em;">${hero.name}は倒れた...</span>`);
+            document.getElementById('command-area').innerHTML = `<button onclick="location.reload()">最初からやり直す</button>`;
+        } else {
+            toggleCommands(true);
+        }
+    }
+
+    // --- 戦闘勝利 ---
+    function winBattle() {
+        state = GAME_STATE.RESULT;
+        document.getElementById('sprite-area').innerHTML = "⚔️";
+        log(`<span class="yellow">${currentEnemy.name}を倒した！</span>`);
+
+        // ゲームクリア判定
+        if (currentEnemy.name === "まおう") {
+             document.getElementById('sprite-area').innerHTML = "🌅";
+             log(`<br><span class="orange" style="font-size:1.5em">世界に平和が訪れた...</span><br>`);
+             log(`勇者の伝説はここから始まる。`);
+             log(`Thank you for playing!`);
+             
+             document.getElementById('command-area').innerHTML = `
+                <div style="grid-column: span 2; text-align: center; padding: 10px; color: yellow; font-size: 1.2em;">
+                    🎉 GAME CLEAR! 🎉
+                </div>
+                <button onclick="location.reload()">最初から遊ぶ</button>
+             `;
+             return;
+        }
+
+        if (currentEnemy.isBoss) {
+            if (currentEnemy.bossLv === 10) bossDefeated.lv10 = true;
+            if (currentEnemy.bossLv === 15) bossDefeated.lv15 = true;
+            log('<span class="orange">強敵を打ち倒した証明を得た！</span>');
+        }
+
+        let getExp = currentEnemy.exp;
+        let getGold = currentEnemy.gold + Math.floor(Math.random() * 5);
+        let dropMsg = "";
+        if (Math.random() < currentEnemy.dropRate) {
+            hero.stones++;
+            dropMsg += `<br>💎 <span class="purple">強化の魔石</span> を手に入れた！`;
+        }
+        // 薬草ドロップ (30%)
+        if (Math.random() < 0.3) {
+            hero.potions++;
+            dropMsg += `<br>🌿 <span class="green">薬草</span> を手に入れた！`;
+        }
+
+        hero.gold += getGold;
+        hero.exp += getExp;
+        log(`経験値 ${getExp}、${getGold} G を獲得！${dropMsg}`);
+
+        checkLevelUp();
+        updateStatus();
+
+        document.getElementById('command-area').innerHTML = `
+            <button onclick="startBattle()">⚔️ 次の戦闘へ</button>
+            <button onclick="renderTown()">🏰 街へ戻る</button>
+        `;
+    }
+
+    // --- レベルアップ ---
+    function checkLevelUp() {
+        if (hero.exp >= hero.nextExp) {
+            hero.lv++;
+            hero.exp -= hero.nextExp;
+            hero.nextExp = Math.floor(hero.nextExp * 1.4);
+            hero.maxHp += 10;
+            hero.baseAtk += 3;
+            hero.hp = hero.maxHp;
+            log(`<span class="yellow" style="font-size:1.2em;">レベルが ${hero.lv} に上がった！(HP/攻撃力大幅UP!)</span>`);
+        }
+    }
+
+    // --- 街: 宿屋 ---
+    function restInn() {
+        const cost = 500;
+        // HP満タンでも攻撃力UPのために泊まれるように制限を解除
+        // if (hero.hp >= hero.maxHp) { log("HPは満タンだ。"); return; }
+        
+        if (hero.gold >= cost) {
+            hero.gold -= cost;
+            hero.hp = hero.maxHp;
+            hero.baseAtk += 2; // 攻撃力UP
+            updateStatus();
+            log(`宿屋に泊まった(${cost}G)。HPが全回復し、<span class="red">攻撃力が 2 上がった！</span>`);
+        } else { log(`ゴールドが足りない！(${cost} G必要)`); }
+    }
+
+    // --- 街: 鍛冶屋 (修正済み) ---
+    function upgradeWeapon() {
+        if (hero.weaponTier === WEAPON_TIERS.length - 1 && hero.weaponPlus >= MAX_WEAPON_PLUS) {
+            log("これ以上、この武器は強化できない！(最強状態)");
+            return;
+        }
+
+        const costGold = (hero.weaponTier + 1) * (hero.weaponPlus + 1) * 80;
+        const costStone = 1;
+
+        let isEvolving = (hero.weaponPlus >= MAX_WEAPON_PLUS);
+        let actionName = isEvolving ? "進化" : "強化";
+
+        log(`【武器${actionName}】必要: ${costGold} G + 魔石 1個`);
+
+        if (hero.gold >= costGold && hero.stones >= costStone) {
+            hero.gold -= costGold;
+            hero.stones -= costStone;
+
+            if (isEvolving) {
+                // 進化
+                hero.weaponTier++;
+                hero.weaponPlus = 0;
+                
+                const bonus = Math.floor(Math.random() * 3) + 3; // +3~5
+                hero.weaponBonusAtk += bonus;
+                
+                // ★修正箇所: 変数名を newWeapon に修正
+                const newWeapon = WEAPON_TIERS[hero.weaponTier];
+                log(`✨武器が進化！<span class="orange">【${newWeapon.name}】</span>になった！(ボーナス攻撃力 +${bonus})`);
+                
+                document.getElementById('btn-forge').innerText = "🔨 鍛冶屋 (強化)";
+            } else {
+                // 強化
+                hero.weaponPlus++;
+                log(`🔨 カンカンカン... 武器が <span class="blue">+${hero.weaponPlus}</span> に強化された！`);
+                if(hero.weaponPlus >= MAX_WEAPON_PLUS && hero.weaponTier < WEAPON_TIERS.length - 1) {
+                    document.getElementById('btn-forge').innerText = "🔨 鍛冶屋 (進化!)";
+                }
+            }
+            updateStatus();
+        } else {
+            if (hero.gold < costGold) log(`Gが足りない！(必要: ${costGold} G)`);
+            if (hero.stones < costStone) log(`魔石が足りない！`);
+        }
+    }
+
+    // --- 街: 力の解放 ---
+    function boostAttack() {
+        const cost = 100;
+        if (hero.stones >= cost) {
+            hero.stones -= cost;
+            hero.baseAtk += 10;
+            updateStatus();
+            log(`魔石を${cost}個捧げ、力が湧いてきた！ <span class="red">攻撃力が 10 上がった！</span>`);
+        } else {
+            log(`魔石が足りない！(必要: ${cost} 個)`);
+        }
+    }
+
+    // --- UI更新 ---
+    function updateStatus() {
+        document.getElementById('val-lv').innerText = hero.lv;
+        document.getElementById('val-exp').innerText = hero.exp;
+        document.getElementById('val-next').innerText = hero.nextExp;
+        document.getElementById('val-gold').innerText = hero.gold;
+        document.getElementById('val-stone').innerText = hero.stones;
+        document.getElementById('val-hp').innerText = hero.hp;
+        document.getElementById('val-maxhp').innerText = hero.maxHp;
+        document.getElementById('val-potion').innerText = hero.potions;
+        
+        const currentWeapon = WEAPON_TIERS[hero.weaponTier];
+        document.getElementById('val-weapon-name').innerText = currentWeapon.name;
+        document.getElementById('val-weapon-plus').innerText = hero.weaponPlus > 0 ? `+${hero.weaponPlus}` : "";
+        document.getElementById('val-total-atk').innerText = getTotalAttack();
+    }
+
+    function toggleCommands(enable) {
+        const btns = document.querySelectorAll('#command-area button');
+        btns.forEach(btn => btn.disabled = !enable);
+    }
+
+    function log(html) {
+        const div = document.getElementById('message-log');
+        div.innerHTML += `<div>${html}</div>`;
+        div.scrollTop = div.scrollHeight;
+    }
+
+    init();
+
+</script>
+</body>
+</html>

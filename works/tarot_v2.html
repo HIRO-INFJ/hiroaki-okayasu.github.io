@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>極・タロット＆姓名波動占い</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0d0a12;
+      --bg-card: #16101f;
+      --gold: #c9a227;
+      --gold-light: #e8d48a;
+      --purple: #4a2c6a;
+      --purple-light: #7b5a9e;
+      --text: #e8e0f0;
+      --text-muted: #9a8fb0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Serif JP', 'Cormorant Garamond', serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 星空背景 */
+    .stars {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(74, 44, 106, 0.4), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(201, 162, 39, 0.08), transparent),
+        var(--bg-deep);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .stars::before,
+    .stars::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.3), transparent),
+        radial-gradient(2px 2px at 50px 160px, rgba(255, 255, 255, 0.35), transparent),
+        radial-gradient(2px 2px at 90px 40px, rgba(255, 255, 255, 0.25), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.3), transparent);
+      background-size: 200px 200px;
+      animation: twinkle 8s ease-in-out infinite;
+      opacity: 0.8;
+    }
+
+    .stars::after {
+      background-position: 100px 50px;
+      animation-delay: -4s;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 600;
+      color: var(--gold-light);
+      letter-spacing: 0.15em;
+      text-shadow: 0 0 30px rgba(201, 162, 39, 0.3);
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      letter-spacing: 0.2em;
+    }
+
+    /* API設定・個人情報入力エリア */
+    .setup-section {
+      width: 100%;
+      max-width: 560px;
+      background: rgba(22, 16, 31, 0.6);
+      border: 1px solid rgba(123, 90, 158, 0.3);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: left;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--gold-light);
+      letter-spacing: 0.1em;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="password"] {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--purple-light);
+      background: rgba(13, 10, 18, 0.9);
+      color: var(--text);
+      border-radius: 6px;
+      width: 100%;
+      transition: all 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 8px rgba(201, 162, 39, 0.3);
+    }
+
+    .genre-section {
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 1.5rem;
+    }
+
+    .genre-section h2 {
+      font-size: 0.85rem;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.75rem;
+      text-align: center;
+    }
+
+    .genre-choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .genre-btn {
+      font-family: inherit;
+      font-size: 0.8rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--purple-light);
+      background: rgba(74, 44, 106, 0.25);
+      color: var(--text);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .genre-btn:hover {
+      background: rgba(74, 44, 106, 0.5);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+
+    .genre-btn.active {
+      background: var(--purple);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+
+    .spread-choices {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .spread-btn {
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.65rem 1.4rem;
+      border: 1px solid var(--purple-light);
+      background: rgba(74, 44, 106, 0.3);
+      color: var(--text);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .spread-btn:hover {
+      background: rgba(74, 44, 106, 0.6);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+
+    .spread-btn.active {
+      background: var(--purple);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+
+    .draw-area {
+      width: 100%;
+      min-height: 240px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .card-slot {
+      width: 120px;
+      height: 200px;
+      perspective: 1000px;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-back {
+      background: linear-gradient(145deg, var(--purple) 0%, var(--bg-card) 100%);
+      border: 2px solid var(--gold);
+    }
+
+    .card-back::before {
+      content: '✦';
+      font-size: 2.5rem;
+      color: var(--gold);
+      opacity: 0.7;
+    }
+
+    .card-front {
+      background: linear-gradient(160deg, var(--bg-card) 0%, #1e1528 100%);
+      border: 1px solid rgba(201, 162, 39, 0.4);
+      transform: rotateY(180deg);
+      text-align: center;
+    }
+
+    .card-name-ja {
+      font-size: 0.85rem;
+      color: var(--gold-light);
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    .card-name-en {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-meaning {
+      font-size: 0.65rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .card.reversed .card-front {
+      transform: rotateY(180deg) rotate(180deg);
+    }
+
+    .card.reversed .card-name-ja::after {
+      content: '（逆）';
+      display: inline-block;
+      font-size: 0.7rem;
+      color: #ff6b6b;
+      margin-left: 0.25rem;
+    }
+
+    .draw-btn {
+      font-family: inherit;
+      font-size: 1.1rem;
+      padding: 1rem 2.5rem;
+      border: 2px solid var(--gold);
+      background: transparent;
+      color: var(--gold-light);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 0.15em;
+    }
+
+    .draw-btn:hover {
+      background: rgba(201, 162, 39, 0.15);
+      box-shadow: 0 0 24px rgba(201, 162, 39, 0.2);
+    }
+
+    .draw-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* 鑑定結果セクション */
+    .result-section {
+      margin-top: 2rem;
+      padding: 2rem;
+      background: rgba(22, 16, 31, 0.9);
+      border-radius: 12px;
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+
+    .result-section h3 {
+      font-size: 1.1rem;
+      color: var(--gold);
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid rgba(201, 162, 39, 0.2);
+      padding-bottom: 0.25rem;
+    }
+
+    .result-section h3:first-of-type {
+      margin-top: 0;
+    }
+
+    .analysis-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      background: var(--purple);
+      color: var(--gold-light);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+      border: 1px solid rgba(201, 162, 39, 0.3);
+    }
+
+    .ai-response h1, 
+    .ai-response h2, 
+    .ai-response h3 {
+    color: var(--gold);
+    margin-top: 1.2rem;
+    }
+
+    .ai-response p {
+    margin: 0.6rem 0;
+    }
+
+    .ai-response strong {
+    color: var(--gold-light);
+    }
+
+    .loading-spinner {
+      display: none;
+      color: var(--gold-light);
+      font-size: 0.95rem;
+      margin: 1.5rem 0;
+      letter-spacing: 0.1em;
+    }
+
+    .loading-spinner::after {
+      content: ' ...';
+      animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60% { content: '...'; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stars"></div>
+  <div class="container">
+    <header>
+      <h1>極・宿命＆タロット鑑定</h1>
+      <p class="subtitle">Tarot & Name Astrology Powered by Gemini</p>
+    </header>
+
+    <div class="setup-section">
+      <div class="form-group">
+        <label for="apiKey">Gemini API Key</label>
+        <input type="password" id="apiKey" placeholder="AI鑑定に必須です。AIキーを入力してください">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="lastName">姓 (Last Name)</label>
+          <input type="text" id="lastName" placeholder="例: 山田">
+        </div>
+        <div class="form-group">
+          <label for="firstName">名 (First Name)</label>
+          <input type="text" id="firstName" placeholder="例: 太郎">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="birthdate">生年月日</label>
+        <input type="date" id="birthdate" value="1995-01-01">
+      </div>
+    </div>
+
+    <div class="genre-section">
+      <h2>どのような運命を紐解きますか？</h2>
+      <div class="genre-choices" id="genreChoices">
+        <button type="button" class="genre-btn active" data-genre="総合">総合運</button>
+        <button type="button" class="genre-btn" data-genre="恋愛">恋愛・ソウルメイト</button>
+        <button type="button" class="genre-btn" data-genre="仕事・キャリア">仕事・適職・転機</button>
+        <button type="button" class="genre-btn" data-genre="金運">財運・投資・豊かさ</button>
+        <button type="button" class="genre-btn" data-genre="健康">心身のバイオリズム</button>
+        <button type="button" class="genre-btn" data-genre="人間関係">人間関係・縁の深さ</button>
+        <button type="button" class="genre-btn" data-genre="スピリチュアル・成長">スピリチュアル・魂の使命</button>
+      </div>
+    </div>
+
+    <div class="spread-choices">
+      <button type="button" class="spread-btn active" data-spread="1">1枚引き (ワンオラクル)</button>
+      <button type="button" class="spread-btn" data-spread="3">3枚スプレッド (過去・現在・未来)</button>
+    </div>
+
+    <div class="draw-area" id="drawArea"></div>
+
+    <button type="button" class="draw-btn" id="drawBtn">運命のカードを引く</button>
+    <div class="loading-spinner" id="loadingSpinner">星々の記憶を読み解き、運命を紡いでいます</div>
+
+    <div class="result-section" id="resultSection" style="display: none;">
+      <div id="personalAnalysis"></div>
+      <h3>✦ 星々とカードの神託</h3>
+      <div class="ai-response" id="aiResponse"></div>
+    </div>
+  </div>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+　<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <script>
+    // メジャーアルカナデータ (続きから節制まで完全補完)
+    const MAJOR_ARCANA = [
+      { id: 0, nameJa: '愚者', nameEn: 'The Fool', meaning: '新しい始まり、自由、冒険心。純粋な一歩を踏み出すとき。', meaningRev: '軽率、リスクの無視。よく考えてから動くこと。' },
+      { id: 1, nameJa: '魔術師', nameEn: 'The Magician', meaning: '創造力、意志の力、スキル。すでに準備は整っている。', meaningRev: '未熟、ごまかし。本質に目を向ける。' },
+      { id: 2, nameJa: '女教皇', nameEn: 'The High Priestess', meaning: '直感、神秘、内なる知恵。静かに答えを待つ時期。', meaningRev: '秘密、表面的な判断。内面と向き合う。' },
+      { id: 3, nameJa: '女帝', nameEn: 'The Empress', meaning: '豊かさ、慈愛、創造、実り。自然の流れに身を任せる。', meaningRev: '停滞、依存。自立とバランスを意識。' },
+      { id: 4, nameJa: '皇帝', nameEn: 'The Emperor', meaning: '権威、秩序、リーダーシップ。構造とルールが味方になる。', meaningRev: '支配的、硬直的。柔軟さを取り戻す。' },
+      { id: 5, nameJa: '教皇', nameEn: 'The Hierophant', meaning: '伝統、教え、精神的な導き。信頼できる知恵を求める。', meaningRev: '型破り、既存の枠を疑う。自分なりの答えを。' },
+      { id: 6, nameJa: '恋人', nameEn: 'The Lovers', meaning: '選択、調和、愛、絆。心が揺れ動く重要な決断。', meaningRev: '不調和、優柔不断。本当に大切なものを選ぶ。' },
+      { id: 7, nameJa: '戦車', nameEn: 'The Chariot', meaning: '勝利、決意、前進。意志の力で障害を乗り越える。', meaningRev: '方向性の喪失、焦り。一度立ち止まって見直す。' },
+      { id: 8, nameJa: '力', nameEn: 'Strength', meaning: '内なる強さ、忍耐、優しさで困難に立ち向かう。', meaningRev: '自信の欠如、自己不信。自分を信じる一歩を。' },
+      { id: 9, nameJa: '隠者', nameEn: 'The Hermit', meaning: '内省、探求、孤独の中の気づき。灯りを手に歩む。', meaningRev: '孤立、見えない答え。誰かに相談してみる。' },
+      { id: 10, nameJa: '運命の輪', nameEn: 'Wheel of Fortune', meaning: '変化、サイクル、運命の流れ。巡り合わせを受け入れる。', meaningRev: '抵抗、不運感。流れに乗るタイミングを待つ。' },
+      { id: 11, nameJa: '正義', nameEn: 'Justice', meaning: '公平、真実、因果。バランスの取れた判断が求められる。', meaningRev: '不公平感、責任の所在。事実を冷静に見る。' },
+      { id: 12, nameJa: '吊るされた男', nameEn: 'The Hanged Man', meaning: '視点の転換、手放し、待つこと。逆の立場から見直す。', meaningRev: '停滞、無駄な我慢。手放す勇気を。' },
+      { id: 13, nameJa: '死神', nameEn: 'Death', meaning: '終わりと再生、変容。古いものを手放し、新しい段階へ。', meaningRev: '変化への抵抗。終わりは始まりでもある。' },
+      { id: 14, nameJa: '節制', nameEn: 'Temperance', meaning: '調和、忍耐、純化、バランス。急がず、混ぜ合わせ、整える。', meaningRev: '不均衡、焦り、消耗。中庸を心がける。' },
+      { id: 15, nameJa: '悪魔', nameEn: 'The Devil', meaning: '束縛、誘惑、物質主義。依存からの脱却と執着の自覚。', meaningRev: '解放、気づき、新たなスタートへの準備。' },
+      { id: 16, nameJa: '塔', nameEn: 'The Tower', meaning: '突然の劇的な変化、破壊、啓示。古い土台の崩壊と再生。', meaningRev: '崩壊の回避、長引く緊迫。根本的見直しの必要性。' },
+      { id: 17, nameJa: '星', nameEn: 'The Star', meaning: '希望、インスピレーション、癒やし、将来へのビジョン。', meaningRev: '失望、疑念、悲観。自分を信じる心の回復が鍵。' },
+      { id: 18, nameJa: '月', nameEn: 'The Moon', meaning: '不安、幻想、直感、潜在意識。不透明な状況の中に光を見出す。', meaningRev: '不安の解消、霧が晴れる。直感を信じて進む。' },
+      { id: 19, nameJa: '太陽', nameEn: 'The Sun', meaning: '活力、祝福、成功、純粋な喜び。全てが明るく照らされる。', meaningRev: '一時的な陰り、エネルギー低下、慢心。' },
+      { id: 20, nameJa: '審判', nameEn: 'Judgement', meaning: '覚醒、復活、決断、過去の総括。内なる呼び声に従う。', meaningRev: 'ためらい、決定の先送り。過去への囚われ。' },
+      { id: 21, nameJa: '世界', nameEn: 'The World', meaning: '完成、調和、旅の終わり、究極の統合。素晴らしい終着点。', meaningRev: '未完成、不完全燃焼、停滞。あと一歩の努力。' }
+    ];
+
+    let selectedGenre = '総合';
+    let selectedSpread = '1';
+    let activeCards = [];
+
+    // UI操作ロジック
+    document.getElementById('genreChoices').addEventListener('click', (e) => {
+      if (e.target.classList.contains('genre-btn')) {
+        document.querySelectorAll('.genre-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        selectedGenre = e.target.dataset.genre;
+      }
+    });
+
+    document.querySelectorAll('.spread-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.spread-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        selectedSpread = e.target.dataset.spread;
+        resetDrawArea();
+      });
+    });
+
+    function resetDrawArea() {
+      const drawArea = document.getElementById('drawArea');
+      drawArea.innerHTML = '';
+      const count = parseInt(selectedSpread);
+      for (let i = 0; i < count; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'card-slot';
+        slot.innerHTML = `
+          <div class="card" id="card-${i}">
+            <div class="card-face card-back"></div>
+            <div class="card-face card-front" id="card-front-${i}"></div>
+          </div>
+        `;
+        drawArea.appendChild(slot);
+      }
+    }
+
+    // 簡易姓名波動・運命数算出ロジック
+    function calculateAstroParameters(lastName, firstName, birthdateStr) {
+      const combinedName = (lastName + firstName).trim();
+      let nameValue = 0;
+      for (let i = 0; i < combinedName.length; i++) {
+        nameValue += combinedName.charCodeAt(i);
+      }
+      const nameDestinyNum = (nameValue % 9) + 1; // 1-9の姓名波動数
+
+      let birthNum = 0;
+      if (birthdateStr) {
+        const digits = birthdateStr.replace(/-/g, '');
+        for (let char of digits) {
+          birthNum += parseInt(char);
+        }
+        while (birthNum > 9) {
+          birthNum = String(birthNum).split('').reduce((sum, d) => sum + parseInt(d), 0);
+        }
+      } else {
+        birthNum = 5; // デフォルト
+      }
+
+      return { nameDestinyNum, birthNum };
+    }
+
+    // カードを引くメインアクション
+    document.getElementById('drawBtn').addEventListener('click', async () => {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      if (!apiKey) {
+        alert('占い結果を生成するには Gemini API Key が必要です。');
+        return;
+      }
+
+      document.getElementById('drawBtn').disabled = true;
+      document.getElementById('loadingSpinner').style.display = 'block';
+      document.getElementById('resultSection').style.display = 'none';
+
+      const count = parseInt(selectedSpread);
+      const shuffled = [...MAJOR_ARCANA].sort(() => 0.5 - Math.random());
+      activeCards = [];
+
+      // スプレッド定義
+      const positions = count === 1 ? ['現在の状況'] : ['過去の因果', '現在の課題', '未来の可能性'];
+
+      for (let i = 0; i < count; i++) {
+        const cardData = shuffled[i];
+        const isReversed = Math.random() < 0.3; // 30%の確率で逆位置
+        activeCards.push({ ...cardData, isReversed, position: positions[i] });
+
+        // カードをめくるアニメーションと表示
+        const cardElement = document.getElementById(`card-${i}`);
+        const cardFront = document.getElementById(`card-front-${i}`);
+
+        if (isReversed) cardElement.classList.add('reversed');
+        
+        cardFront.innerHTML = `
+          <div class="card-name-ja">${cardData.nameJa}</div>
+          <div class="card-name-en">${cardData.nameEn}</div>
+          <div class="card-meaning">${isReversed ? cardData.meaningRev : cardData.meaning}</div>
+        `;
+        
+        cardElement.classList.add('flipped');
+      }
+
+      // 姓名波動パラメータ算出
+      const lName = document.getElementById('lastName').value || '匿名';
+      const fName = document.getElementById('firstName').value || '希望者';
+      const bDate = document.getElementById('birthdate').value;
+      const params = calculateAstroParameters(lName, fName, bDate);
+
+      // 個人宿命情報の画面出力
+      document.getElementById('personalAnalysis').innerHTML = `
+        <p><span class="analysis-badge">姓名波動数</span> ${params.nameDestinyNum}（言霊・音霊から導く独自の宿命パターン）</p>
+        <p><span class="analysis-badge">ソウルナンバー</span> ${params.birthNum}（生年月日が示すあなたの本質と周期）</p>
+      `;
+
+      // APIによる鑑定生成
+      await generateAIAstrology(apiKey, lName + fName, bDate, params, activeCards);
+    });
+
+    // Gemini API 呼び出し
+    async function generateAIAstrology(apiKey, name, birthdate, params, cards) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+      // カード情報の文字列化
+      const cardDescription = cards.map(c => 
+        `位置「${c.position}」: 【${c.nameJa}】(${c.isReversed ? '逆位置' : '正位置'}) - 意味: ${c.isReversed ? c.meaningRev : c.meaning}`
+      ).join('\n');
+
+      // AIに唯一無二の結果を書き下させるためのプロンプト
+      const prompt = `
+あなたは世界最高峰の占星術師であり、タロット・姓名言霊・数秘術を融合させた神秘の鑑定士です。
+以下の相談者データと展開されたタロットカードに基づいて、この人だけの特別で本格的な個人鑑定書を作成してください。
+
+【相談者データ】
+- お名前: ${name} (姓名波動数: ${params.nameDestinyNum})
+- 生年月日: ${birthdate} (ソウルナンバー: ${params.birthNum})
+- 今回占うテーマ(ジャンル): ${selectedGenre}
+
+【展開されたタロットカード】
+${cardDescription}
+
+【鑑定書の構成指示（必ず守ってください）】
+1. **姓名と言霊・生年月日の統合解析**
+   姓名波動数とソウルナンバーを掛け合わせ、相談者の持つ唯一無二の資質、または「現時点でまとっているオーラや運気の波」を、本気で驚くような深みと説得力を持って記述してください。
+2. **タロットカードが告げる真実と深層心理**
+   展開されたカード(${selectedSpread}枚)と、相談者の波動がどのように共鳴しているかを読み解いてください。正・逆位置の意味を踏まえ、ジャンル(テーマ)に深く踏み込んだ具体的なアドバイスを記述してください。
+3. **今月および来月のバイオリズム（統計・予測）**
+   姓名波動のバイオリズムサイクルとタロットカードが示す未来から、今月・来月の運勢の具体的な変化を予測し、行動指針を明確に示してください。
+   (「今月の注意点とチャンス」「来月の運気のピーク」など、統計的かつドラマチックに表現してください)
+
+口調：神秘的で思慮深く、相談者の心に深く寄り添い、力を与える美しい日本語の文体（敬体）。
+`;
+
+        try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('API呼び出しでエラーが発生しました。キーが正しいか確認してください。');
+        }
+
+        const data = await response.json();
+        const aiText = data.candidates[0].content.parts[0].text;
+
+        // Markdown → HTML
+        const markdownHtml = marked.parse(aiText);
+
+        // XSS対策で安全なHTMLに
+        const html = DOMPurify.sanitize(markdownHtml);
+
+        document.getElementById('aiResponse').innerHTML = html;
+        document.getElementById('resultSection').style.display = 'block';
+        } catch (error) {
+        alert('エラーが発生しました: ' + error.message);
+        } finally {
+        document.getElementById('loadingSpinner').style.display = 'none';
+        document.getElementById('drawBtn').disabled = false;
+        }
+    }
+
+    // 初回読み込み時のカードスロット初期化
+    resetDrawArea();
+  </script>
+
+</body>
+
+</html>
