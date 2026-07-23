@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guitar Progression Looper Pro - Essential Patterns</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary-color: #38bdf8;
+      --primary-hover: #0284c7;
+      --accent-color: #10b981;
+      --active-bar-bg: #1e3a5f;
+      --active-bar-border: #38bdf8;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: var(--primary-color);
+      letter-spacing: 1px;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+
+    .panel {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    /* コントロール */
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
+    select, input {
+      padding: 10px;
+      background-color: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    select:focus, input:focus { border-color: var(--primary-color); }
+
+    .btn {
+      background-color: var(--primary-color);
+      color: #0f172a;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background-color: var(--primary-hover); color: #fff; }
+
+    .btn-toggle {
+      background-color: #334155;
+      color: var(--text-main);
+    }
+
+    .btn-toggle.active {
+      background-color: var(--accent-color);
+      color: #fff;
+    }
+
+    /* タイムライン */
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pattern-title-info {
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .loop-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+
+    .bar-card {
+      background-color: #0f172a;
+      border: 2px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .bar-card:hover { border-color: var(--text-sub); }
+
+    .bar-card.selected {
+      border-color: var(--primary-color);
+      background-color: #1e293b;
+    }
+
+    .bar-card.active-loop {
+      background-color: var(--active-bar-bg);
+      border-color: var(--active-bar-border);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
+      transform: scale(1.05);
+    }
+
+    .bar-number {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+      position: absolute;
+      top: 4px;
+      left: 6px;
+    }
+
+    .chord-name {
+      font-size: 1.15rem;
+      font-weight: bold;
+      margin-top: 4px;
+      color: var(--primary-color);
+      word-break: break-word;
+    }
+
+    .degree-name {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    /* 詳細パネル */
+    .detail-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .diagram-area {
+      flex: 0 0 200px;
+      text-align: center;
+    }
+
+    canvas {
+      background-color: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+    }
+
+    .info-area {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .info-area h3 {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+
+    .meta-item {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .meta-label {
+      font-weight: 600;
+      color: var(--text-sub);
+      display: inline-block;
+      width: 130px;
+    }
+
+    .tab-text {
+      font-family: monospace;
+      background: #0f172a;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--card-border);
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    .voicing-select {
+      margin-top: 4px;
+      padding: 4px 8px;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Guitar Progression Looper Pro</h1>
+    <p>名曲・定番パターン厳選！滑らかな指の流れを鍛えるコードループ</p>
+  </header>
+
+  <!-- 1. 設定パネル -->
+  <div class="panel">
+    <div class="control-grid">
+      <div class="form-group">
+        <label for="genre">ジャンル / スタイル</label>
+        <select id="genre">
+          <option value="ALL" selected>🎲 ランダム (全ジャンルから)</option>
+          <option value="JAZZ">🎷 Jazz / Modern Jazz</option>
+          <option value="NEOSOUL">☕ Neo Soul / Chill Lo-Fi</option>
+          <option value="CITYPOP">🌃 City Pop / J-Pop 黄金律</option>
+          <option value="ROCK">🎸 Rock / Pop Standard</option>
+          <option value="BLUES">🍸 Jazzy Blues</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="key">キー</label>
+        <select id="key">
+          <option value="RANDOM" selected>🎲 ランダム (キー指定なし)</option>
+          <option value="C">C Major / A minor</option>
+          <option value="F">F Major / D minor</option>
+          <option value="Bb">B♭ Major / G minor</option>
+          <option value="Eb">E♭ Major / C minor</option>
+          <option value="G">G Major / E minor</option>
+          <option value="D">D Major / B minor</option>
+          <option value="A">A Major / F# minor</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="bpm">BPM (テンポ)</label>
+        <input type="number" id="bpm" value="84" min="40" max="240">
+      </div>
+
+      <button id="btn-generate" class="btn">✨ 次の定番進行をセット</button>
+    </div>
+  </div>
+
+  <!-- 2. タイムライン ＆ ループ再生 -->
+  <div class="panel">
+    <div class="timeline-header">
+      <div class="loop-controls">
+        <button id="btn-global-loop" class="btn btn-toggle">▶ 自動進行ループ</button>
+        <button id="btn-stop" class="btn btn-toggle">⏹ 停止</button>
+      </div>
+      <div id="pattern-title" class="pattern-title-info">進行パターン: --</div>
+      <div id="status-text" style="font-size: 0.85rem; color: var(--text-sub); font-weight: bold;">
+        停止中
+      </div>
+    </div>
+
+    <div id="timeline" class="timeline"></div>
+  </div>
+
+  <!-- 3. コード詳細 & 自動ダイアグラム -->
+  <div class="panel">
+    <div class="detail-container">
+      <div class="diagram-area">
+        <canvas id="chord-diagram" width="180" height="210"></canvas>
+      </div>
+      <div class="info-area">
+        <div class="info-header">
+          <h3 id="detail-chord-name">--</h3>
+          <div>
+            <label style="font-size:0.8rem; color:var(--text-sub);">フォーム切替: </label>
+            <select id="voicing-select" class="voicing-select">
+              <option value="0">フォーム 1</option>
+            </select>
+          </div>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">押さえ方 (6→1弦):</span>
+          <span id="detail-frets" class="tab-text">x, x, x, x, x, x</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">推奨カポタスト:</span>
+          <span id="detail-capo" style="color:var(--primary-color); font-weight:bold;">--</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">ボイシング特徴:</span>
+          <span id="detail-desc">--</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">推奨スケール:</span>
+          <span id="detail-scale">--</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">音楽理論的役割:</span>
+          <span id="detail-role">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ==========================================================================
+     音階・コード・理論ライブラリ
+     ========================================================================== */
+  const CHROMATIC = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const FLAT_CONVERT = { "Db":"C#", "Eb":"D#", "Gb":"F#", "Ab":"G#", "Bb":"A#" };
+
+  const DEGREE_OFFSETS = {
+    "I": 0, "bII": 1, "II": 2, "ii": 2, "bIII": 3, "III": 4, "iii": 4,
+    "IV": 5, "iv": 5, "#IV": 6, "bV": 6, "V": 7, "v": 7, "bVI": 8, "VI": 9, "vi": 9,
+    "bVII": 10, "VII": 11, "vii": 11
+  };
+
+  /* ==========================================================================
+     プロ厳選：ギタリストが本当に弾く「定番進行データベース」
+     ========================================================================== */
+  const PRESET_PROGRESSIONS = [
+    // --- JAZZ ---
+    {
+      genre: "JAZZ",
+      name: "王道ジャズ 2-5-1-6 (ドロップ2ボイシング系)",
+      degrees: ["ii9", "V13", "Imaj9", "VI7b9"]
+    },
+    {
+      genre: "JAZZ",
+      name: "裏コードを活用した半音下降 2-5-1 (SubV7)",
+      degrees: ["ii9", "bII7", "Imaj9", "VI7alt"]
+    },
+    {
+      genre: "JAZZ",
+      name: "マイナー2-5-1 (哀愁のジャズ定番)",
+      degrees: ["iim7b5", "V7b9", "im9", "VI7b9"]
+    },
+    {
+      genre: "JAZZ",
+      name: "3-6-2-5 循環進行 (ジャズスタンダード超高頻度)",
+      degrees: ["iii7", "VI7alt", "ii9", "V13"]
+    },
+
+    // --- NEO SOUL / LO-FI ---
+    {
+      genre: "NEOSOUL",
+      name: "Neo Soul 王道 Floating (4-3-2-1 下降スタイル)",
+      degrees: ["IVmaj9", "iii7", "ii11", "Imaj9"]
+    },
+    {
+      genre: "NEOSOUL",
+      name: "チル系メロウ進行 (Just the Two of Us感)",
+      degrees: ["IVmaj9", "III7alt", "vi9", "I7"]
+    },
+    {
+      genre: "NEOSOUL",
+      name: "11thテンション多用 Neo-Soul (浮遊感ループ)",
+      degrees: ["i11", "iv11", "bVII9", "Imaj9"]
+    },
+
+    // --- CITY POP / J-POP ---
+    {
+      genre: "CITYPOP",
+      name: "王道丸サ進行 / カノン進行発展系 (4-3-2-1)",
+      degrees: ["IVmaj7", "III7", "vi7", "I7"]
+    },
+    {
+      genre: "CITYPOP",
+      name: "王道王道進行 (4-5-3-6 都会的エモさ)",
+      degrees: ["IVmaj7", "V7", "iii7", "vi7"]
+    },
+    {
+      genre: "CITYPOP",
+      name: "サブドミナントマイナーを活用した切ない進行",
+      degrees: ["Imaj7", "IVmaj7", "iv7", "Imaj7"]
+    },
+
+    // --- ROCK / POP ---
+    {
+      genre: "ROCK",
+      name: "王道ポップ・ロック黄金進行 (1-5-6-4)",
+      degrees: ["I", "V", "vi", "IV"]
+    },
+    {
+      genre: "ROCK",
+      name: "小悪魔的・エモーショナルロック進行 (6-4-1-5)",
+      degrees: ["vi", "IV", "I", "V"]
+    },
+    {
+      genre: "ROCK",
+      name: "50s ロックンロール / パワー進行 (1-6-4-5)",
+      degrees: ["I", "vi", "IV", "V"]
+    },
+
+    // --- BLUES ---
+    {
+      genre: "BLUES",
+      name: "Jazzy Blues 12小節短縮ターンアラウンド",
+      degrees: ["I9", "IV9", "I9", "VI7#9", "ii9", "V7alt", "I9", "V7b9"]
+    }
+  ];
+
+  /* ==========================================================================
+     ギタリスト用コードデータベース [6弦, 5弦, 4弦, 3弦, 2弦, 1弦]
+     ========================================================================== */
+  const CHORD_DATABASE = {
+    // --- C 系 ---
+    "C": [
+      { frets: ['x', 3, 2, 0, 1, 0], desc: "ローコード C" },
+      { frets: [8, 10, 10, 9, 8, 8], desc: "6弦ルート E型" }
+    ],
+    "Cmaj7": [
+      { frets: ['x', 3, 5, 4, 5, 3], desc: "5弦ルート Amaj7型" },
+      { frets: [8, 'x', 9, 9, 8, 'x'], desc: "6弦ルート Drop2" }
+    ],
+    "Cmaj9": [
+      { frets: ['x', 3, 2, 4, 3, 'x'], desc: "5弦ルート テンション(9) スムーズ" },
+      { frets: [8, 'x', 9, 9, 8, 10], desc: "6弦ルート Top 9th" }
+    ],
+    "Cm7": [
+      { frets: ['x', 3, 5, 3, 4, 3], desc: "5弦ルート Am7型" },
+      { frets: [8, 'x', 8, 8, 8, 'x'], desc: "6弦ルート Drop2" }
+    ],
+    "Cm9": [
+      { frets: ['x', 3, 1, 3, 3, 'x'], desc: "5弦ルート Modern Cm9" },
+      { frets: [8, 'x', 8, 8, 8, 10], desc: "6弦ルート Cm9" }
+    ],
+    "Cm11": [
+      { frets: [8, 'x', 8, 8, 6, 'x'], desc: "Neo-Soul 11th" }
+    ],
+    "C7": [
+      { frets: ['x', 3, 2, 3, 1, 0], desc: "ローコード C7" },
+      { frets: [8, 'x', 8, 9, 8, 'x'], desc: "6弦ルート C7" }
+    ],
+    "C9": [
+      { frets: ['x', 3, 2, 3, 3, 3], desc: "ファンク/ジャズ定番 C9" }
+    ],
+    "C13": [
+      { frets: [8, 'x', 8, 9, 10, 'x'], desc: "ジャズ定番 13th" }
+    ],
+    "C7b9": [
+      { frets: ['x', 3, 2, 3, 2, 'x'], desc: "オルタード系 b9th" },
+      { frets: [8, 'x', 8, 9, 8, 9], desc: "6弦ルート C7(b9)" }
+    ],
+    "C7alt": [
+      { frets: ['x', 3, 2, 3, 4, 4], desc: "C7(#9, b13) オルタード" }
+    ],
+    "Cm7b5": [
+      { frets: ['x', 3, 4, 3, 4, 'x'], desc: "5弦ルート ハーフディミニッシュ" }
+    ],
+
+    // --- D 系 ---
+    "Dm7": [
+      { frets: ['x', 5, 7, 5, 6, 5], desc: "5弦ルート Am7型" },
+      { frets: [10, 'x', 10, 10, 10, 'x'], desc: "6弦ルート Dm7" }
+    ],
+    "Dm9": [
+      { frets: ['x', 5, 3, 5, 5, 'x'], desc: "ジャズ定番 Dm9 (指移動が最高にスムーズ)" },
+      { frets: [10, 'x', 10, 10, 10, 12], desc: "6弦ルート Dm9" }
+    ],
+    "Dm11": [
+      { frets: [10, 'x', 10, 10, 8, 'x'], desc: "Neo-Soul Dm11" }
+    ],
+    "D7": [
+      { frets: ['x', 5, 4, 5, 3, 'x'], desc: "5弦ルート D7" }
+    ],
+    "D9": [
+      { frets: ['x', 5, 4, 5, 5, 5], desc: "5弦ルート D9" }
+    ],
+    "D7b9": [
+      { frets: ['x', 5, 4, 5, 4, 'x'], desc: "5弦ルート D7(b9)" }
+    ],
+    "D7alt": [
+      { frets: ['x', 5, 4, 5, 6, 6], desc: "D7(#9, b13) オルタード" }
+    ],
+    "Dm7b5": [
+      { frets: ['x', 5, 6, 5, 6, 'x'], desc: "5弦ルート Dm7b5" }
+    ],
+    "Dmaj7": [
+      { frets: ['x', 5, 7, 6, 7, 5], desc: "5弦ルート Dmaj7" }
+    ],
+
+    // --- Eb 系 (裏コード等) ---
+    "Eb7": [
+      { frets: ['x', 6, 5, 6, 4, 'x'], desc: "5弦ルート Eb7 (G7の裏コード)" }
+    ],
+    "Ebmaj7": [
+      { frets: ['x', 6, 8, 7, 8, 6], desc: "5弦ルート Ebmaj7" }
+    ],
+
+    // --- E 系 ---
+    "Em7": [
+      { frets: [0, 2, 0, 0, 0, 0], desc: "オープン Em7" },
+      { frets: [7, 'x', 7, 7, 7, 'x'], desc: "5弦7F Em7" }
+    ],
+    "Em9": [
+      { frets: ['x', 7, 5, 7, 7, 'x'], desc: "5弦ルート Em9" }
+    ],
+    "E7": [
+      { frets: [0, 2, 0, 1, 0, 0], desc: "オープン E7" },
+      { frets: ['x', 7, 6, 7, 5, 'x'], desc: "5弦ルート E7" }
+    ],
+    "E7b9": [
+      { frets: ['x', 7, 6, 7, 6, 'x'], desc: "5弦ルート E7(b9)" }
+    ],
+    "E7alt": [
+      { frets: ['x', 7, 6, 7, 8, 8], desc: "E7alt オルタード" }
+    ],
+
+    // --- F 系 ---
+    "Fmaj7": [
+      { frets: [1, 'x', 2, 2, 1, 'x'], desc: "6弦ルート Fmaj7" },
+      { frets: ['x', 8, 10, 9, 10, 8], desc: "5弦ルート Fmaj7" }
+    ],
+    "Fmaj9": [
+      { frets: [1, 'x', 2, 0, 1, 'x'], desc: "6弦ルート Fmaj9" },
+      { frets: ['x', 8, 7, 9, 8, 'x'], desc: "5弦ルート Fmaj9" }
+    ],
+    "F7": [
+      { frets: [1, 'x', 1, 2, 1, 'x'], desc: "6弦ルート F7" }
+    ],
+    "Fm7": [
+      { frets: [1, 'x', 1, 1, 1, 'x'], desc: "6弦ルート Fm7" }
+    ],
+    "F#m7b5": [
+      { frets: [2, 'x', 2, 2, 1, 'x'], desc: "6弦ルート F#m7b5" }
+    ],
+
+    // --- G 系 ---
+    "G": [
+      { frets: [3, 2, 0, 0, 0, 3], desc: "ローコード G" }
+    ],
+    "Gmaj7": [
+      { frets: [3, 'x', 4, 4, 3, 'x'], desc: "6弦ルート Gmaj7" }
+    ],
+    "G7": [
+      { frets: [3, 'x', 3, 4, 3, 'x'], desc: "6弦ルート G7" }
+    ],
+    "G9": [
+      { frets: ['x', 10, 9, 10, 10, 10], desc: "5弦ルート G9" }
+    ],
+    "G13": [
+      { frets: [3, 'x', 3, 4, 5, 'x'], desc: "6弦ルート G13 (指移動が超スムーズ)" }
+    ],
+    "G7b9": [
+      { frets: [3, 'x', 3, 4, 3, 4], desc: "6弦ルート G7(b9)" }
+    ],
+    "G7alt": [
+      { frets: [3, 'x', 3, 4, 4, 3], desc: "G7alt オルタード" }
+    ],
+    "Gm7": [
+      { frets: [3, 'x', 3, 3, 3, 'x'], desc: "6弦ルート Gm7" }
+    ],
+
+    // --- Ab / G# 系 ---
+    "Ab7": [
+      { frets: [4, 'x', 4, 5, 4, 'x'], desc: "6弦ルート Ab7" }
+    ],
+    "Db7": [
+      { frets: ['x', 4, 3, 4, 2, 'x'], desc: "5弦ルート Db7 (裏コード)" }
+    ],
+
+    // --- A 系 ---
+    "Am": [
+      { frets: ['x', 0, 2, 2, 1, 0], desc: "ローコード Am" }
+    ],
+    "Am7": [
+      { frets: ['x', 0, 2, 0, 1, 0], desc: "ローコード Am7" },
+      { frets: [5, 'x', 5, 5, 5, 'x'], desc: "6弦ルート Am7" }
+    ],
+    "Am9": [
+      { frets: [5, 'x', 5, 5, 5, 7], desc: "6弦ルート Am9" }
+    ],
+    "Am11": [
+      { frets: [5, 'x', 5, 5, 3, 'x'], desc: "Neo-Soul Am11" }
+    ],
+    "A7": [
+      { frets: ['x', 0, 2, 0, 2, 0], desc: "ローコード A7" },
+      { frets: [5, 'x', 5, 6, 5, 'x'], desc: "6弦ルート A7" }
+    ],
+    "A7b9": [
+      { frets: ['x', 0, 2, 3, 2, 3], desc: "ローコード A7(b9)" },
+      { frets: [5, 'x', 5, 6, 5, 6], desc: "6弦ルート A7(b9)" }
+    ],
+    "A7alt": [
+      { frets: [5, 'x', 5, 6, 6, 5], desc: "6弦ルート A7alt" }
+    ],
+
+    // --- Bb 系 ---
+    "Bbmaj7": [
+      { frets: ['x', 1, 3, 2, 3, 1], desc: "5弦ルート Bbmaj7" },
+      { frets: [6, 'x', 7, 7, 6, 'x'], desc: "6弦ルート Bbmaj7" }
+    ],
+    "Bb7": [
+      { frets: ['x', 1, 3, 1, 3, 1], desc: "5弦ルート Bb7" }
+    ],
+    "Bbm7": [
+      { frets: ['x', 1, 3, 1, 2, 1], desc: "5弦ルート Bbm7" }
+    ],
+
+    // --- B 系 ---
+    "Bm7b5": [
+      { frets: ['x', 2, 3, 2, 3, 'x'], desc: "5弦ルート Bm7b5" }
+    ]
+  };
+
+  /* ==========================================================================
+     アプリ状態 & タイマー
+     ========================================================================== */
+  let appState = {
+    selectedGenre: "ALL",
+    selectedKey: "RANDOM",
+    currentKey: "C",
+    bpm: 84,
+    currentPatternName: "",
+    bars: [],
+    selectedBarIndex: 1,
+    currentLoopIndex: 1,
+    isPlaying: false,
+    selectedVoicingIdx: 0
+  };
+
+  let loopTimer = null;
+
+  /* ==========================================================================
+     DOM要素
+     ========================================================================== */
+  const elGenre = document.getElementById('genre');
+  const elKey = document.getElementById('key');
+  const elBpm = document.getElementById('bpm');
+  const elBtnGenerate = document.getElementById('btn-generate');
+  const elTimeline = document.getElementById('timeline');
+
+  const elBtnGlobalLoop = document.getElementById('btn-global-loop');
+  const elBtnStop = document.getElementById('btn-stop');
+  const elStatusText = document.getElementById('status-text');
+  const elPatternTitle = document.getElementById('pattern-title');
+
+  const elDetailChordName = document.getElementById('detail-chord-name');
+  const elDetailFrets = document.getElementById('detail-frets');
+  const elDetailCapo = document.getElementById('detail-capo');
+  const elDetailDesc = document.getElementById('detail-desc');
+  const elDetailScale = document.getElementById('detail-scale');
+  const elDetailRole = document.getElementById('detail-role');
+  const elVoicingSelect = document.getElementById('voicing-select');
+  const canvasDiagram = document.getElementById('chord-diagram');
+
+  /* ==========================================================================
+     初期化
+     ========================================================================== */
+  window.addEventListener('DOMContentLoaded', () => {
+    generateProgression();
+    setupEventListeners();
+  });
+
+  function setupEventListeners() {
+    elBtnGenerate.addEventListener('click', generateProgression);
+
+    elBtnGlobalLoop.addEventListener('click', () => {
+      appState.isPlaying = true;
+      startLoopTimer();
+    });
+
+    elBtnStop.addEventListener('click', () => {
+      appState.isPlaying = false;
+      stopLoopTimer();
+      renderTimeline();
+    });
+
+    elBpm.addEventListener('change', () => {
+      appState.bpm = Math.max(40, Math.min(240, parseInt(elBpm.value) || 84));
+      if (appState.isPlaying) startLoopTimer();
+    });
+
+    elVoicingSelect.addEventListener('change', (e) => {
+      appState.selectedVoicingIdx = parseInt(e.target.value) || 0;
+      updateDetailPanel();
+    });
+  }
+
+  /* ==========================================================================
+     定番進行の計算エンジン
+     ========================================================================== */
+  function getRootNote(keyStr, degreeStr) {
+    let cleanKey = FLAT_CONVERT[keyStr] || keyStr;
+    let keyIdx = CHROMATIC.indexOf(cleanKey);
+    if (keyIdx === -1) keyIdx = 0;
+
+    let degMatch = degreeStr.match(/^(b[I|V|i|v]+|#[I|V|i|v]+|[I|V|i|v]+)/);
+    let degHeader = degMatch ? degMatch[0] : "I";
+    
+    let offset = DEGREE_OFFSETS[degHeader] !== undefined ? DEGREE_OFFSETS[degHeader] : 0;
+    let rootIdx = (keyIdx + offset) % 12;
+    return CHROMATIC[rootIdx];
+  }
+
+  function degreeToChordName(keyStr, degreeStr) {
+    let root = getRootNote(keyStr, degreeStr);
+    
+    let suffix = "";
+    if (degreeStr.includes("m7b5") || degreeStr.includes("ø")) suffix = "m7b5";
+    else if (degreeStr.includes("7alt")) suffix = "7alt";
+    else if (degreeStr.includes("7b9")) suffix = "7b9";
+    else if (degreeStr.includes("7#9")) suffix = "7#9";
+    else if (degreeStr.includes("maj9")) suffix = "maj9";
+    else if (degreeStr.includes("maj7")) suffix = "maj7";
+    else if (degreeStr.includes("11")) {
+      suffix = (degreeStr.startsWith("i") || degreeStr.startsWith("vi") || degreeStr.startsWith("ii") || degreeStr.startsWith("iii") || degreeStr.startsWith("iv")) ? "m11" : "11";
+    }
+    else if (degreeStr.includes("13")) suffix = "13";
+    else if (degreeStr.includes("9")) {
+      suffix = (degreeStr.startsWith("i") || degreeStr.startsWith("vi") || degreeStr.startsWith("ii") || degreeStr.startsWith("iii") || degreeStr.startsWith("iv")) ? "m9" : "9";
+    }
+    else if (degreeStr.includes("7")) {
+      suffix = (degreeStr.startsWith("i") || degreeStr.startsWith("vi") || degreeStr.startsWith("ii") || degreeStr.startsWith("iii") || degreeStr.startsWith("iv")) ? "m7" : "7";
+    }
+    else if (degreeStr === degreeStr.toLowerCase()) suffix = "m";
+
+    return root + suffix;
+  }
+
+  function generateProgression() {
+    appState.selectedGenre = elGenre.value;
+    appState.selectedKey = elKey.value;
+    appState.bpm = parseInt(elBpm.value) || 84;
+
+    // 1. 進行パターンの選定
+    let pool = PRESET_PROGRESSIONS;
+    if (appState.selectedGenre !== "ALL") {
+      pool = PRESET_PROGRESSIONS.filter(p => p.genre === appState.selectedGenre);
+    }
+    let chosenPattern = pool[Math.floor(Math.random() * pool.length)];
+
+    // 2. キーの決定
+    const keysList = ["C", "F", "Bb", "Eb", "G", "D", "A"];
+    if (appState.selectedKey === "RANDOM") {
+      appState.currentKey = keysList[Math.floor(Math.random() * keysList.length)];
+    } else {
+      appState.currentKey = appState.selectedKey;
+    }
+
+    appState.currentPatternName = `${chosenPattern.name} (Key: ${appState.currentKey})`;
+
+    // 3. 小節データの構築
+    appState.bars = chosenPattern.degrees.map((deg, idx) => ({
+      index: idx + 1,
+      degree: deg,
+      chord: degreeToChordName(appState.currentKey, deg)
+    }));
+
+    appState.selectedBarIndex = 1;
+    appState.currentLoopIndex = 1;
+    appState.selectedVoicingIdx = 0;
+
+    renderTimeline();
+    updateDetailPanel();
+    if (appState.isPlaying) startLoopTimer();
+  }
+
+  /* ==========================================================================
+     UI描画
+     ========================================================================== */
+  function renderTimeline() {
+    elPatternTitle.textContent = appState.currentPatternName;
+    elTimeline.innerHTML = '';
+
+    appState.bars.forEach(bar => {
+      const card = document.createElement('div');
+      card.className = 'bar-card';
+
+      if (bar.index === appState.selectedBarIndex) card.classList.add('selected');
+      if (appState.isPlaying && bar.index === appState.currentLoopIndex) {
+        card.classList.add('active-loop');
+      }
+
+      card.innerHTML = `
+        <span class="bar-number">${bar.index}</span>
+        <div class="chord-name">${bar.chord}</div>
+        <div class="degree-name">${bar.degree}</div>
+      `;
+
+      card.addEventListener('click', () => {
+        appState.selectedBarIndex = bar.index;
+        appState.currentLoopIndex = bar.index;
+        appState.selectedVoicingIdx = 0;
+        renderTimeline();
+        updateDetailPanel();
+      });
+
+      elTimeline.appendChild(card);
+    });
+
+    updateStatusText();
+  }
+
+  function updateDetailPanel() {
+    const currentBar = appState.bars.find(b => b.index === appState.selectedBarIndex);
+    if (!currentBar) return;
+
+    const chordName = currentBar.chord;
+    let forms = CHORD_DATABASE[chordName] || [ generateGenericBarreForm(chordName) ];
+
+    elVoicingSelect.innerHTML = forms.map((f, i) => `<option value="${i}">フォーム ${i+1}</option>`).join('');
+    if (appState.selectedVoicingIdx >= forms.length) appState.selectedVoicingIdx = 0;
+    elVoicingSelect.value = appState.selectedVoicingIdx;
+
+    const currentForm = forms[appState.selectedVoicingIdx];
+
+    elDetailChordName.textContent = `${chordName} (${currentBar.degree})`;
+    elDetailFrets.textContent = currentForm.frets.join(', ');
+    elDetailDesc.textContent = currentForm.desc || "標準ボイシング";
+    elDetailScale.textContent = getRecommendedScale(currentBar.degree, chordName);
+    elDetailRole.textContent = getHarmonicRole(currentBar.degree);
+    elDetailCapo.textContent = getCapoSuggestion(appState.currentKey);
+
+    drawChordDiagram(currentForm.frets);
+  }
+
+  function getRecommendedScale(deg, chord) {
+    let cleanRoot = chord.replace(/(maj9|maj7|m11|m9|m7b5|m7|7alt|7b9|7#9|13|9|7)/, '');
+    
+    if (deg.includes("alt")) return `${cleanRoot} Altered Scale`;
+    if (deg.includes("7b9") || deg.includes("7#9")) return `${cleanRoot} HW Diminished / Altered`;
+    if (deg.includes("bII7")) return `${cleanRoot} Lydian Dominant (裏コード用)`;
+    if (deg.includes("13") || deg.includes("9") || deg.includes("7")) return `${cleanRoot} Mixolydian`;
+    if (deg.includes("m7b5")) return `${cleanRoot} Locrian #2`;
+    if (deg.includes("11") || deg.includes("m9") || deg.startsWith("ii")) return `${cleanRoot} Dorian`;
+    if (deg.includes("maj9") || deg.includes("maj7")) return `${cleanRoot} Major / Lydian`;
+    return `${cleanRoot} Major / Minor Pentatonic`;
+  }
+
+  function getHarmonicRole(deg) {
+    if (deg.includes("bII7")) return "裏コード (SubV7) - スムーズな半音下降";
+    if (deg.includes("alt") || deg.includes("b9")) return "オルタードドミナント - 緊張と強烈な解決感";
+    if (deg.startsWith("I") || deg.startsWith("vi")) return "トニック - 安定感・着地";
+    if (deg.startsWith("IV") || deg.startsWith("ii")) return "サブドミナント - 展開・浮遊感";
+    if (deg.startsWith("V") || deg.startsWith("vii")) return "ドミナント - 緊張・次に繋げる力";
+    return "経過コード / 定番展開部";
+  }
+
+  function getCapoSuggestion(key) {
+    const capoMap = { "Eb": "Capo: 1 (Dフォーム)", "F": "Capo: 3 (Dフォーム)", "Bb": "Capo: 3 (Gフォーム)" };
+    return capoMap[key] || "Capo: 0 (No Capo / ノーマル)";
+  }
+
+  function generateGenericBarreForm(chordName) {
+    let match = chordName.match(/^([A-G][#b]?)(.*)$/);
+    if (!match) return { frets: ['x', 0, 2, 2, 1, 0], desc: "標準コード" };
+
+    let root = match[1];
+    let type = match[2];
+    let cleanRoot = FLAT_CONVERT[root] || root;
+    let rootIdx = CHROMATIC.indexOf(cleanRoot);
+    if (rootIdx === -1) rootIdx = 0;
+
+    let fret6 = (rootIdx - CHROMATIC.indexOf("E") + 12) % 12;
+    if (fret6 === 0) fret6 = 12;
+
+    if (type.includes("m7b5")) return { frets: [fret6, 'x', fret6, fret6, fret6-1, 'x'], desc: `6弦${fret6}F (m7b5)` };
+    if (type.includes("m")) return { frets: [fret6, 'x', fret6, fret6, fret6, 'x'], desc: `6弦${fret6}F (マイナー7th)` };
+    if (type.includes("maj")) return { frets: [fret6, 'x', fret6+1, fret6+1, fret6, 'x'], desc: `6弦${fret6}F (メジャー7th)` };
+
+    return { frets: [fret6, 'x', fret6, fret6+1, fret6, 'x'], desc: `6弦${fret6}F (ドミナント7th)` };
+  }
+
+  function updateStatusText() {
+    elBtnGlobalLoop.classList.toggle('active', appState.isPlaying);
+
+    if (appState.isPlaying) {
+      elStatusText.textContent = `▶ ループ進行中 (${appState.currentLoopIndex} / ${appState.bars.length} 小節)`;
+    } else {
+      elStatusText.textContent = `停止中 (選択小節: ${appState.selectedBarIndex})`;
+    }
+  }
+
+  /* ==========================================================================
+     タイマー（テンポに同期した視覚的切り替え）
+     ========================================================================== */
+  function startLoopTimer() {
+    stopLoopTimer();
+    const intervalMs = (60 / appState.bpm) * 4 * 1000;
+
+    updateCurrentStep();
+
+    loopTimer = setInterval(() => {
+      appState.currentLoopIndex = (appState.currentLoopIndex % appState.bars.length) + 1;
+      appState.selectedBarIndex = appState.currentLoopIndex;
+      updateCurrentStep();
+    }, intervalMs);
+  }
+
+  function updateCurrentStep() {
+    renderTimeline();
+    updateDetailPanel();
+  }
+
+  function stopLoopTimer() {
+    if (loopTimer) {
+      clearInterval(loopTimer);
+      loopTimer = null;
+    }
+  }
+
+  /* ==========================================================================
+     ダイアグラム描画 (Canvas)
+     ========================================================================== */
+  function drawChordDiagram(frets) {
+    const ctx = canvasDiagram.getContext('2d');
+    const width = canvasDiagram.width;
+    const height = canvasDiagram.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const paddingX = 35;
+    const paddingTop = 40;
+    const paddingBottom = 20;
+    const numStrings = 6;
+    const numFrets = 4;
+
+    const boardWidth = width - (paddingX * 2);
+    const boardHeight = height - paddingTop - paddingBottom;
+    const stringSpacing = boardWidth / (numStrings - 1);
+    const fretSpacing = boardHeight / numFrets;
+
+    const numericFrets = frets.filter(f => typeof f === 'number' && f > 0);
+    const minFret = numericFrets.length > 0 ? Math.min(...numericFrets) : 1;
+    const baseFret = minFret > 2 ? minFret : 1;
+
+    if (baseFret === 1) {
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = '#f8fafc';
+      ctx.beginPath();
+      ctx.moveTo(paddingX, paddingTop);
+      ctx.lineTo(paddingX + boardWidth, paddingTop);
+      ctx.stroke();
+    } else {
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillStyle = '#38bdf8';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${baseFret}F`, paddingX - 8, paddingTop + 14);
+    }
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#475569';
+    for (let i = (baseFret === 1 ? 1 : 0); i <= numFrets; i++) {
+      const y = paddingTop + (i * fretSpacing);
+      ctx.beginPath();
+      ctx.moveTo(paddingX, y);
+      ctx.lineTo(paddingX + boardWidth, y);
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < numStrings; i++) {
+      const x = paddingX + (i * stringSpacing);
+      ctx.beginPath();
+      ctx.moveTo(x, paddingTop);
+      ctx.lineTo(x, paddingTop + boardHeight);
+      ctx.lineWidth = 1 + (numStrings - 1 - i) * 0.5;
+      ctx.strokeStyle = '#94a3b8';
+      ctx.stroke();
+    }
+
+    frets.forEach((fret, stringIdx) => {
+      const x = paddingX + (stringIdx * stringSpacing);
+
+      if (fret === 'x' || fret === 'X') {
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillStyle = '#ef4444';
+        ctx.textAlign = 'center';
+        ctx.fillText('×', x, paddingTop - 12);
+      } else if (fret === 0) {
+        ctx.font = '14px sans-serif';
+        ctx.fillStyle = '#10b981';
+        ctx.textAlign = 'center';
+        ctx.fillText('◯', x, paddingTop - 12);
+      } else {
+        const relFret = fret - baseFret + 1;
+        const y = paddingTop + (relFret * fretSpacing) - (fretSpacing / 2);
+
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fill();
+
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillStyle = '#0f172a';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(fret, x, y);
+      }
+    });
+  }
+</script>
+</body>
+</html>
