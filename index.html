@@ -703,6 +703,80 @@
     .reveal-delay-4 { transition-delay: 0.40s; }
 
     /* ============================================================
+       SCROLL PROGRESS BAR
+    ============================================================ */
+    .scroll-progress {
+      position: fixed; top: 0; left: 0;
+      height: 3px; width: 0%;
+      background: linear-gradient(90deg, #FFD166, #FF6B1A, #F05A00);
+      z-index: 2000;
+      pointer-events: none;
+      box-shadow: 0 0 12px rgba(240,90,0,0.55);
+    }
+    [data-theme="dark"] .scroll-progress {
+      background: linear-gradient(90deg, #60A5FA, #3B82F6, #1D4ED8);
+      box-shadow: 0 0 12px rgba(59,130,246,0.55);
+    }
+
+    /* ============================================================
+       CUSTOM CURSOR (fine-pointer desktop only)
+    ============================================================ */
+    .cursor-dot, .cursor-ring {
+      position: fixed; top: 0; left: 0;
+      pointer-events: none; z-index: 3000;
+      border-radius: 50%;
+      will-change: transform;
+    }
+    .cursor-dot {
+      width: 6px; height: 6px;
+      background: var(--text-primary);
+      transition: background var(--transition);
+    }
+    .cursor-ring {
+      width: 34px; height: 34px;
+      border: 1.5px solid var(--clay-btn-border);
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1), height 0.25s cubic-bezier(0.4,0,0.2,1), border-color var(--transition), background var(--transition);
+    }
+    .cursor-ring.hover {
+      width: 58px; height: 58px;
+      background: rgba(255,255,255,0.10);
+      border-color: var(--text-primary);
+    }
+    body.cursor-active, body.cursor-active * { cursor: none !important; }
+
+    /* ============================================================
+       PARTICLE NETWORK CANVAS (hero background)
+    ============================================================ */
+    #particle-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       PARALLAX / TILT HELPERS
+    ============================================================ */
+    .emoji-scene { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); will-change: transform; }
+    .work-card, .skill-card, .journal-card, .about-visual { will-change: transform; }
+
+    /* ============================================================
+       FILM GRAIN OVERLAY
+    ============================================================ */
+    .grain-overlay {
+      position: fixed; inset: 0; z-index: 1400;
+      pointer-events: none;
+      opacity: 0.05;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-repeat: repeat;
+    }
+
+    @media (pointer: coarse) {
+      .cursor-dot, .cursor-ring { display: none !important; }
+    }
+
+    /* ============================================================
        RESPONSIVE
     ============================================================ */
     @media (max-width: 768px) {
@@ -724,6 +798,9 @@
   </style>
 </head>
 <body>
+
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="grain-overlay" aria-hidden="true"></div>
 
   <!-- ============================================================
        NAVIGATION
@@ -759,6 +836,7 @@
   <section class="hero" id="hero">
 
     <div id="spline-container">
+      <canvas id="particle-canvas" aria-hidden="true"></canvas>
       <div class="emoji-scene">
         <span class="clay-obj obj-sun" aria-hidden="true">☀️</span>
         <span class="clay-obj obj-laptop" aria-hidden="true">💻</span>
@@ -1185,6 +1263,218 @@
       Object.assign(navLinks.style, { display:'flex', flexDirection:'column', position:'absolute', top:'64px', left:'0', right:'0', padding:'1.5rem 2.5rem', background:'var(--nav-bg-scroll)', backdropFilter:'blur(16px)' });
     });
     navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.removeAttribute('style')));
+  </script>
+
+  <!-- ============================================================
+       ENHANCED INTERACTION LAYER
+       Particle network / custom cursor / 3D tilt / magnetic buttons /
+       hero text scramble / scroll progress
+  ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+      const html = document.documentElement;
+      const hero = document.getElementById('hero');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      const fineDesktop = !reduceMotion && !coarsePointer;
+
+      /* ---------- Scroll progress bar ---------- */
+      const progressBar = document.querySelector('.scroll-progress');
+      function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        if (progressBar) progressBar.style.width = pct + '%';
+      }
+      window.addEventListener('scroll', updateProgress, { passive: true });
+      updateProgress();
+
+      /* ---------- Hero name scramble-in ---------- */
+      const heroName = document.querySelector('.hero-name');
+      if (heroName && !reduceMotion) {
+        const lines = heroName.innerHTML.split('<br>').map(s => s.trim());
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const totalFrames = 22;
+        let frame = 0;
+        (function tick() {
+          frame++;
+          const progress = Math.min(frame / totalFrames, 1);
+          const revealed = lines.map(line => {
+            const revealCount = Math.floor(line.length * progress);
+            return line.split('').map((c, i) => (i < revealCount ? c : chars[Math.floor(Math.random() * chars.length)])).join('');
+          });
+          heroName.innerHTML = revealed.join('<br>');
+          if (progress < 1) requestAnimationFrame(tick);
+          else heroName.innerHTML = lines.join('<br>');
+        })();
+      }
+
+      /* ---------- Mouse parallax on hero background layer ---------- */
+      const emojiScene = document.querySelector('.emoji-scene');
+      if (hero && emojiScene && fineDesktop) {
+        hero.addEventListener('mousemove', (e) => {
+          const rect = hero.getBoundingClientRect();
+          const nx = (e.clientX - rect.left) / rect.width - 0.5;
+          const ny = (e.clientY - rect.top) / rect.height - 0.5;
+          emojiScene.style.transform = `translate(${nx * 18}px, ${ny * 18}px)`;
+        });
+        hero.addEventListener('mouseleave', () => { emojiScene.style.transform = ''; });
+      }
+
+      /* ---------- Particle network canvas ---------- */
+      const canvas = document.getElementById('particle-canvas');
+      if (canvas && hero && fineDesktop) {
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null };
+
+        function resize() {
+          const rect = hero.getBoundingClientRect();
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          const count = Math.min(60, Math.max(20, Math.floor((rect.width * rect.height) / 22000)));
+          particles = Array.from({ length: count }, () => ({
+            x: Math.random() * rect.width,
+            y: Math.random() * rect.height,
+            vx: (Math.random() - 0.5) * 0.35,
+            vy: (Math.random() - 0.5) * 0.35,
+            r: Math.random() * 1.5 + 0.6
+          }));
+        }
+
+        function draw() {
+          if (canvas.width && canvas.height) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            const rgb = isDark ? '96,165,250' : '255,255,255';
+
+            particles.forEach(p => {
+              p.x += p.vx; p.y += p.vy;
+              if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+              if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(${rgb},0.55)`;
+              ctx.fill();
+            });
+
+            for (let i = 0; i < particles.length; i++) {
+              for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 120) {
+                  ctx.beginPath();
+                  ctx.moveTo(particles[i].x, particles[i].y);
+                  ctx.lineTo(particles[j].x, particles[j].y);
+                  ctx.strokeStyle = `rgba(${rgb},${0.14 * (1 - dist / 120)})`;
+                  ctx.lineWidth = 1;
+                  ctx.stroke();
+                }
+              }
+              if (mouse.x !== null) {
+                const dx = particles[i].x - mouse.x;
+                const dy = particles[i].y - mouse.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 160) {
+                  ctx.beginPath();
+                  ctx.moveTo(particles[i].x, particles[i].y);
+                  ctx.lineTo(mouse.x, mouse.y);
+                  ctx.strokeStyle = `rgba(${rgb},${0.30 * (1 - dist / 160)})`;
+                  ctx.lineWidth = 1;
+                  ctx.stroke();
+                }
+              }
+            }
+          }
+          requestAnimationFrame(draw);
+        }
+
+        hero.addEventListener('mousemove', (e) => {
+          const rect = hero.getBoundingClientRect();
+          mouse.x = e.clientX - rect.left;
+          mouse.y = e.clientY - rect.top;
+        });
+        hero.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+        window.addEventListener('resize', resize);
+        resize();
+        requestAnimationFrame(draw);
+      }
+
+      if (fineDesktop) {
+        /* ---------- 3D tilt on cards ---------- */
+        const tiltConfig = [
+          { sel: '.work-card', base: 'translateY(-8px) scale(1.02)' },
+          { sel: '.skill-card', base: 'translateY(-6px) scale(1.01)' },
+          { sel: '.journal-card', base: 'translateY(-6px) scale(1.01)' },
+          { sel: '.about-visual', base: 'translateY(-6px) rotate(-0.5deg)' }
+        ];
+        tiltConfig.forEach(({ sel, base }) => {
+          document.querySelectorAll(sel).forEach(el => {
+            el.addEventListener('mousemove', (e) => {
+              const rect = el.getBoundingClientRect();
+              const px = (e.clientX - rect.left) / rect.width - 0.5;
+              const py = (e.clientY - rect.top) / rect.height - 0.5;
+              const rx = (-py * 10).toFixed(2);
+              const ry = (px * 10).toFixed(2);
+              el.style.transform = `${base} perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+            });
+            el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+          });
+        });
+
+        /* ---------- Magnetic buttons ---------- */
+        const magnetConfig = [
+          { sel: '.hero-cta', lift: -3 },
+          { sel: '.quick-btn', lift: -4 },
+          { sel: '.theme-toggle', lift: -2 },
+          { sel: '.contact-btn', lift: -4 },
+          { sel: '.nav-logo-icon', lift: -2 }
+        ];
+        magnetConfig.forEach(({ sel, lift }) => {
+          document.querySelectorAll(sel).forEach(el => {
+            el.addEventListener('mousemove', (e) => {
+              const rect = el.getBoundingClientRect();
+              const relX = e.clientX - rect.left - rect.width / 2;
+              const relY = e.clientY - rect.top - rect.height / 2;
+              el.style.transform = `translate(${relX * 0.25}px, ${relY * 0.25 + lift}px)`;
+            });
+            el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+          });
+        });
+
+        /* ---------- Custom cursor ---------- */
+        const dot = document.createElement('div');
+        dot.className = 'cursor-dot';
+        const ring = document.createElement('div');
+        ring.className = 'cursor-ring';
+        document.body.appendChild(dot);
+        document.body.appendChild(ring);
+        document.body.classList.add('cursor-active');
+
+        let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+        let ringX = mx, ringY = my;
+        window.addEventListener('mousemove', (e) => {
+          mx = e.clientX; my = e.clientY;
+          dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
+        });
+        (function cursorLoop() {
+          ringX += (mx - ringX) * 0.18;
+          ringY += (my - ringY) * 0.18;
+          ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+          requestAnimationFrame(cursorLoop);
+        })();
+
+        const hoverSelector = 'a, button, .work-card, .skill-card, .journal-card, .about-visual';
+        document.addEventListener('mouseover', (e) => {
+          if (e.target.closest(hoverSelector)) ring.classList.add('hover');
+        });
+        document.addEventListener('mouseout', (e) => {
+          if (e.target.closest(hoverSelector)) ring.classList.remove('hover');
+        });
+      }
+    })();
   </script>
 
 </body>
