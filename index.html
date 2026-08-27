@@ -1244,6 +1244,9 @@
        SCRIPTS
   ============================================================ -->
   <script>
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+
     const html        = document.documentElement;
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon   = document.getElementById('themeIcon');
