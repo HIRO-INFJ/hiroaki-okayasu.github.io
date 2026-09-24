@@ -1,409 +1,348 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="light">
+<html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hiroaki Okayasu — Portfolio</title>
-  <meta name="description" content="Hiroaki Okayasu — Developer, Creator, Dreamer. Noir edition." />
+  <title>Hiroaki Okayasu — Developer &amp; Creator</title>
+  <meta name="description" content="Hiroaki Okayasu — Developer & Creator. Noir edition." />
+  <meta name="theme-color" content="#08080a" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Inter:wght@300;400;500;600&family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      --bg: #efece6;
-      --bg-2: #e6e2da;
-      --ink: #141413;
-      --ink-2: #3b3a37;
-      --muted: #7c776e;
-      --rule: rgba(20,20,19,.14);
-      --accent: #8a6a3f;
-      --inv-bg: #141413;
-      --inv-ink: #efece6;
-      --serif: "Fraunces", "Shippori Mincho", Georgia, serif;
-      --sans: "Inter", "Zen Kaku Gothic New", -apple-system, sans-serif;
-      --jp-serif: "Shippori Mincho", "Fraunces", serif;
-      --ease: cubic-bezier(.2,.75,.15,1);
-      --pad: clamp(16px, 4.5vw, 64px);
+      --bg: #08080a;
+      --bg-1: #0e0e11;
+      --bg-2: #141418;
+      --line: rgba(255,255,255,.08);
+      --line-2: rgba(255,255,255,.14);
+      --text: #ededf0;
+      --text-2: #a1a1aa;
+      --text-3: #6b6b74;
+      --live: #4ade80;
+      --sans: "Geist", "Inter", "Noto Sans JP", -apple-system, sans-serif;
+      --jp: "Noto Sans JP", "Geist", sans-serif;
+      --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+      --ease: cubic-bezier(.16,1,.3,1);
+      --r: 18px;
     }
-    [data-theme="dark"] {
-      --bg: #0e0e0d; --bg-2: #171715; --ink: #ebe7df; --ink-2: #c9c4ba; --muted: #8b867d;
-      --rule: rgba(235,231,223,.14); --accent: #c7a574; --inv-bg: #ebe7df; --inv-ink: #0e0e0d;
-    }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg); color: var(--ink); font-family: var(--sans); font-weight: 400;
-      font-size: 15px; line-height: 1.8; letter-spacing: .01em;
-      -webkit-font-smoothing: antialiased; overflow-x: hidden;
-      transition: background .6s var(--ease), color .6s var(--ease);
-    }
-    ::selection { background: var(--ink); color: var(--bg); }
+    html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.7; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    ::selection { background: #fff; color: #000; }
     a { color: inherit; text-decoration: none; }
     button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
     img { display: block; max-width: 100%; }
-    :focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+    :focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 6px; }
+    .wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
 
-    /* grain */
-    body::after {
-      content: ""; position: fixed; inset: -50%; z-index: 900; pointer-events: none; opacity: .06;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-      animation: grain 1.2s steps(6) infinite;
-    }
-    @keyframes grain { 0%{transform:translate(0,0)} 20%{transform:translate(-3%,2%)} 40%{transform:translate(2%,-3%)} 60%{transform:translate(-2%,-1%)} 80%{transform:translate(3%,3%)} 100%{transform:translate(0,0)} }
+    /* noise */
+    body::before { content: ""; position: fixed; inset: 0; z-index: 999; pointer-events: none; opacity: .035;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
 
-    .wrap { padding-inline: var(--pad); max-width: 1440px; margin-inline: auto; }
-    .eyebrow { font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
-    .serif { font-family: var(--serif); }
-    .it { font-style: italic; font-variation-settings: "opsz" 144; }
-
-    /* ── Loader ── */
-    #loader {
-      position: fixed; inset: 0; z-index: 1000; background: var(--inv-bg); color: var(--inv-ink);
-      display: flex; flex-direction: column; justify-content: space-between; padding: var(--pad);
-      transition: transform 1.1s cubic-bezier(.8,0,.15,1);
-    }
-    #loader.up { transform: translateY(-100%); }
-    #loader .l-top { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .24em; text-transform: uppercase; opacity: .6; }
-    #loader .l-name { font-family: var(--serif); font-weight: 300; font-size: clamp(3rem, 10vw, 9rem); line-height: .9; overflow: hidden; }
-    #loader .l-name span { display: inline-block; transform: translateY(110%); animation: rise 1s var(--ease) forwards; }
-    #loader .l-name span:nth-child(2) { animation-delay: .08s; font-style: italic; }
-    #loader .l-count { font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.4rem); font-weight: 300; font-variant-numeric: tabular-nums; }
-    @keyframes rise { to { transform: none; } }
-
-    /* ── Nav ── */
-    .nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100; color: var(--ink);
-      border-bottom: 1px solid transparent;
-      transition: background .5s var(--ease), border-color .5s var(--ease), transform .6s var(--ease);
-    }
-    .nav.scrolled { background: color-mix(in srgb, var(--bg) 84%, transparent); border-bottom-color: var(--rule); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-    .nav.hide { transform: translateY(-100%); }
-    .nav .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 76px; transition: height .5s var(--ease); }
-    .nav.scrolled .wrap { height: 60px; }
-    .brand { font-family: var(--serif); font-size: 19px; font-weight: 400; letter-spacing: -.01em; }
-    .brand i { font-style: italic; }
-    .nav-links { display: flex; gap: 34px; list-style: none; font-size: 12.5px; letter-spacing: .06em; }
-    .nav-links a { position: relative; }
-    .nav-links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .5s var(--ease); }
-    .nav-links a:hover::after { transform: scaleX(1); transform-origin: left; }
-    .nav-right { display: flex; justify-content: flex-end; align-items: center; gap: 22px; font-size: 12px; letter-spacing: .06em; }
-    .clock { font-variant-numeric: tabular-nums; opacity: .75; }
-    .theme-btn { display: inline-flex; align-items: center; gap: 8px; }
-    .theme-btn i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid currentColor; background: linear-gradient(90deg, currentColor 50%, transparent 50%); transition: transform .6s var(--ease); }
-    [data-theme="dark"] .theme-btn i { transform: rotate(180deg); }
-    .menu-btn { display: none; }
-    @media (max-width: 900px) {
-      .nav .wrap { grid-template-columns: 1fr auto; }
-      .nav-links { display: none; }
-      .clock { display: none; }
-    }
+    /* ── Nav (floating pill) ── */
+    .nav { position: fixed; top: 16px; left: 50%; z-index: 100; transform: translateX(-50%); width: min(760px, calc(100% - 24px));
+      display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 16px; border-radius: 999px;
+      background: rgba(14,14,17,.66); border: 1px solid var(--line); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+      box-shadow: 0 10px 40px rgba(0,0,0,.4); transition: transform .5s var(--ease); }
+    .nav.hide { transform: translate(-50%, -140%); }
+    .logo { font-weight: 600; letter-spacing: -.03em; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-right: auto; white-space: nowrap; }
+    .logo i { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(145deg, #fff, #8b8b93); display: grid; place-items: center; font-style: normal; color: #000; font-size: 10px; font-weight: 700; letter-spacing: -.02em; }
+    .nav-links { display: flex; list-style: none; position: relative; }
+    .nav-links a { position: relative; z-index: 1; display: block; padding: 7px 13px; font-size: 13.5px; color: var(--text-2); transition: color .25s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+    .nav-hl { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: rgba(255,255,255,.07); transition: left .4s var(--ease), width .4s var(--ease), opacity .3s; opacity: 0; }
+    .kbar { display: flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 999px; color: var(--text-3); font-size: 12px; border: 1px solid var(--line); }
+    .kbar kbd { font-family: var(--mono); font-size: 11px; }
+    .kbar:hover { color: var(--text); border-color: var(--line-2); }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 500; transition: transform .3s var(--ease), background .3s, box-shadow .3s; white-space: nowrap; }
+    .btn-w { background: #fff; color: #000; }
+    .btn-w:hover { box-shadow: 0 0 0 4px rgba(255,255,255,.14); transform: translateY(-1px); }
+    .btn-g { border: 1px solid var(--line-2); color: var(--text); }
+    .btn-g:hover { background: rgba(255,255,255,.06); }
+    .btn .arr { transition: transform .3s var(--ease); }
+    .btn:hover .arr { transform: translateX(3px); }
+    @media (max-width: 760px) { .nav-links { display: none; } .kbar span { display: none; } }
 
     /* ── Hero ── */
-    .hero { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding-top: 120px; padding-bottom: 36px; position: relative; }
-    .hero-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding-bottom: 36px; font-size: 12.5px; color: var(--ink-2); }
-    .hero-meta b { display: block; font-weight: 500; color: var(--muted); font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; margin-bottom: 6px; }
-    @media (max-width: 760px) { .hero-meta { grid-template-columns: 1fr 1fr; } .hero-title { font-size: 19vw; } }
-    .hero-title {
-      font-family: var(--serif); font-weight: 300; font-size: clamp(3.6rem, 13.6vw, 15.5rem);
-      line-height: .86; letter-spacing: -.045em; font-variation-settings: "opsz" 144;
-    }
-    .hero-title .row { display: block; overflow: hidden; padding-bottom: .04em; }
-    .hero-title .row > span { display: inline-block; transform: translateY(105%); transition: transform 1.3s var(--ease); }
-    .loaded .hero-title .row > span { transform: none; }
-    .loaded .hero-title .row:nth-child(2) > span { transition-delay: .09s; }
-    .hero-title .row:nth-child(2) { text-align: right; }
-    .hero-title em { font-style: italic; font-weight: 200; }
-    .hero-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--rule); }
-    .hero-foot p { max-width: 30em; font-size: 14px; color: var(--ink-2); font-family: var(--jp-serif); line-height: 2; }
-    .scroll-ind { display: flex; align-items: center; gap: 12px; font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-    .scroll-ind i { position: relative; width: 1px; height: 46px; background: var(--rule); overflow: hidden; }
-    .scroll-ind i::after { content: ""; position: absolute; left: 0; top: -40%; width: 1px; height: 40%; background: var(--ink); animation: drip 2.2s var(--ease) infinite; }
-    @keyframes drip { to { top: 100%; } }
-    .hero-portrait {
-      display: inline-block; height: .74em; aspect-ratio: 3 / 4; margin-left: .12em; vertical-align: -.02em; overflow: hidden;
-      clip-path: inset(100% 0 0 0); transition: clip-path 1.6s var(--ease) .45s;
-    }
-    .loaded .hero-portrait { clip-path: inset(0 0 0 0); }
-    .hero-portrait img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.05); transform: scale(1.2); transition: transform 2.2s var(--ease) .45s, filter 1s var(--ease); }
-    .loaded .hero-portrait img { transform: scale(1); }
-    .hero-portrait:hover img { filter: none; }
-    @media (max-width: 760px) { .hero-foot { flex-direction: column; align-items: flex-start; } }
+    .hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; padding: 140px 0 90px; overflow: hidden; isolation: isolate; }
+    .grid-bg { position: absolute; inset: 0; z-index: -2;
+      background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 64px 64px; background-position: center;
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%); }
+    .orb { position: absolute; z-index: -1; width: 780px; height: 780px; left: 50%; top: -260px; margin-left: -390px; border-radius: 50%; filter: blur(90px); opacity: .5;
+      background: conic-gradient(from 0deg, #3b3b46, #9a9aa6, #1b1b22, #cfcfd8, #2a2a33, #3b3b46); animation: spin 26s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spot { position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .6s;
+      background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 40%), rgba(255,255,255,.07), transparent 60%); }
+    .hero:hover .spot { opacity: 1; }
+    .hero-in { text-align: center; display: grid; justify-items: center; }
+    .badge { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 8px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(255,255,255,.03); font-size: 12.5px; color: var(--text-2); }
+    .badge b { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; background: rgba(74,222,128,.1); color: var(--live); font-weight: 500; font-size: 11.5px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 0 rgba(74,222,128,.6); animation: ping 2s infinite; }
+    @keyframes ping { 70% { box-shadow: 0 0 0 7px rgba(74,222,128,0); } 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); } }
+    h1.hero-h { margin-top: 28px; font-size: clamp(2.7rem, 7.6vw, 6.4rem); line-height: 1; letter-spacing: -.055em; font-weight: 600; max-width: 14ch; }
+    .hero-h .w { display: inline-block; opacity: 0; transform: translateY(.35em); filter: blur(10px); transition: opacity 1s var(--ease), transform 1s var(--ease), filter 1s var(--ease);
+      background: linear-gradient(180deg, #fff 35%, #8a8a94 110%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: .06em; }
+    .ready .hero-h .w { opacity: 1; transform: none; filter: none; }
+    .grad { background: linear-gradient(180deg, #fff 35%, #8a8a94 110%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero-sub { margin-top: 26px; max-width: 36em; color: var(--text-2); font-family: var(--jp); font-size: 15.5px; line-height: 1.95; }
+    .hero-sub b { color: var(--text); font-weight: 500; }
+    .hero-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 34px; }
+    .hero-cta .btn { padding: 12px 22px; font-size: 14.5px; }
+    .fade-up { opacity: 0; transform: translateY(14px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+    .ready .fade-up { opacity: 1; transform: none; }
+    .ready .d1 { transition-delay: .35s; } .ready .d2 { transition-delay: .5s; } .ready .d3 { transition-delay: .65s; }
 
-    /* marquee */
-    .marquee { border-block: 1px solid var(--rule); overflow: hidden; padding: 22px 0; white-space: nowrap; }
-    .marquee-track { display: inline-flex; animation: marq 38s linear infinite; }
-    .marquee span { font-family: var(--serif); font-size: clamp(1.6rem, 3.4vw, 2.8rem); font-weight: 300; padding-right: .7em; }
-    .marquee span:nth-child(even) { font-style: italic; color: var(--muted); }
-    .marquee span::after { content: "✦"; font-size: .45em; vertical-align: .5em; padding-left: .9em; color: var(--accent); font-style: normal; }
+    .marquee { margin-top: 80px; width: 100%; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent); mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent); }
+    .marquee p { text-align: center; font-size: 12px; color: var(--text-3); margin-bottom: 18px; }
+    .track { display: flex; width: max-content; gap: 56px; padding-right: 56px; animation: marq 34s linear infinite; }
+    .track span { font-weight: 600; font-size: 18px; letter-spacing: -.02em; color: #5e5e67; white-space: nowrap; }
     @keyframes marq { to { transform: translateX(-50%); } }
 
     /* ── Sections ── */
-    section.s { padding: clamp(96px, 14vw, 180px) 0; }
-    .s-head { display: grid; grid-template-columns: 1fr 3fr; gap: 24px; margin-bottom: clamp(48px, 7vw, 96px); align-items: baseline; }
-    .s-num { font-family: var(--serif); font-size: 14px; color: var(--muted); }
-    .s-num b { font-weight: 400; color: var(--ink); }
-    .s-title { font-family: var(--serif); font-weight: 300; font-size: clamp(2.4rem, 6vw, 5.6rem); line-height: 1; letter-spacing: -.035em; }
-    .s-title em { font-style: italic; font-weight: 200; }
-    @media (max-width: 760px) { .s-head { grid-template-columns: 1fr; gap: 10px; } }
+    section.s { padding: clamp(80px, 12vw, 140px) 0; position: relative; }
+    .s-head { display: grid; gap: 14px; margin-bottom: 48px; max-width: 640px; }
+    .label { font-family: var(--mono); font-size: 12px; color: var(--text-3); letter-spacing: .04em; display: inline-flex; align-items: center; gap: 10px; }
+    .label::before { content: ""; width: 18px; height: 1px; background: var(--text-3); }
+    .s-title { font-size: clamp(2rem, 4.6vw, 3.4rem); font-weight: 600; letter-spacing: -.045em; line-height: 1.05; }
+    .s-lead { color: var(--text-2); font-family: var(--jp); font-size: 15px; }
 
-    /* About */
-    .about { display: grid; grid-template-columns: 1fr 3fr; gap: 24px; }
-    .about-side { font-size: 12.5px; color: var(--muted); }
-    .about-side dl { display: grid; gap: 14px; margin-top: 8px; }
-    .about-side dt { font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; }
-    .about-side dd { color: var(--ink); font-size: 13.5px; }
-    .about-main { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(28px, 5vw, 80px); align-items: start; }
-    .statement { font-family: var(--jp-serif); font-size: clamp(1.25rem, 2.1vw, 1.75rem); line-height: 1.95; letter-spacing: .02em; font-weight: 400; }
-    .statement .en { display: block; font-family: var(--serif); font-style: italic; font-weight: 300; font-size: 1.05em; margin-bottom: .8em; letter-spacing: -.01em; }
-    .about-body { margin-top: 36px; color: var(--ink-2); font-size: 14.5px; line-height: 2.05; max-width: 38em; }
-    .about-body p + p { margin-top: 1.1em; }
-    .about-photo { position: relative; overflow: hidden; aspect-ratio: 4 / 5; background: var(--bg-2); }
-    .about-photo img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: filter 1.2s var(--ease), transform 1.6s var(--ease); }
-    .about-photo:hover img { filter: grayscale(0); transform: scale(1.03); }
-    .about-photo figcaption { position: absolute; left: 14px; bottom: 12px; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: #fff; mix-blend-mode: difference; }
-    .tagline { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--muted); }
-    @media (max-width: 960px) { .about, .about-main { grid-template-columns: 1fr; } .about-photo { max-width: 420px; } }
+    /* card w/ spotlight border */
+    .card { position: relative; border-radius: var(--r); background: var(--bg-1); border: 1px solid var(--line); overflow: hidden; isolation: isolate; }
+    .card::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; opacity: 0; transition: opacity .4s;
+      background: radial-gradient(420px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,.075), transparent 55%); }
+    .card::after { content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .4s; padding: 1px;
+      background: radial-gradient(280px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,.55), transparent 60%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+    .card:hover::before, .card:hover::after { opacity: 1; }
+
+    /* About bento */
+    .bento { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: minmax(150px, auto); gap: 14px; }
+    .b-me { grid-column: span 3; grid-row: span 2; display: grid; grid-template-rows: 1fr auto; }
+    .b-me .ph { position: relative; overflow: hidden; min-height: 240px; }
+    .b-me .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; filter: grayscale(1) contrast(1.05) brightness(.9); transition: transform 1.2s var(--ease), filter 1s var(--ease); }
+    .b-me:hover .ph img { transform: scale(1.04); filter: grayscale(.2) brightness(1); }
+    .b-me .ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, var(--bg-1)); }
+    .b-me .tx { padding: 0 26px 26px; margin-top: -40px; position: relative; }
+    .b-me h3 { font-size: 26px; letter-spacing: -.035em; font-weight: 600; }
+    .b-me .role { font-size: 13px; color: var(--text-3); margin: 2px 0 12px; }
+    .b-me p { font-family: var(--jp); color: var(--text-2); font-size: 14px; line-height: 1.9; }
+    .b-pad { padding: 22px 24px; display: flex; flex-direction: column; }
+    .b-k { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); margin-bottom: auto; display: flex; justify-content: space-between; gap: 10px; }
+    .b-clock { grid-column: span 3; }
+    .big-time { font-size: clamp(2.6rem, 5vw, 3.8rem); font-weight: 500; letter-spacing: -.05em; line-height: 1; font-variant-numeric: tabular-nums; margin-top: 18px; }
+    .big-time small { font-size: .38em; color: var(--text-3); letter-spacing: 0; margin-left: 6px; }
+    .b-sub { color: var(--text-2); font-size: 13px; margin-top: 8px; font-family: var(--jp); }
+    .b-stat { grid-column: span 1; min-width: 0; }
+    .b-stat .n { font-size: 40px; font-weight: 600; letter-spacing: -.05em; line-height: 1; margin-top: 18px; font-variant-numeric: tabular-nums; }
+    .b-stat .t { font-size: 12px; color: var(--text-3); margin-top: 6px; font-family: var(--jp); }
+    .b-off { grid-column: span 4; }
+    .b-now { grid-column: span 2; }
+    .b-now h4 { font-size: 15px; font-weight: 500; margin-top: 16px; font-family: var(--jp); line-height: 1.6; }
+    .bar { height: 4px; border-radius: 99px; background: rgba(255,255,255,.07); margin-top: 16px; overflow: hidden; }
+    .bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #6b6b74, #fff); transition: width 1.6s var(--ease) .3s; }
+    .in .bar i { width: var(--w); }
+    .hobbies { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+    .hob { flex: 1; min-width: 120px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.02); display: flex; gap: 12px; align-items: center; transition: border-color .3s, background .3s; }
+    .hob:hover { border-color: var(--line-2); background: rgba(255,255,255,.04); }
+    .hob svg { flex: none; width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .hob b { font-weight: 500; font-size: 13.5px; }
+    .hob small { display: block; color: var(--text-3); font-size: 11.5px; font-family: var(--jp); }
+    .b-stack { grid-column: span 6; }
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 18px; }
+    .tag { font-size: 12.5px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); background: rgba(255,255,255,.02); }
+    @media (max-width: 960px) {
+      .bento { grid-template-columns: repeat(3, 1fr); }
+      .b-me, .b-clock, .b-off, .b-stack, .b-now { grid-column: span 3; }
+      .b-me { grid-row: auto; }
+    }
+    @media (max-width: 520px) { .b-stat .n { font-size: 30px; } .b-pad { padding: 18px; } }
 
     /* Expertise */
-    .exp { border-top: 1px solid var(--rule); }
-    .exp-row {
-      display: grid; grid-template-columns: 1fr 1.6fr 1.4fr 40px; gap: 24px; align-items: baseline;
-      padding: 34px 0; border-bottom: 1px solid var(--rule); position: relative; cursor: default;
-    }
-    .exp-row::before { content: ""; position: absolute; inset: 0; background: var(--ink); transform: scaleY(0); transform-origin: bottom; transition: transform .6s var(--ease); z-index: -1; }
-    .exp-row { z-index: 0; transition: color .5s var(--ease), padding .6s var(--ease); }
-    .exp-row:hover { color: var(--bg); padding-inline: 20px; }
-    .exp-row:hover::before { transform: scaleY(1); }
-    .exp-row:hover .exp-desc, .exp-row:hover .exp-tools, .exp-row:hover .exp-n { color: var(--bg); opacity: .8; }
-    .exp-n { font-family: var(--serif); color: var(--muted); font-size: 14px; }
-    .exp-name { font-family: var(--serif); font-size: clamp(1.6rem, 3vw, 2.6rem); font-weight: 300; line-height: 1.1; letter-spacing: -.02em; }
-    .exp-name em { font-style: italic; }
-    .exp-desc { color: var(--ink-2); font-size: 13.5px; }
-    .exp-tools { font-size: 12px; color: var(--muted); margin-top: 8px; letter-spacing: .04em; }
-    .exp-arrow { font-family: var(--serif); font-size: 22px; justify-self: end; transition: transform .6s var(--ease); }
-    .exp-row:hover .exp-arrow { transform: rotate(-45deg); }
-    @media (max-width: 860px) { .exp-row { grid-template-columns: 40px 1fr; } .exp-row > div:nth-child(3) { grid-column: 2; } .exp-arrow { display: none; } }
+    .exp { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .exp .card { padding: 26px 24px 24px; display: flex; flex-direction: column; min-height: 300px; }
+    .ex-ic { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line-2); display: grid; place-items: center; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)); }
+    .ex-ic svg { width: 20px; height: 20px; stroke: var(--text); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .exp h3 { font-size: 18px; letter-spacing: -.025em; font-weight: 600; margin: 26px 0 10px; }
+    .exp p { color: var(--text-2); font-size: 13.5px; font-family: var(--jp); line-height: 1.85; }
+    .exp .tools { margin-top: auto; padding-top: 22px; font-family: var(--mono); font-size: 11.5px; color: var(--text-3); line-height: 1.9; }
+    @media (max-width: 960px) { .exp { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .exp { grid-template-columns: 1fr; } .exp .card { min-height: 0; } }
 
-    /* Works index */
-    .filters { display: flex; flex-wrap: wrap; gap: 8px 26px; margin-bottom: 30px; font-size: 13px; }
-    .filters button { color: var(--muted); position: relative; transition: color .3s; }
-    .filters button sup { font-size: 9px; margin-left: 3px; }
-    .filters button[aria-pressed="true"] { color: var(--ink); }
-    .filters button[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: currentColor; }
-    .idx-head, .idx-row { display: grid; grid-template-columns: 60px 2.4fr 1fr 1.4fr 60px; gap: 24px; align-items: baseline; }
-    .idx-head { font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); padding-bottom: 14px; border-bottom: 1px solid var(--ink); }
-    .idx-row { padding: 26px 0; border-bottom: 1px solid var(--rule); transition: opacity .5s var(--ease); }
-    .idx-list:hover .idx-row { opacity: .35; }
-    .idx-list .idx-row:hover { opacity: 1; }
-    .idx-row .n { font-family: var(--serif); color: var(--muted); font-size: 14px; }
-    .idx-row .t { font-family: var(--serif); font-size: clamp(1.4rem, 2.8vw, 2.4rem); font-weight: 300; line-height: 1.15; letter-spacing: -.02em; transition: transform .6s var(--ease), font-style .3s; }
-    .idx-row:hover .t { transform: translateX(14px); font-style: italic; }
-    .idx-row .t small { display: block; font-family: var(--sans); font-size: 13px; color: var(--muted); letter-spacing: 0; margin-top: 6px; font-style: normal; }
-    .idx-row .c { font-size: 12.5px; color: var(--ink-2); }
-    .idx-row .k { font-size: 12px; color: var(--muted); }
-    .idx-row .y { font-family: var(--serif); text-align: right; color: var(--muted); }
-    .idx-row.hidden { display: none; }
-    @media (max-width: 860px) {
-      .idx-head { display: none; }
-      .idx-row { grid-template-columns: 40px 1fr auto; gap: 6px 14px; }
-      .idx-row .c { grid-column: 2; } .idx-row .k { display: none; }
-      .idx-row .y { grid-column: 3; grid-row: 1; }
-    }
-    .preview {
-      position: fixed; left: 0; top: 0; z-index: 80; width: 300px; aspect-ratio: 4 / 3; pointer-events: none;
-      opacity: 0; transform: translate(36px, -50%) scale(.85); transition: opacity .4s var(--ease), transform .5s var(--ease);
-      overflow: hidden; background: var(--inv-bg);
-    }
-    .preview.on { opacity: 1; transform: translate(36px, -50%) scale(1); }
-    .preview-inner { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 18px; color: var(--inv-ink); }
-    .preview .pv-cat { font-size: 10px; letter-spacing: .24em; text-transform: uppercase; opacity: .7; }
-    .preview .pv-glyph { font-family: var(--serif); font-style: italic; font-weight: 200; font-size: 108px; line-height: .8; letter-spacing: -.05em; align-self: flex-end; }
-    .preview .pv-cta { font-size: 11px; letter-spacing: .1em; opacity: .8; }
-    @media (hover: none) { .preview { display: none; } }
-
-    /* Now */
-    .now-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--rule); }
-    .now-item { padding: 30px 24px 30px 0; border-right: 1px solid var(--rule); }
-    .now-item + .now-item { padding-left: 24px; }
-    .now-item:last-child { border-right: 0; }
-    .now-item .eyebrow { margin-bottom: 18px; }
-    .now-item h4 { font-family: var(--serif); font-weight: 300; font-size: 22px; line-height: 1.3; letter-spacing: -.01em; }
-    .now-item p { font-size: 13px; color: var(--ink-2); margin-top: 10px; }
-    .progress { height: 1px; background: var(--rule); margin-top: 18px; position: relative; }
-    .progress i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink); width: 0; transition: width 1.6s var(--ease); }
-    .in .progress i { width: var(--w); }
-    @media (max-width: 960px) { .now-grid { grid-template-columns: 1fr 1fr; } .now-item { padding: 26px 16px 26px 0 !important; border-right: 0; border-bottom: 1px solid var(--rule); } }
-    @media (max-width: 560px) { .now-grid { grid-template-columns: 1fr; } }
-    .timeline { margin-top: clamp(56px, 8vw, 110px); display: grid; grid-template-columns: 1fr 3fr; gap: 24px; }
-    .timeline ol { list-style: none; }
-    .timeline li { display: grid; grid-template-columns: 120px 1fr; gap: 24px; padding: 18px 0; border-bottom: 1px solid var(--rule); }
-    .timeline li span { font-family: var(--serif); color: var(--muted); }
-    .timeline li b { font-weight: 400; }
-    @media (max-width: 760px) { .timeline { grid-template-columns: 1fr; } .timeline li { grid-template-columns: 70px 1fr; } }
+    /* Works */
+    .seg { position: relative; display: inline-flex; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg-1); margin-bottom: 26px; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+    .seg::-webkit-scrollbar { display: none; }
+    .seg button { position: relative; z-index: 1; padding: 7px 15px; border-radius: 999px; font-size: 13px; color: var(--text-2); white-space: nowrap; transition: color .3s; }
+    .seg button[aria-pressed="true"] { color: #000; }
+    .seg .pill { position: absolute; top: 4px; bottom: 4px; border-radius: 999px; background: #fff; transition: left .45s var(--ease), width .45s var(--ease); }
+    .works { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .work { display: flex; flex-direction: column; transition: transform .5s var(--ease), border-color .3s; }
+    .work:hover { transform: translateY(-4px); border-color: var(--line-2); }
+    .work.hide { display: none; }
+    .thumb { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-bottom: 1px solid var(--line); background: #0b0b0e; }
+    .thumb .mesh { position: absolute; inset: -20%; filter: blur(40px); opacity: .5; transition: transform 1.2s var(--ease), opacity .6s;
+      background: radial-gradient(circle at 25% 30%, var(--c1), transparent 45%), radial-gradient(circle at 75% 70%, var(--c2), transparent 50%); }
+    .work:hover .mesh { transform: scale(1.12) rotate(4deg); opacity: .8; }
+    .thumb .gl { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 28px 28px; -webkit-mask-image: radial-gradient(circle at 50% 50%, #000, transparent 75%); mask-image: radial-gradient(circle at 50% 50%, #000, transparent 75%); }
+    .thumb .ic { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 18px; display: grid; place-items: center;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 20px 40px rgba(0,0,0,.4); transition: transform .8s var(--ease); }
+    .work:hover .thumb .ic { transform: scale(1.08); }
+    .thumb .ic svg { width: 28px; height: 28px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .thumb .kind { position: absolute; left: 14px; top: 12px; font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.6); }
+    .thumb .yr { position: absolute; right: 14px; top: 12px; font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.4); }
+    .work .body { padding: 18px 20px 20px; display: flex; flex-direction: column; flex: 1; }
+    .work h3 { font-size: 16px; font-weight: 600; letter-spacing: -.02em; display: flex; justify-content: space-between; gap: 10px; }
+    .work h3 .go { color: var(--text-3); transition: transform .4s var(--ease), color .3s; }
+    .work:hover h3 .go { transform: translate(3px, -3px); color: var(--text); }
+    .work p { color: var(--text-2); font-size: 13px; margin-top: 6px; font-family: var(--jp); line-height: 1.8; }
+    .work .tech { margin-top: auto; padding-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .work .tech span { font-family: var(--mono); font-size: 11px; color: var(--text-3); padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,.04); }
+    .work.feat { grid-column: span 2; flex-direction: row; }
+    .work.feat .thumb { flex: 1.3; aspect-ratio: auto; min-height: 260px; border-bottom: 0; border-right: 1px solid var(--line); }
+    .work.feat .body { flex: 1; padding: 28px; }
+    .work.feat h3 { font-size: 22px; }
+    .flag { font-family: var(--mono); font-size: 11px; color: var(--text-3); margin-bottom: 16px; display: none; }
+    .work.feat .flag { display: block; }
+    @media (max-width: 960px) { .works { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .works { grid-template-columns: 1fr; } .work.feat { grid-column: auto; flex-direction: column; } .work.feat .thumb { border-right: 0; border-bottom: 1px solid var(--line); min-height: 200px; } }
 
     /* Journal */
-    .journal { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(20px, 3vw, 44px); }
-    .j-card { display: block; border-top: 1px solid var(--ink); padding-top: 22px; }
-    .j-card .meta { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
-    .j-card h3 { font-family: var(--jp-serif); font-weight: 600; font-size: 20px; line-height: 1.65; margin: 22px 0 14px; transition: color .3s; }
-    .j-card p { font-size: 13.5px; color: var(--ink-2); line-height: 1.95; }
-    .j-card .more { display: inline-flex; gap: 8px; margin-top: 22px; font-size: 12.5px; position: relative; }
-    .j-card .more::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: currentColor; transform: scaleX(.25); transform-origin: left; transition: transform .6s var(--ease); }
-    .j-card:hover .more::after { transform: scaleX(1); }
-    @media (max-width: 860px) { .journal { grid-template-columns: 1fr; } }
+    .journal { border-top: 1px solid var(--line); }
+    .j-row { display: grid; grid-template-columns: 150px 1fr auto; gap: 24px; align-items: center; padding: 26px 8px; border-bottom: 1px solid var(--line); transition: background .3s, padding .5s var(--ease); }
+    .j-row:hover { background: rgba(255,255,255,.025); padding-inline: 18px; }
+    .j-row .meta { font-family: var(--mono); font-size: 12px; color: var(--text-3); }
+    .j-row h3 { font-family: var(--jp); font-size: 17px; font-weight: 500; }
+    .j-row p { font-family: var(--jp); font-size: 13px; color: var(--text-2); margin-top: 4px; }
+    .j-row .go { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; transition: background .3s, color .3s, transform .5s var(--ease); }
+    .j-row:hover .go { background: #fff; color: #000; transform: rotate(45deg); }
+    @media (max-width: 640px) { .j-row { grid-template-columns: 1fr auto; } .j-row .meta { grid-column: 1 / -1; } }
 
     /* Contact */
-    .contact { background: var(--inv-bg); color: var(--inv-ink); padding: clamp(110px, 16vw, 200px) 0 60px; }
-    .contact .eyebrow { color: color-mix(in srgb, var(--inv-ink) 55%, transparent); }
-    .contact-title { font-family: var(--serif); font-weight: 200; font-size: clamp(3rem, 10.5vw, 11rem); line-height: .92; letter-spacing: -.045em; margin: 24px 0 56px; }
-    .contact-title em { font-style: italic; }
-    .mail {
-      display: inline-flex; align-items: center; gap: 18px; font-family: var(--serif); font-weight: 300; font-size: clamp(1.4rem, 3.2vw, 2.6rem);
-      position: relative; padding-bottom: 6px;
-    }
-    .mail::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: currentColor; transform-origin: right; transition: transform .7s var(--ease); }
-    .mail:hover::after { transform: scaleX(0); }
-    .mail .arr { display: inline-block; transition: transform .6s var(--ease); }
-    .mail:hover .arr { transform: translateX(10px) rotate(-45deg); }
-    .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: clamp(80px, 12vw, 150px); padding-top: 28px; border-top: 1px solid color-mix(in srgb, var(--inv-ink) 18%, transparent); font-size: 13px; }
-    .contact-grid .eyebrow { margin-bottom: 10px; }
-    .contact-grid a { display: block; opacity: .85; transition: opacity .3s, transform .4s var(--ease); }
-    .contact-grid a:hover { opacity: 1; transform: translateX(6px); }
-    @media (max-width: 760px) { .contact-grid { grid-template-columns: 1fr; } }
+    .contact { text-align: center; padding: clamp(100px, 16vw, 180px) 0; position: relative; overflow: hidden; isolation: isolate; }
+    .contact .orb { top: auto; bottom: -560px; opacity: .35; }
+    .contact .label { justify-content: center; }
+    .contact h2 { font-size: clamp(2.8rem, 9vw, 7rem); font-weight: 600; letter-spacing: -.06em; line-height: 1; margin: 20px auto 22px; padding-bottom: .06em; }
+    .contact p { color: var(--text-2); font-family: var(--jp); }
+    .mailbox { display: inline-flex; align-items: center; gap: 6px; margin-top: 36px; padding: 6px 6px 6px 22px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(14,14,17,.7); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); max-width: 100%; }
+    .mailbox span { font-family: var(--mono); font-size: 14px; margin-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .socials { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+    .socials a { font-size: 13px; color: var(--text-2); padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); transition: color .3s, border-color .3s; }
+    .socials a:hover { color: var(--text); border-color: var(--line-2); }
 
-    /* Footer w/ variable-weight name */
-    footer { background: var(--inv-bg); color: var(--inv-ink); padding: 40px 0 84px; overflow: hidden; }
-    .giant {
-      font-family: var(--serif); font-size: clamp(3rem, 22.5vw, 21rem); line-height: .82; letter-spacing: -.05em;
-      display: flex; justify-content: space-between; user-select: none; white-space: nowrap;
-    }
-    .giant span { font-variation-settings: "wght" 200, "opsz" 144; transition: font-variation-settings .25s ease-out; display: inline-block; }
-    .foot-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 28px; font-size: 11.5px; letter-spacing: .08em; opacity: .6; }
-    .foot-row button { letter-spacing: inherit; text-decoration: underline; text-underline-offset: 3px; }
+    footer { border-top: 1px solid var(--line); padding: 28px 0 90px; font-size: 12.5px; color: var(--text-3); }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+    footer kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line-2); color: var(--text-2); }
 
-    /* Colophon modal */
-    .modal { position: fixed; inset: 0; z-index: 950; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--bg) 70%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; visibility: hidden; transition: opacity .5s var(--ease), visibility .5s; }
-    .modal.open { opacity: 1; visibility: visible; }
-    .modal-card { width: min(560px, 100%); background: var(--bg); border: 1px solid var(--rule); padding: clamp(24px, 5vw, 48px); transform: translateY(20px); transition: transform .6s var(--ease); max-height: calc(100vh - 32px); overflow: auto; }
-    .modal.open .modal-card { transform: none; }
-    .modal h3 { font-family: var(--serif); font-weight: 300; font-size: 36px; letter-spacing: -.02em; margin: 10px 0 20px; }
-    .modal h3 em { font-style: italic; }
-    .modal dl { display: grid; grid-template-columns: 110px 1fr; gap: 10px 20px; font-size: 13px; }
-    .modal dt { color: var(--muted); }
-    .modal .close { margin-top: 28px; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
-    .kbd { display: inline-block; min-width: 22px; padding: 0 6px; border: 1px solid var(--rule); font-size: 11px; text-align: center; }
+    /* Command palette */
+    .cmdk-bg { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: none; padding: 16vh 16px 16px; }
+    .cmdk-bg.open { display: block; }
+    .cmdk { width: min(600px, 100%); margin: 0 auto; border-radius: 16px; background: rgba(18,18,22,.96); border: 1px solid var(--line-2); box-shadow: 0 30px 90px rgba(0,0,0,.6); overflow: hidden; animation: pop .3s var(--ease); }
+    @keyframes pop { from { opacity: 0; transform: scale(.97) translateY(6px); } }
+    .cmdk input { width: 100%; padding: 18px 20px; background: transparent; border: 0; border-bottom: 1px solid var(--line); outline: 0; color: var(--text); font: inherit; font-size: 16px; }
+    .cmdk-list { max-height: 50vh; overflow: auto; padding: 8px; }
+    .cmdk-list h6 { font-size: 11px; font-weight: 500; color: var(--text-3); padding: 10px 12px 6px; }
+    .cmdk-list button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 10px; text-align: left; font-size: 14px; color: var(--text-2); }
+    .cmdk-list button.act { background: rgba(255,255,255,.07); color: var(--text); }
+    .cmdk-list button svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    .cmdk-list button small { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+    .cmdk-foot { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--text-3); }
+    .cmdk-foot kbd { font-family: var(--mono); padding: 0 5px; border-radius: 4px; border: 1px solid var(--line-2); margin-right: 4px; }
 
-    /* cursor */
-    .cursor { position: fixed; left: 0; top: 0; z-index: 2950; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #fff; mix-blend-mode: difference; pointer-events: none; transition: width .4s var(--ease), height .4s var(--ease), margin .4s var(--ease); }
-    .cursor.big { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
-    @media (hover: none), (pointer: coarse) { .cursor { display: none; } }
+    .toast { position: fixed; left: 50%; bottom: 28px; z-index: 600; transform: translate(-50%, 20px); padding: 10px 16px; border-radius: 999px; background: #fff; color: #000; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: all .45s var(--ease); max-width: calc(100% - 32px); }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-    /* reveal */
-    .rv { opacity: 0; transform: translateY(40px); transition: opacity 1.2s var(--ease), transform 1.2s var(--ease); }
+    .rv { opacity: 0; transform: translateY(26px); transition: opacity 1s var(--ease), transform 1s var(--ease), border-color .3s; }
     .rv.in { opacity: 1; transform: none; }
-    .rv-d1 { transition-delay: .1s; } .rv-d2 { transition-delay: .2s; } .rv-d3 { transition-delay: .3s; }
-    .line-rv { overflow: hidden; display: block; padding: 0 .08em .1em; margin: 0 -.08em -.1em; }
-    .line-rv > span { display: inline-block; transform: translateY(105%); transition: transform 1.2s var(--ease); }
-    .in .line-rv > span, .line-rv.in > span { transform: none; }
+    .work.rv.in:hover { transform: translateY(-4px); }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
-      .rv, .line-rv > span, .hero-title .row > span { opacity: 1; transform: none; }
-      .hero-portrait { clip-path: none; }
+      .rv, .fade-up, .hero-h .w { opacity: 1 !important; transform: none !important; filter: none !important; }
     }
   </style>
 </head>
 <body>
 
-  <div id="loader" aria-hidden="true">
-    <div class="l-top"><span>Portfolio</span><span>©2025</span></div>
-    <div class="l-name"><span>Hiroaki&nbsp;</span><span>Okayasu</span></div>
-    <div class="l-top" style="opacity:1"><span class="l-count" id="count">000</span><span style="align-self:flex-end;opacity:.6">Developer — Creator — Dreamer</span></div>
-  </div>
-
-  <nav class="nav">
-    <div class="wrap">
-      <a href="#top" class="brand">H. <i>Okayasu</i></a>
-      <ul class="nav-links">
-        <li><a href="#about">About</a></li>
-        <li><a href="#expertise">Expertise</a></li>
-        <li><a href="#works">Works</a></li>
-        <li><a href="#now">Now</a></li>
-        <li><a href="#journal">Journal</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-      <div class="nav-right">
-        <span class="clock" id="clock">Japan —:—</span>
-        <button class="theme-btn" id="theme" aria-label="ライト/ダーク切り替え"><i></i><span id="theme-label">Dark</span></button>
-      </div>
-    </div>
+  <nav class="nav" id="nav" aria-label="メイン">
+    <a href="#top" class="logo"><i>HO</i>Hiroaki Okayasu</a>
+    <ul class="nav-links" id="nav-links">
+      <span class="nav-hl" id="nav-hl"></span>
+      <li><a href="#about">About</a></li>
+      <li><a href="#expertise">Expertise</a></li>
+      <li><a href="#works">Works</a></li>
+      <li><a href="#journal">Journal</a></li>
+    </ul>
+    <button class="kbar" id="kbar" aria-label="コマンドパレットを開く"><kbd>⌘K</kbd><span>Search</span></button>
+    <a href="#contact" class="btn btn-w">Contact</a>
   </nav>
 
   <main id="top">
     <!-- HERO -->
-    <header class="hero wrap">
-      <div class="hero-meta">
-        <div><b>Discipline</b>Developer / Creator</div>
-        <div><b>Focus</b>Automation &amp; Web Apps</div>
-        <div><b>Based in</b>Japan</div>
-        <div><b>Status</b>Available for projects</div>
-      </div>
-      <h1 class="hero-title" aria-label="Hiroaki Okayasu">
-        <span class="row"><span>Hiroaki<span class="hero-portrait" data-cursor="big"><img src="../hiroaki.png" alt="" /></span></span></span>
-        <span class="row"><span><em>Okayasu</em></span></span>
-      </h1>
-      <div class="hero-foot">
-        <p>テクノロジーと創造性の交差点で。<br>自動化・アプリ開発・コンテンツ制作を通じて、人々の可能性を広げる。</p>
-        <span class="scroll-ind"><i></i>Scroll to explore</span>
+    <header class="hero" id="hero">
+      <div class="grid-bg"></div>
+      <div class="orb"></div>
+      <div class="spot"></div>
+      <div class="wrap hero-in">
+        <span class="badge fade-up"><b><i class="dot"></i>Available</b>新規プロジェクトのご相談を受付中</span>
+        <h1 class="hero-h" id="hero-h">Building quiet tools that change how things work.</h1>
+        <p class="hero-sub fade-up d1">Hiroaki Okayasu — <b>Developer &amp; Creator</b><br>自動化・Web アプリ・コンテンツ制作を通じて、身近な「あったらいいな」を確かなコードでかたちにしています。</p>
+        <div class="hero-cta fade-up d2">
+          <a href="#works" class="btn btn-w">View work <span class="arr">→</span></a>
+          <a href="#contact" class="btn btn-g">Get in touch</a>
+        </div>
+        <div class="marquee fade-up d3" aria-hidden="true">
+          <p>Tools I work with</p>
+          <div class="track">
+            <span>Python</span><span>Next.js</span><span>TypeScript</span><span>Supabase</span><span>Notion API</span><span>Playwright</span><span>Gemini API</span><span>Google Apps Script</span><span>Chrome MV3</span><span>PHP</span>
+            <span>Python</span><span>Next.js</span><span>TypeScript</span><span>Supabase</span><span>Notion API</span><span>Playwright</span><span>Gemini API</span><span>Google Apps Script</span><span>Chrome MV3</span><span>PHP</span>
+          </div>
+        </div>
       </div>
     </header>
-
-    <div class="marquee" aria-hidden="true">
-      <div class="marquee-track">
-        <span>Automation</span><span>Web Apps</span><span>Chrome Extensions</span><span>Writing</span><span>Photography</span><span>Games</span>
-        <span>Automation</span><span>Web Apps</span><span>Chrome Extensions</span><span>Writing</span><span>Photography</span><span>Games</span>
-      </div>
-    </div>
 
     <!-- ABOUT -->
     <section class="s" id="about">
       <div class="wrap">
-        <div class="s-head">
-          <span class="s-num"><b>01</b> / 06</span>
-          <h2 class="s-title"><span class="line-rv rv"><span>Developer, Creator</span></span><span class="line-rv rv rv-d1"><span><em>&amp; Educator.</em></span></span></h2>
+        <div class="s-head rv">
+          <span class="label">01 — About</span>
+          <h2 class="s-title">Developer, creator,<br>and educator.</h2>
         </div>
-        <div class="about">
-          <aside class="about-side rv">
-            <p class="eyebrow">Profile</p>
-            <dl>
-              <div><dt>Name</dt><dd>Hiroaki Okayasu</dd></div>
-              <div><dt>Role</dt><dd>Freelance Developer</dd></div>
-              <div><dt>Languages</dt><dd>Python, JavaScript, PHP</dd></div>
-              <div><dt>Off-duty</dt><dd>Camera, Tennis, Guitar</dd></div>
-            </dl>
-          </aside>
-          <div class="about-main">
-            <div>
-              <p class="statement rv">
-                <span class="en">Hi, I'm Hiro.</span>
-                課題を見つけて、ツールを作って、仕組みを変える。身近に「あったらいいな」を、確かなコードでかたちにしています。
-              </p>
-              <div class="about-body rv rv-d1">
-                <p>Python・JavaScript・PHP を中心に、業務自動化からモバイルアプリまで幅広く手がけています。最近は Notion × Gemini API × Playwright を組み合わせた記事自動投稿システムや、Amazon/楽天の価格比較 Chrome 拡張などを開発中。</p>
-                <p>コードを書かないときは、カメラを持って街を歩いたり、テニスコートに立ったり、ギターを弾いたりしています。</p>
-              </div>
-              <div class="tagline rv rv-d2">
-                <span>Python</span><span>JavaScript</span><span>PHP</span><span>React / Next.js</span><span>Notion API</span><span>Playwright</span><span>Chrome Extension</span><span>note.com</span>
-              </div>
+        <div class="bento">
+          <article class="card b-me rv">
+            <div class="ph"><img src="../hiroaki.png" alt="Hiroaki Okayasu" loading="lazy" decoding="async" /></div>
+            <div class="tx">
+              <h3>Hi, I'm Hiro.</h3>
+              <p class="role">Freelance Developer — Japan</p>
+              <p>Python・JavaScript・PHP を中心に、業務自動化からモバイルアプリまで幅広く手がけています。最近は Notion × Gemini API × Playwright の記事自動投稿システムや、Amazon/楽天の価格比較 Chrome 拡張を開発中。</p>
             </div>
-            <figure class="about-photo rv rv-d2" data-cursor="big">
-              <img src="../hiroaki.png" alt="Hiroaki Okayasu" loading="lazy" decoding="async" />
-              <figcaption>Portrait — hover for colour</figcaption>
-            </figure>
-          </div>
+          </article>
+          <article class="card b-pad b-clock rv">
+            <div class="b-k"><span>LOCAL TIME</span><span>JST · UTC+9</span></div>
+            <div class="big-time" id="time">--:--<small id="sec">:--</small></div>
+            <p class="b-sub" id="time-sub">日本からリモートで対応しています。</p>
+          </article>
+          <article class="card b-pad b-stat rv"><div class="b-k"><span>WORKS</span></div><div class="n" data-count="11">0</div><div class="t">公開・開発した作品</div></article>
+          <article class="card b-pad b-stat rv"><div class="b-k"><span>FIELDS</span></div><div class="n" data-count="4">0</div><div class="t">得意領域</div></article>
+          <article class="card b-pad b-stat rv"><div class="b-k"><span>COFFEE</span></div><div class="n">∞</div><div class="t">一日の杯数</div></article>
+          <article class="card b-pad b-off rv">
+            <div class="b-k"><span>OFF-DUTY</span></div>
+            <div class="hobbies">
+              <div class="hob"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg><div><b>Camera</b><small>街を歩いて撮る</small></div></div>
+              <div class="hob"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5a9 9 0 0 1 0 13M18.5 5.5a9 9 0 0 0 0 13"/></svg><div><b>Tennis</b><small>週末はコートへ</small></div></div>
+              <div class="hob"><svg viewBox="0 0 24 24"><path d="m19 5-6.5 6.5"/><path d="M11 10.5a4 4 0 0 0-5.3.3 3.5 3.5 0 0 0-1 2.2 3 3 0 0 1-1.7 2.3 3.6 3.6 0 0 0 5.4 5.4 3 3 0 0 1 2.3-1.7 3.5 3.5 0 0 0 2.2-1 4 4 0 0 0 .3-5.3"/><path d="m17 3 4 4"/></svg><div><b>Guitar</b><small>コード進行が好き</small></div></div>
+            </div>
+          </article>
+          <article class="card b-pad b-now rv">
+            <div class="b-k"><span>NOW BUILDING</span><span>68%</span></div>
+            <h4>note 自動投稿 v2 パイプライン</h4>
+            <div class="bar"><i style="--w:68%"></i></div>
+          </article>
+          <article class="card b-pad b-stack rv">
+            <div class="b-k"><span>STACK</span></div>
+            <div class="tags"><span class="tag">Python</span><span class="tag">JavaScript</span><span class="tag">TypeScript</span><span class="tag">PHP</span><span class="tag">React / Next.js</span><span class="tag">Supabase</span><span class="tag">Notion API</span><span class="tag">Playwright</span><span class="tag">Gemini API</span><span class="tag">GAS</span><span class="tag">Chrome Extension</span><span class="tag">note.com</span></div>
+          </article>
         </div>
       </div>
     </section>
@@ -411,15 +350,16 @@
     <!-- EXPERTISE -->
     <section class="s" id="expertise" style="padding-top:0">
       <div class="wrap">
-        <div class="s-head">
-          <span class="s-num"><b>02</b> / 06</span>
-          <h2 class="s-title"><span class="line-rv rv"><span>What I <em>build.</em></span></span></h2>
+        <div class="s-head rv">
+          <span class="label">02 — Expertise</span>
+          <h2 class="s-title">What I build.</h2>
+          <p class="s-lead">得意とする技術領域と、その先にある価値を届けるための道具たち。</p>
         </div>
         <div class="exp">
-          <div class="exp-row rv"><span class="exp-n">(i)</span><h3 class="exp-name">Automation <em>Systems</em></h3><div><p class="exp-desc">Notion を中心に据えたデータ連携・自動化パイプラインの設計・実装。</p><p class="exp-tools">Python · Playwright · Gemini API · GAS</p></div><span class="exp-arrow">→</span></div>
-          <div class="exp-row rv"><span class="exp-n">(ii)</span><h3 class="exp-name">Web &amp; App <em>Development</em></h3><div><p class="exp-desc">React・Next.js・Supabase によるフルスタック開発。Chrome 拡張機能の設計・公開も。</p><p class="exp-tools">Next.js · Supabase · TypeScript · Chrome Ext.</p></div><span class="exp-arrow">→</span></div>
-          <div class="exp-row rv"><span class="exp-n">(iii)</span><h3 class="exp-name">Content <em>Creation</em></h3><div><p class="exp-desc">note.com での技術記事・体験記の執筆。AI と自動化を活用した効率的な発信。</p><p class="exp-tools">note.com · Technical Writing · AI-assisted</p></div><span class="exp-arrow">→</span></div>
-          <div class="exp-row rv"><span class="exp-n">(iv)</span><h3 class="exp-name"><em>Photography</em></h3><div><p class="exp-desc">日常の瞬間をレンズで切り取る。カメラと旅がアイデアの源泉。</p><p class="exp-tools">Mirrorless · Street · Portrait</p></div><span class="exp-arrow">→</span></div>
+          <article class="card rv"><span class="ex-ic"><svg viewBox="0 0 24 24"><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg></span><h3>Automation Systems</h3><p>Notion を中心に据えたデータ連携・自動化パイプラインの設計・実装。</p><div class="tools">Python / Playwright<br>Gemini API / GAS</div></article>
+          <article class="card rv"><span class="ex-ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/></svg></span><h3>Web &amp; App Development</h3><p>React・Next.js・Supabase によるフルスタック開発。Chrome 拡張機能の設計・公開も。</p><div class="tools">Next.js / Supabase<br>TypeScript / Chrome Ext.</div></article>
+          <article class="card rv"><span class="ex-ic"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><h3>Content Creation</h3><p>note.com での技術記事・体験記の執筆。AI と自動化を活用した効率的な発信。</p><div class="tools">note.com / Tech Writing<br>AI-assisted</div></article>
+          <article class="card rv"><span class="ex-ic"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg></span><h3>Photography</h3><p>日常の瞬間をレンズで切り取る。カメラと旅がアイデアの源泉。</p><div class="tools">Mirrorless / Street<br>Portrait</div></article>
         </div>
       </div>
     </section>
@@ -427,89 +367,53 @@
     <!-- WORKS -->
     <section class="s" id="works" style="padding-top:0">
       <div class="wrap">
-        <div class="s-head">
-          <span class="s-num"><b>03</b> / 06</span>
-          <h2 class="s-title"><span class="line-rv rv"><span>Selected <em>Works</em></span></span></h2>
+        <div class="s-head rv">
+          <span class="label">03 — Works</span>
+          <h2 class="s-title">Selected projects.</h2>
+          <p class="s-lead">課題を見つけて、ツールを作って、仕組みを変える。</p>
         </div>
-        <div class="filters rv" role="group" aria-label="カテゴリー">
-          <button type="button" data-f="all" aria-pressed="true">All<sup></sup></button>
-          <button type="button" data-f="Web App" aria-pressed="false">Web App<sup></sup></button>
-          <button type="button" data-f="Game" aria-pressed="false">Game<sup></sup></button>
-          <button type="button" data-f="App" aria-pressed="false">App<sup></sup></button>
-          <button type="button" data-f="Automation" aria-pressed="false">Automation<sup></sup></button>
+        <div class="seg rv" id="seg" role="group" aria-label="カテゴリー">
+          <span class="pill" id="seg-pill"></span>
+          <button type="button" data-f="all" aria-pressed="true">All</button>
+          <button type="button" data-f="web" aria-pressed="false">Web Apps</button>
+          <button type="button" data-f="game" aria-pressed="false">Games</button>
+          <button type="button" data-f="app" aria-pressed="false">Apps</button>
+          <button type="button" data-f="auto" aria-pressed="false">Automation</button>
         </div>
-        <div class="idx-head"><span>No.</span><span>Project</span><span>Category</span><span>Stack</span><span style="text-align:right">Year</span></div>
-        <div class="idx-list" id="idx"></div>
-      </div>
-    </section>
-
-    <!-- NOW -->
-    <section class="s" id="now" style="padding-top:0">
-      <div class="wrap">
-        <div class="s-head">
-          <span class="s-num"><b>04</b> / 06</span>
-          <h2 class="s-title"><span class="line-rv rv"><span>Right <em>now.</em></span></span></h2>
-        </div>
-        <div class="now-grid rv">
-          <div class="now-item"><p class="eyebrow">Building</p><h4>note 自動投稿の<br>v2 パイプライン</h4><p>画像生成と予約投稿の精度を改善中。</p><div class="progress"><i style="--w:68%"></i></div></div>
-          <div class="now-item"><p class="eyebrow">Learning</p><h4>TypeScript と<br>型安全な設計</h4><p>Next.js App Router を深掘り中。</p><div class="progress"><i style="--w:54%"></i></div></div>
-          <div class="now-item"><p class="eyebrow">Reading</p><h4><em class="serif it">The Pragmatic Programmer</em></h4><p>何度目かの再読。毎回発見がある。</p><div class="progress"><i style="--w:40%"></i></div></div>
-          <div class="now-item"><p class="eyebrow">Playing</p><h4>週末テニスと<br>ギターの練習</h4><p>サーブのフォーム改造に苦戦中。</p><div class="progress"><i style="--w:80%"></i></div></div>
-        </div>
-        <div class="timeline">
-          <p class="eyebrow rv">Timeline</p>
-          <ol class="rv">
-            <li><span>2026</span><b>ポートフォリオを複数デザインでリニューアル</b></li>
-            <li><span>2025</span><b>note 自動投稿システム / 請求書自動発行システムを構築</b></li>
-            <li><span>2025</span><b>Amazon / 楽天 価格比較 Chrome 拡張をリリース</b></li>
-            <li><span>2025</span><b>テニス関連 Web アプリ 3 本を公開</b></li>
-            <li><span>2024</span><b>ブラウザゲーム Space Salvage / RPG を制作</b></li>
-          </ol>
-        </div>
+        <div class="works" id="works-grid"></div>
       </div>
     </section>
 
     <!-- JOURNAL -->
     <section class="s" id="journal" style="padding-top:0">
       <div class="wrap">
-        <div class="s-head">
-          <span class="s-num"><b>05</b> / 06</span>
-          <h2 class="s-title"><span class="line-rv rv"><span>Latest <em>writing</em></span></span></h2>
+        <div class="s-head rv">
+          <span class="label">04 — Journal</span>
+          <h2 class="s-title">Latest writing.</h2>
+          <p class="s-lead">note.com で書いている技術記事・日常の記録。</p>
         </div>
         <div class="journal">
-          <a class="j-card rv" href="https://note.com/" target="_blank" rel="noopener">
-            <div class="meta"><span>Automation</span><span>2025</span></div>
-            <h3>Notion × Playwright で記事投稿を完全自動化した話</h3>
-            <p>Queue 管理から Gemini による本文生成、サムネイル作成まで——実装の全貌と詰まったポイントを公開します。</p>
-            <span class="more">Read on note ↗</span>
-          </a>
-          <a class="j-card rv rv-d1" href="https://note.com/" target="_blank" rel="noopener">
-            <div class="meta"><span>Chrome Extension</span><span>2025</span></div>
-            <h3>Amazon で開いたら楽天の値段が出る拡張を作った</h3>
-            <p>Rakuten API v2 への移行と、検索精度を上げるためのヒューリスティクス設計について。</p>
-            <span class="more">Read on note ↗</span>
-          </a>
-          <a class="j-card rv rv-d2" href="https://note.com/" target="_blank" rel="noopener">
-            <div class="meta"><span>English</span><span>2025</span></div>
-            <h3>TOEIC / IELTS / TOEFL iBT 徹底比較 2025年版</h3>
-            <p>2026年1月の TOEFL iBT 大改訂を踏まえた最新版。自分の目的に合う試験の選び方を整理しました。</p>
-            <span class="more">Read on note ↗</span>
-          </a>
+          <a class="j-row rv" href="https://note.com/" target="_blank" rel="noopener"><span class="meta">2025 · Automation</span><div><h3>Notion × Playwright で記事投稿を完全自動化した話</h3><p>Queue 管理から Gemini による本文生成、サムネイル作成まで——実装の全貌と詰まったポイント。</p></div><span class="go">↗</span></a>
+          <a class="j-row rv" href="https://note.com/" target="_blank" rel="noopener"><span class="meta">2025 · Extension</span><div><h3>Amazon で開いたら楽天の値段が出る拡張を作った</h3><p>Rakuten API v2 への移行と、検索精度を上げるためのヒューリスティクス設計について。</p></div><span class="go">↗</span></a>
+          <a class="j-row rv" href="https://note.com/" target="_blank" rel="noopener"><span class="meta">2025 · English</span><div><h3>TOEIC / IELTS / TOEFL iBT 徹底比較 2025年版</h3><p>2026年1月の TOEFL iBT 大改訂を踏まえた最新版。目的に合う試験の選び方。</p></div><span class="go">↗</span></a>
         </div>
       </div>
     </section>
 
     <!-- CONTACT -->
     <section class="contact" id="contact">
+      <div class="grid-bg"></div>
+      <div class="orb"></div>
       <div class="wrap">
-        <p class="eyebrow">06 / 06 — Contact</p>
-        <h2 class="contact-title"><span class="line-rv rv"><span>Let's build</span></span><span class="line-rv rv rv-d1"><span><em>something.</em></span></span></h2>
-        <p class="rv" style="max-width:32em;opacity:.75;margin-bottom:36px">お仕事のご依頼・コラボレーション・ご質問など、お気軽にどうぞ。</p>
-        <a class="mail rv" id="mail" href="#" data-cursor="big"><span id="mail-label">メールを送る</span><span class="arr">→</span></a>
-        <div class="contact-grid">
-          <div><p class="eyebrow">Social</p><a href="https://twitter.com/" target="_blank" rel="noopener">X (Twitter) ↗</a><a href="https://Instagram.com/" target="_blank" rel="noopener">Instagram ↗</a></div>
-          <div><p class="eyebrow">Writing</p><a href="https://note.com/" target="_blank" rel="noopener">note.com ↗</a></div>
-          <div><p class="eyebrow">Code</p><a href="https://github.com/" target="_blank" rel="noopener">GitHub ↗</a></div>
+        <span class="label rv">05 — Contact</span>
+        <h2 class="grad rv">Let's build<br>something.</h2>
+        <p class="rv">お仕事のご依頼・コラボレーション・ご質問など、お気軽にどうぞ。</p>
+        <div class="mailbox rv"><span id="mail-text"></span><button class="btn btn-g" id="copy" type="button">Copy</button><a class="btn btn-w" id="mail" href="#">Send <span class="arr">→</span></a></div>
+        <div class="socials rv">
+          <a href="https://twitter.com/" target="_blank" rel="noopener">X / Twitter ↗</a>
+          <a href="https://Instagram.com/" target="_blank" rel="noopener">Instagram ↗</a>
+          <a href="https://note.com/" target="_blank" rel="noopener">note ↗</a>
+          <a href="https://github.com/" target="_blank" rel="noopener">GitHub ↗</a>
         </div>
       </div>
     </section>
@@ -517,181 +421,181 @@
 
   <footer>
     <div class="wrap">
-      <div class="giant" id="giant" aria-label="Okayasu"></div>
-      <div class="foot-row">
-        <span>© 2025 Hiroaki Okayasu. All rights reserved.</span>
-        <span><button type="button" id="colophon-btn">Colophon</button> &nbsp;·&nbsp; Press <span class="kbd">?</span></span>
-      </div>
+      <span>© 2025 Hiroaki Okayasu</span>
+      <span>Press <kbd>⌘</kbd> <kbd>K</kbd> to navigate</span>
     </div>
   </footer>
 
-  <div class="modal" id="colophon" role="dialog" aria-modal="true" aria-labelledby="colo-title">
-    <div class="modal-card">
-      <p class="eyebrow">Colophon</p>
-      <h3 id="colo-title">Made with <em>care.</em></h3>
-      <dl>
-        <dt>Typeface</dt><dd>Fraunces, Inter, Shippori Mincho, Zen Kaku Gothic New</dd>
-        <dt>Built with</dt><dd>HTML, CSS, vanilla JS — no frameworks</dd>
-        <dt>Shortcuts</dt><dd><span class="kbd">T</span> テーマ &nbsp; <span class="kbd">W</span> Works &nbsp; <span class="kbd">C</span> Contact &nbsp; <span class="kbd">D</span> デザイン切替</dd>
-        <dt>Secret</dt><dd>フッターの名前にカーソルを近づけてみてください。</dd>
-      </dl>
-      <button class="close" type="button" id="colophon-close">Close ×</button>
+  <div class="cmdk-bg" id="cmdk-bg">
+    <div class="cmdk" role="dialog" aria-modal="true" aria-label="コマンドパレット">
+      <input id="cmdk-in" placeholder="Type a command or search…" autocomplete="off" />
+      <div class="cmdk-list" id="cmdk-list"></div>
+      <div class="cmdk-foot"><span><kbd>↑↓</kbd>移動</span><span><kbd>↵</kbd>決定</span><span><kbd>esc</kbd>閉じる</span></div>
     </div>
   </div>
-
-  <div class="preview" id="preview" aria-hidden="true"><div class="preview-inner"><span class="pv-cat" id="pv-cat"></span><span class="pv-glyph" id="pv-glyph"></span><span class="pv-cta" id="pv-cta"></span></div></div>
+  <div class="toast" id="toast" role="status"></div>
 
   <script>
   (function () {
     'use strict';
     const EMAIL = 'XXXX'; // ← 実際のメールアドレスに置き換えてください
 
+    const I = {
+      tennis: '<circle cx="12" cy="12" r="9"/><path d="M5.5 5.5a9 9 0 0 1 0 13M18.5 5.5a9 9 0 0 0 0 13"/>',
+      calc: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
+      chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+      rocket: '<path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M14 4c3-1 6-1 6-1s0 3-1 6l-7 7-5-5z"/><circle cx="15" cy="9" r="1.5"/>',
+      sword: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/>',
+      guitar: '<path d="m19 5-6.5 6.5"/><path d="M11 10.5a4 4 0 0 0-5.3.3 3.5 3.5 0 0 0-1 2.2 3 3 0 0 1-1.7 2.3 3.6 3.6 0 0 0 5.4 5.4 3 3 0 0 1 2.3-1.7 3.5 3.5 0 0 0 2.2-1 4 4 0 0 0 .3-5.3"/><path d="m17 3 4 4"/>',
+      cards: '<rect x="4" y="4" width="11" height="15" rx="2" transform="rotate(-10 9 11)"/><rect x="9" y="5" width="11" height="15" rx="2" transform="rotate(8 14 12)"/>',
+      bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+      receipt: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+      cart: '<circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/><path d="M3 4h2l2.4 11h11L21 8H6"/>',
+      hash: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>', copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+      mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>', palette: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>',
+    };
+    const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${I[k]}</svg>`;
+
     const WORKS = [
-      { t: 'ガット張り記録アプリ', en: 'String Log', cat: 'Web App', k: 'Next.js, Supabase, Capacitor', y: 2025, url: 'https://v0-tennis-stringing-tracker.vercel.app/', d: 'ラケットのガット張り履歴を管理するモバイル対応 Web アプリ。' },
-      { t: 'テニス代計算 app', en: 'Court Split', cat: 'Web App', k: 'Next.js', y: 2025, url: 'https://tenniscost-dukz4cqj.manus.space/', d: 'コート代・ボール代の立替金を参加人数で瞬時に割り勘。' },
-      { t: 'テニス スコアアプリ', en: 'Scoreboard', cat: 'Web App', k: 'React, Vercel', y: 2025, url: 'https://tennis-scoring-app-six.vercel.app/', d: '試合中のスコアをリアルタイムで記録・表示。' },
-      { t: 'Space Salvage', en: 'Space Salvage', cat: 'Game', k: 'HTML, JavaScript', y: 2024, url: '../works/space_salvage_v111.html', d: '宇宙を舞台にしたサルベージアクションゲーム。' },
-      { t: 'RPG', en: 'RPG', cat: 'Game', k: 'HTML, JavaScript', y: 2024, url: '../works/rpg.html', d: 'ブラウザで動く RPG ゲーム。' },
-      { t: 'ギターコード進行サンプル', en: 'Chord Atlas', cat: 'Web App', k: 'HTML, JavaScript', y: 2025, url: '../works/guitar_chord.html', d: 'ジャンルに合わせた王道のコード進行をキーごとに生成。' },
-      { t: 'Tarot v2', en: 'Tarot II', cat: 'App', k: 'HTML, JavaScript', y: 2025, url: '../works/tarot_v2.html', d: 'タロットカードリーディングアプリ 最新版。' },
-      { t: 'Tarot', en: 'Tarot I', cat: 'App', k: 'HTML, JavaScript', y: 2024, url: '../works/tarot_v1.html', d: 'タロットカードリーディングアプリ 初期版。' },
-      { t: 'note 自動投稿システム', en: 'Autopost', cat: 'Automation', k: 'Python, Notion API, Playwright', y: 2025, url: null, d: 'Notion → Gemini API → Playwright で記事を自動生成・投稿。' },
-      { t: '請求書自動発行システム', en: 'Invoicer', cat: 'Automation', k: 'GAS, Google Drive, Notion', y: 2025, url: null, d: '請求書 PDF の生成・送付・保存を全自動化。' },
-      { t: 'Amazon / 楽天 価格比較拡張', en: 'Price Lens', cat: 'Automation', k: 'JavaScript, Rakuten API, Chrome MV3', y: 2025, url: null, d: 'Amazon 商品ページで楽天の最安値を比較表示。' },
+      { t: 'note 自動投稿システム', cat: 'auto', kind: 'Automation', ic: 'bolt', c: ['#8f8f9b', '#3a3a44'], y: 2025, url: null, d: 'Notion → Gemini API → Playwright のパイプラインで記事を自動生成・投稿。Queue 管理・サムネイル自動生成まで対応。', tech: ['Python', 'Notion API', 'Playwright'], feat: true },
+      { t: 'ガット張り記録アプリ', cat: 'web', kind: 'Web App', ic: 'tennis', c: ['#6ee7b7', '#1f2937'], y: 2025, url: 'https://v0-tennis-stringing-tracker.vercel.app/', d: 'ラケットのガット張り履歴を管理するモバイル対応 Web アプリ。', tech: ['Next.js', 'Supabase', 'Capacitor'] },
+      { t: 'テニス代計算 app', cat: 'web', kind: 'Web App', ic: 'calc', c: ['#fcd34d', '#1f2937'], y: 2025, url: 'https://tenniscost-dukz4cqj.manus.space/', d: 'コート代・ボール代の立替金を参加人数で瞬時に割り勘。', tech: ['Next.js'] },
+      { t: 'テニス スコアアプリ', cat: 'web', kind: 'Web App', ic: 'chart', c: ['#93c5fd', '#1f2937'], y: 2025, url: 'https://tennis-scoring-app-six.vercel.app/', d: '試合中のスコアをリアルタイムで記録・表示。', tech: ['React', 'Vercel'] },
+      { t: 'ギターコード進行サンプル', cat: 'web', kind: 'Web App', ic: 'guitar', c: ['#fdba74', '#1f2937'], y: 2025, url: '../works/guitar_chord.html', d: 'ジャンルに合わせた王道のコード進行をキーごとに生成。', tech: ['HTML', 'JavaScript'] },
+      { t: 'Space Salvage', cat: 'game', kind: 'Game', ic: 'rocket', c: ['#a5b4fc', '#1e1b4b'], y: 2024, url: '../works/space_salvage_v111.html', d: '宇宙を舞台にしたサルベージアクションゲーム。', tech: ['HTML', 'JavaScript'] },
+      { t: 'RPG', cat: 'game', kind: 'Game', ic: 'sword', c: ['#fca5a5', '#1f2937'], y: 2024, url: '../works/rpg.html', d: 'ブラウザで動く RPG ゲーム。', tech: ['HTML', 'JavaScript'] },
+      { t: 'Tarot v2', cat: 'app', kind: 'App', ic: 'cards', c: ['#d8b4fe', '#1f2937'], y: 2025, url: '../works/tarot_v2.html', d: 'タロットカードリーディングアプリ 最新版。', tech: ['HTML', 'JavaScript'] },
+      { t: 'Tarot', cat: 'app', kind: 'App', ic: 'cards', c: ['#c4b5fd', '#111827'], y: 2024, url: '../works/tarot_v1.html', d: 'タロットカードリーディングアプリ 初期版。', tech: ['HTML', 'JavaScript'] },
+      { t: '請求書自動発行システム', cat: 'auto', kind: 'Automation', ic: 'receipt', c: ['#cbd5e1', '#1f2937'], y: 2025, url: null, d: 'Notion × GAS × Gmail × Drive で請求書 PDF の生成・送付・保存を全自動化。', tech: ['GAS', 'Google Drive', 'Notion'] },
+      { t: 'Amazon / 楽天 価格比較拡張', cat: 'auto', kind: 'Chrome Extension', ic: 'cart', c: ['#f9a8d4', '#1f2937'], y: 2025, url: null, d: 'Amazon 商品ページを開くだけで楽天の最安値を取得・比較表示。', tech: ['JavaScript', 'Rakuten API', 'Chrome MV3'] },
     ];
 
     const $ = (s, el = document) => el.querySelector(s);
     const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-    const html = document.documentElement;
-    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
-    /* theme */
-    const setTheme = (t) => { html.dataset.theme = t; $('#theme-label').textContent = t === 'dark' ? 'Light' : 'Dark'; };
-    try { const saved = localStorage.getItem('noir-theme'); if (saved) setTheme(saved); } catch (e) {}
-    const toggleTheme = () => { const n = html.dataset.theme === 'dark' ? 'light' : 'dark'; setTheme(n); try { localStorage.setItem('noir-theme', n); } catch (e) {} };
-    $('#theme').addEventListener('click', toggleTheme);
+    function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
 
-    /* nav: 背景 & スクロール方向で隠す */
-    const nav = $('.nav'); let lastY = 0;
-    addEventListener('scroll', () => {
-      const y = scrollY;
-      nav.classList.toggle('scrolled', y > 40);
-      nav.classList.toggle('hide', y > 400 && y > lastY);
-      lastY = y;
-    }, { passive: true });
+    /* hero headline word reveal */
+    const h = $('#hero-h');
+    h.innerHTML = h.textContent.split(' ').map((w, i) => `<span class="w" style="transition-delay:${i * 60}ms">${w}</span>`).join(' ');
+    requestAnimationFrame(() => setTimeout(() => document.body.classList.add('ready'), 60));
+
+    /* hero spotlight */
+    const hero = $('#hero'), spot = $('.spot', hero);
+    hero.addEventListener('pointermove', (e) => { const r = hero.getBoundingClientRect(); spot.style.setProperty('--mx', e.clientX - r.left + 'px'); spot.style.setProperty('--my', e.clientY - r.top + 'px'); });
+
+    /* nav: highlight pill + hide on scroll */
+    const nav = $('#nav'), hl = $('#nav-hl'), links = $$('#nav-links a');
+    const moveHl = (a) => { if (!a) { hl.style.opacity = 0; return; } hl.style.left = a.parentElement.offsetLeft + 'px'; hl.style.width = a.offsetWidth + 'px'; hl.style.opacity = 1; };
+    links.forEach(a => a.addEventListener('mouseenter', () => moveHl(a)));
+    $('#nav-links').addEventListener('mouseleave', () => moveHl($('#nav-links a.active')));
+    let lastY = 0;
+    addEventListener('scroll', () => { const y = scrollY; if (y > 500 && y > lastY + 4) nav.classList.add('hide'); else if (y < lastY - 4 || y < 500) nav.classList.remove('hide'); lastY = y; }, { passive: true });
+    const navObs = new IntersectionObserver((es) => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+      moveHl($('#nav-links a.active'));
+    }), { rootMargin: '-45% 0px -50% 0px' });
+    $$('main > [id]').forEach(s => navObs.observe(s));
+
+    /* spotlight cards */
+    document.addEventListener('pointermove', (e) => {
+      const c = e.target.closest && e.target.closest('.card'); if (!c) return;
+      const r = c.getBoundingClientRect(); c.style.setProperty('--x', e.clientX - r.left + 'px'); c.style.setProperty('--y', e.clientY - r.top + 'px');
+    });
 
     /* clock */
-    const tick = () => { $('#clock').textContent = 'Japan ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' }); };
-    tick(); setInterval(tick, 15000);
-
-    /* mail */
-    $('#mail').href = 'mailto:' + EMAIL;
-
-    /* loader */
-    function runLoader() {
-      const loader = $('#loader'), count = $('#count');
-      const done = () => { loader.classList.add('up'); document.body.classList.add('loaded'); setTimeout(() => loader.remove(), 1200); };
-      if (reduceMotion || sessionStorage.getItem('noir-loaded')) { loader.style.display = 'none'; document.body.classList.add('loaded'); return; }
-      const start = performance.now(), dur = 1500;
-      (function step(now) {
-        const p = Math.min(1, (now - start) / dur);
-        const e = 1 - Math.pow(1 - p, 3);
-        count.textContent = String(Math.round(e * 100)).padStart(3, '0');
-        if (p < 1) requestAnimationFrame(step); else { sessionStorage.setItem('noir-loaded', '1'); setTimeout(done, 200); }
-      })(start);
+    function clock() {
+      const [hh, mm, ss] = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Tokyo', hour12: false }).split(':');
+      $('#time').firstChild.nodeValue = `${hh}:${mm}`; $('#sec').textContent = ':' + ss;
+      const hr = +hh;
+      $('#time-sub').textContent = hr >= 23 || hr < 7 ? 'いまは就寝中かも。返信は朝になります 🌙' : hr < 12 ? '朝のコーヒーを片手に作業中 ☕' : hr < 18 ? '集中モードでコードを書いています。' : '夜はギターかテニスの時間かも 🎸';
     }
-    runLoader();
+    clock(); setInterval(clock, 1000);
 
-    /* works index */
-    const idx = $('#idx');
-    idx.innerHTML = WORKS.map((w, i) => `
-      <a class="idx-row" href="${w.url || '#works'}" ${w.url && w.url.startsWith('http') ? 'target="_blank" rel="noopener"' : ''} data-i="${i}" data-cat="${w.cat}">
-        <span class="n">${String(i + 1).padStart(2, '0')}</span>
-        <span class="t">${esc(w.t)}<small>${esc(w.d)}</small></span>
-        <span class="c">${w.cat}</span>
-        <span class="k">${esc(w.k)}</span>
-        <span class="y">${w.y}</span>
-      </a>`).join('');
-    $$('.filters button').forEach(b => {
-      const n = b.dataset.f === 'all' ? WORKS.length : WORKS.filter(w => w.cat === b.dataset.f).length;
-      $('sup', b).textContent = n;
-      b.addEventListener('click', () => {
-        $$('.filters button').forEach(x => x.setAttribute('aria-pressed', x === b));
-        $$('.idx-row').forEach(r => r.classList.toggle('hidden', b.dataset.f !== 'all' && r.dataset.cat !== b.dataset.f));
+    /* works */
+    const grid = $('#works-grid');
+    grid.innerHTML = WORKS.map((w, i) => {
+      const ext = w.url && w.url.startsWith('http');
+      return `<a class="card work ${w.feat ? 'feat' : ''} rv" data-cat="${w.cat}" href="${w.url || '#contact'}" ${ext ? 'target="_blank" rel="noopener"' : ''} data-i="${i}">
+        <div class="thumb" style="--c1:${w.c[0]};--c2:${w.c[1]}"><span class="mesh"></span><span class="gl"></span><span class="kind">${w.kind}</span><span class="yr">${w.y}</span><span class="ic">${svg(w.ic)}</span></div>
+        <div class="body"><span class="flag">★ FEATURED</span><h3>${esc(w.t)}<span class="go">${w.url ? (ext ? '↗' : '→') : '🔒'}</span></h3><p>${esc(w.d)}</p><div class="tech">${w.tech.map(t => `<span>${t}</span>`).join('')}</div></div>
+      </a>`;
+    }).join('');
+    $$('.work', grid).forEach(a => a.addEventListener('click', (e) => { if (!WORKS[a.dataset.i].url) { e.preventDefault(); toast('非公開プロジェクトです — 詳しくはお問い合わせください'); } }));
+
+    const seg = $('#seg'), pill = $('#seg-pill');
+    const movePill = (b) => { pill.style.left = b.offsetLeft + 'px'; pill.style.width = b.offsetWidth + 'px'; };
+    $$('button', seg).forEach(b => b.addEventListener('click', () => {
+      $$('button', seg).forEach(x => x.setAttribute('aria-pressed', x === b)); movePill(b);
+      const f = b.dataset.f;
+      $$('.work', grid).forEach(w => { w.classList.toggle('hide', f !== 'all' && w.dataset.cat !== f); w.classList.toggle('feat', f === 'all' && !!WORKS[w.dataset.i].feat); });
+    }));
+    const initPill = () => movePill($('[aria-pressed="true"]', seg));
+    addEventListener('resize', initPill); if (document.fonts) document.fonts.ready.then(initPill); initPill();
+
+    /* reveal + counters */
+    const io = new IntersectionObserver((es) => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('in'); io.unobserve(e.target);
+      const n = $('[data-count]', e.target);
+      if (n) { const to = +n.dataset.count, t0 = performance.now(); (function tick(t) { const p = Math.min(1, (t - t0) / 1200); n.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(tick); })(t0); }
+    }), { threshold: .12, rootMargin: '0px 0px -6% 0px' });
+    $$('.rv').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 70 + 'ms'; io.observe(el); });
+
+    /* contact */
+    $('#mail-text').textContent = EMAIL; $('#mail').href = 'mailto:' + EMAIL;
+    const copyEmail = () => { (navigator.clipboard ? navigator.clipboard.writeText(EMAIL) : Promise.reject()).then(() => toast('メールアドレスをコピーしました'), () => toast(EMAIL)); };
+    $('#copy').addEventListener('click', copyEmail);
+
+    /* command palette */
+    const bg = $('#cmdk-bg'), inp = $('#cmdk-in'), list = $('#cmdk-list');
+    const go = (id) => () => $(id).scrollIntoView({ behavior: 'smooth' });
+    const CMDS = [
+      { g: 'Navigate', l: 'About', ic: 'hash', k: 'G A', run: go('#about') },
+      { g: 'Navigate', l: 'Expertise', ic: 'hash', k: 'G E', run: go('#expertise') },
+      { g: 'Navigate', l: 'Works', ic: 'hash', k: 'G W', run: go('#works') },
+      { g: 'Navigate', l: 'Journal', ic: 'hash', k: 'G J', run: go('#journal') },
+      { g: 'Navigate', l: 'Contact', ic: 'hash', k: 'G C', run: go('#contact') },
+      { g: 'Actions', l: 'メールアドレスをコピー', ic: 'copy', run: copyEmail },
+      { g: 'Actions', l: 'メールを送る', ic: 'mail', run: () => { location.href = 'mailto:' + EMAIL; } },
+      { g: 'Actions', l: 'デザインを切り替える', ic: 'palette', k: 'D', run: () => window.DesignSwitcher && window.DesignSwitcher.open() },
+      ...WORKS.map(w => ({ g: 'Projects', l: w.t, ic: w.ic, run: () => { if (!w.url) return toast('非公開プロジェクトです'); if (w.url.startsWith('http')) window.open(w.url, '_blank', 'noopener'); else location.href = w.url; } })),
+    ];
+    let items = [], act = 0;
+    function render() {
+      const q = inp.value.trim().toLowerCase();
+      items = CMDS.filter(c => !q || (c.l + c.g).toLowerCase().includes(q));
+      act = Math.min(act, Math.max(0, items.length - 1));
+      let g = '', html = '';
+      items.forEach((c, i) => { if (c.g !== g) { g = c.g; html += `<h6>${g}</h6>`; } html += `<button data-i="${i}" class="${i === act ? 'act' : ''}">${svg(c.ic)}${esc(c.l)}${c.k ? `<small>${c.k}</small>` : ''}</button>`; });
+      list.innerHTML = html || '<h6>No results</h6>';
+      $$('button', list).forEach(b => {
+        b.addEventListener('click', () => exec(+b.dataset.i));
+        b.addEventListener('mousemove', () => { if (act !== +b.dataset.i) { act = +b.dataset.i; $$('button', list).forEach(x => x.classList.toggle('act', x === b)); } });
       });
-    });
-    $$('.idx-row').forEach(r => r.addEventListener('click', (e) => { if (!WORKS[r.dataset.i].url) e.preventDefault(); }));
-
-    /* hover preview follows cursor */
-    const pv = $('#preview');
-    let px = 0, py = 0, tx = 0, ty = 0, pvOn = false;
-    $$('.idx-row').forEach(r => {
-      r.addEventListener('mouseenter', () => {
-        const w = WORKS[r.dataset.i];
-        $('#pv-cat').textContent = `${String(+r.dataset.i + 1).padStart(2, '0')} — ${w.cat}`;
-        $('#pv-glyph').textContent = w.en;
-        $('#pv-cta').textContent = w.url ? (w.url.startsWith('http') ? 'Visit site ↗' : 'Open project →') : 'Private — case study on request';
-        pv.classList.add('on'); pvOn = true;
-      });
-      r.addEventListener('mouseleave', () => { pv.classList.remove('on'); pvOn = false; });
-    });
-
-    /* cursor + lerp loop */
-    const cur = document.createElement('div'); cur.className = 'cursor'; document.body.appendChild(cur);
-    let mx = innerWidth / 2, my = innerHeight / 2, cx = mx, cy = my;
-    addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; });
-    document.addEventListener('mouseover', (e) => cur.classList.toggle('big', !!e.target.closest('[data-cursor="big"], .idx-row, .j-card')));
-    (function loop() {
-      cx += (mx - cx) * .22; cy += (my - cy) * .22;
-      cur.style.transform = `translate(${cx}px, ${cy}px)`;
-      tx += (mx - tx) * .1; ty += (my - ty) * .1;
-      if (pvOn) pv.style.left = tx + 'px', pv.style.top = ty + 'px';
-      requestAnimationFrame(loop);
-    })();
-
-    /* reveal */
-    const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12, rootMargin: '0px 0px -8% 0px' });
-    $$('.rv').forEach(el => io.observe(el));
-
-    /* giant footer: variable weight by cursor proximity */
-    const giant = $('#giant');
-    giant.innerHTML = 'Okayasu'.split('').map(c => `<span>${c}</span>`).join('');
-    const letters = $$('span', giant);
-    let gActive = false;
-    new IntersectionObserver(([e]) => { gActive = e.isIntersecting; }).observe(giant);
-    addEventListener('mousemove', (e) => {
-      if (!gActive) return;
-      letters.forEach(l => {
-        const r = l.getBoundingClientRect();
-        const d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
-        const w = Math.round(200 + 700 * Math.max(0, 1 - d / 420));
-        l.style.fontVariationSettings = `"wght" ${w}, "opsz" 144`;
-        l.style.fontStyle = d < 120 ? 'italic' : 'normal';
-      });
-    });
-    // touch: breathing wave
-    if (matchMedia('(hover: none)').matches && !reduceMotion) {
-      let t = 0; (function wave() { t += .03; letters.forEach((l, i) => l.style.fontVariationSettings = `"wght" ${Math.round(500 + 350 * Math.sin(t + i * .7))}, "opsz" 144`); requestAnimationFrame(wave); })();
     }
+    const open = () => { bg.classList.add('open'); inp.value = ''; act = 0; render(); setTimeout(() => inp.focus(), 10); };
+    const close = () => bg.classList.remove('open');
+    const exec = (i) => { const c = items[i]; close(); if (c) c.run(); };
+    inp.addEventListener('input', () => { act = 0; render(); });
+    inp.addEventListener('keydown', (e) => {
+      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && items.length) { e.preventDefault(); act = (act + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length; render(); const a = $('.act', list); if (a) a.scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'Enter') exec(act);
+    });
+    bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
+    $('#kbar').addEventListener('click', open);
 
-    /* colophon + shortcuts */
-    const modal = $('#colophon');
-    const openModal = () => modal.classList.add('open');
-    const closeModal = () => modal.classList.remove('open');
-    $('#colophon-btn').addEventListener('click', openModal);
-    $('#colophon-close').addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    let gPending = false;
     addEventListener('keydown', (e) => {
-      if (e.metaKey || e.ctrlKey || e.altKey || e.target.matches('input, textarea')) return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); bg.classList.contains('open') ? close() : open(); return; }
+      if (e.key === 'Escape') { close(); return; }
+      if (e.target.matches('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key.toLowerCase();
-      if (k === '?') openModal();
-      else if (k === 'escape') closeModal();
-      else if (k === 't') toggleTheme();
-      else if (k === 'w') $('#works').scrollIntoView({ behavior: 'smooth' });
-      else if (k === 'c') $('#contact').scrollIntoView({ behavior: 'smooth' });
+      if (gPending) { gPending = false; const m = { a: '#about', e: '#expertise', w: '#works', j: '#journal', c: '#contact' }[k]; if (m) go(m)(); return; }
+      if (k === 'g') { gPending = true; setTimeout(() => { gPending = false; }, 900); }
       else if (k === 'd' && window.DesignSwitcher) window.DesignSwitcher.open();
     });
   })();

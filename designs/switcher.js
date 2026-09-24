@@ -1,7 +1,7 @@
 /* ============================================================
    DESIGN SWITCHER
    全デザイン共通の切り替えUI。
-   <script src="designs/switcher.js" data-current="pop" data-position="bottom-right"></script>
+   <script src="designs/switcher.js" data-current="os" data-position="hidden"></script>
    data-position: bottom-right | bottom-left | hidden（hidden の場合は window.DesignSwitcher.open() で開く）
 ============================================================ */
 (function () {
@@ -13,10 +13,10 @@
   const root = new URL('..', dir);                                  // サイトルート
 
   const DESIGNS = [
-    { id: 'pop',    name: 'Pop Clay',  jp: 'ポップ',           desc: 'オレンジのクレイモーフィズム。オリジナル版。', href: new URL('index.html', root).href, dot: '#F05A00' },
+    { id: 'os',     name: 'HiroOS',    jp: 'デフォルト',       desc: 'ブラウザの中で動くデスクトップOS。',           href: new URL('index.html', root).href, dot: '#7c6cff' },
+    { id: 'pop',    name: 'Pop Clay',  jp: 'ポップ',           desc: 'オレンジのクレイモーフィズム。オリジナル版。', href: new URL('pop.html', dir).href,     dot: '#F05A00' },
     { id: 'matrix', name: 'Matrix',    jp: 'プログラマー',     desc: 'デジタルレインと対話型ターミナル。',             href: new URL('matrix.html', dir).href, dot: '#00ff41' },
-    { id: 'noir',   name: 'Noir',      jp: 'シック',           desc: '余白とセリフ体で魅せるエディトリアル。',       href: new URL('noir.html', dir).href,   dot: '#b39266' },
-    { id: 'os',     name: 'HiroOS',    jp: 'お任せ',           desc: 'ブラウザの中で動くデスクトップOS。',           href: new URL('os.html', dir).href,     dot: '#7c6cff' },
+    { id: 'noir',   name: 'Noir',      jp: 'シック',           desc: 'モノトーンで仕立てたミニマルなダーク。',     href: new URL('noir.html', dir).href,   dot: '#d4d4d8' },
   ];
 
   const host = document.createElement('div');
@@ -88,9 +88,10 @@
       .t-matrix span { position: absolute; top: 0; width: 2px; background: linear-gradient(#00ff4100, #00ff41); border-radius: 2px; animation: rain 1.6s linear infinite; }
       .t-matrix b { position: absolute; left: 10%; bottom: 14%; font: 700 12px/1.3 ui-monospace, Menlo, monospace; color: #00ff41; text-shadow: 0 0 8px #00ff41; }
       @keyframes rain { from { transform: translateY(-100%); } to { transform: translateY(260%); } }
-      .t-noir { background: #eeeae3; }
-      .t-noir b { position: absolute; left: 12%; top: 18%; font: italic 400 30px/0.9 "Fraunces", Georgia, serif; color: #141414; }
-      .t-noir span { position: absolute; left: 12%; right: 12%; height: 1px; background: #1414142e; }
+      .t-noir { background: #08080a; background-image: linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px); background-size: 14px 14px; }
+      .t-noir::before { content: ""; position: absolute; width: 90%; aspect-ratio: 1; left: 5%; top: -55%; border-radius: 50%; filter: blur(18px); opacity: .55; background: conic-gradient(#3b3b46, #cfcfd8, #1b1b22, #9a9aa6, #3b3b46); }
+      .t-noir b { position: absolute; left: 0; right: 0; top: 36%; text-align: center; font: 600 17px/1.05 -apple-system, "Inter", sans-serif; letter-spacing: -.04em; color: #fff; }
+      .t-noir span { position: absolute; left: 50%; bottom: 16%; width: 34%; height: 11px; margin-left: -17%; border-radius: 99px; background: #fff; }
       .t-os { background: radial-gradient(circle at 20% 20%, #ff8fb1, transparent 45%), radial-gradient(circle at 80% 30%, #7c6cff, transparent 50%), radial-gradient(circle at 50% 90%, #36d1dc, transparent 55%), #1b1740; }
       .t-os span { position: absolute; border-radius: 5px; background: rgba(255,255,255,.72); box-shadow: 0 4px 12px rgba(0,0,0,.25); }
       .t-os span::before { content: ""; position: absolute; left: 4px; top: 4px; width: 14px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #ff5f57 0 4px, transparent 4px 5px, #febc2e 5px 9px, transparent 9px 10px, #28c840 10px); }
@@ -135,7 +136,7 @@
     if (id === 'pop') return '<span></span><b>HIROAKI<br>OKAYASU</b>';
     if (id === 'matrix') return Array.from({ length: 11 }, (_, i) =>
       `<span style="left:${6 + i * 8.6}%;height:${30 + (i * 37) % 45}%;animation-delay:-${(i * 0.37) % 1.6}s;opacity:${0.35 + (i % 3) * 0.25}"></span>`).join('') + '<b>&gt; wake up_</b>';
-    if (id === 'noir') return '<b>Hiroaki<br>Okayasu</b><span style="bottom:30%"></span><span style="bottom:22%;right:40%"></span>';
+    if (id === 'noir') return '<b>Building quiet<br>tools.</b><span></span>';
     return '<span style="left:10%;top:14%;width:52%;height:46%"></span><span style="left:40%;top:34%;width:48%;height:40%"></span><i></i>';
   }
 

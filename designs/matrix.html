@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>hiro@okayasu:~$ — Hiroaki Okayasu</title>
-  <meta name="description" content="Hiroaki Okayasu — Developer, Creator, Dreamer. Matrix edition." />
+  <meta name="description" content="Hiroaki Okayasu — Developer & Creator. Matrix edition." />
   <meta name="theme-color" content="#000000" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -404,8 +404,7 @@
 ╚═╝  ╚═╝ ╚═════╝
 
   developer
-  creator
-  dreamer</pre>
+  creator</pre>
             <dl>
               <dd class="title">hiro<span>@</span>okayasu</dd>
               <dd class="sep">-------------</dd>
@@ -779,7 +778,7 @@
     /* ============ HERO ============ */
     function heroIntro() {
       $$('.hero [data-scramble]').forEach((el, i) => setTimeout(() => scramble(el, undefined, 900), i * 180));
-      const roles = ['developer', 'creator', 'dreamer', 'automation engineer', 'tennis player', 'guitarist'];
+      const roles = ['developer', 'creator', 'automation engineer', 'tennis player', 'guitarist'];
       const roleEl = $('#role');
       let r = 0, i = 0, del = false;
       (function loop() {
@@ -906,7 +905,7 @@
          ['clear', '画面クリア'], ['history', '履歴']].forEach(([c, d]) => print(`  ${c.padEnd(16)} ${d}`));
         print('  ...and a few secrets. 🐇', 'dim');
       },
-      whoami: () => { print('guest  — ようこそ、訪問者さん。'); print('host   — hiro: developer · creator · dreamer', 'hi'); },
+      whoami: () => { print('guest  — ようこそ、訪問者さん。'); print('host   — hiro: developer · creator', 'hi'); },
       about: () => ['Hiroaki Okayasu / フリーランス開発者', 'Python・JavaScript・PHP を中心に、業務自動化からモバイルアプリまで。', 'off-duty: 📷 camera / 🎾 tennis / 🎸 guitar'].forEach(l => print(l)),
       skills: () => $$('.module').forEach(m => print(`▸ ${$('.module-name', m).textContent.padEnd(20)} ${$$('.lbl', m).map(x => x.textContent).join(', ')}`)),
       works: () => { WORKS.forEach((w, i) => print(`  [${String(i + 1).padStart(2, '0')}] ${w.id.padEnd(15)} ${w.jp}`)); print("usage: open <番号 or 名前>", 'dim'); },
