@@ -249,7 +249,16 @@
     .f-info .chips { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 10px; }
     .f-info .empty { color: var(--ink-3); margin: auto; }
     @media (max-width: 900px) { .finder { grid-template-columns: 150px 1fr; } .f-info { display: none; } }
-    @media (max-width: 560px) { .finder { grid-template-columns: 1fr; } .f-side { display: flex; gap: 4px; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; } .f-side h6 { display: none; } .f-side button { width: auto; white-space: nowrap; } .f-side button small { display: none; } .f-tool input { width: 110px; } }
+    @media (max-width: 560px) {
+      .finder { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+      .f-side { display: flex; align-items: center; gap: 4px; overflow-x: auto; overflow-y: hidden; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; scrollbar-width: none; }
+      .f-side::-webkit-scrollbar { display: none; }
+      .f-side h6 { display: none; }
+      .f-side button { flex: none; width: auto; height: 32px; padding: 0 12px; border-radius: 999px; white-space: nowrap; }
+      .f-side button small { display: none; }
+      .f-main { min-height: 0; }
+      .f-tool input { width: 110px; }
+    }
 
     /* ── app: browser ── */
     .browser { display: flex; flex-direction: column; height: 100%; }
@@ -709,7 +718,7 @@
         const draw = () => {
           const list = WORKS.filter(w => (cat === 'all' || w.cat === cat) && (!q.value || (w.name + w.desc + w.tech.join()).toLowerCase().includes(q.value.toLowerCase())));
           grid.innerHTML = list.map(w => `<button class="f-item ${sel === w.id ? 'sel' : ''}" data-id="${w.id}">${icon(w.ic, w.c[0], w.c[1])}<span>${esc(w.name)}</span></button>`).join('');
-          status.textContent = `${list.length} 項目 ・ ダブルクリックで開く`;
+          status.textContent = `${list.length} 項目 ・ ${innerWidth < 900 ? "タップ" : "ダブルクリック"}で開く`;
           $$('.f-item', grid).forEach(b => {
             b.addEventListener('click', () => { sel = b.dataset.id; $$('.f-item', grid).forEach(x => x.classList.toggle('sel', x === b)); showInfo(); if (isMobile() || innerWidth < 900) launchWork(WORKS.find(w => w.id === sel)); });
             b.addEventListener('dblclick', () => launchWork(WORKS.find(w => w.id === b.dataset.id)));
