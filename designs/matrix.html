@@ -334,8 +334,8 @@
     }
     .overlay.show { opacity: 1; visibility: visible; }
     .overlay .msg { font-size: clamp(18px, 3.4vw, 32px); color: var(--g); text-shadow: 0 0 14px var(--g); max-width: 900px; white-space: pre-wrap; }
-    .runner { position: fixed; z-index: 1600; bottom: 18%; left: -80px; font-size: 48px; pointer-events: none; animation: run 2.4s cubic-bezier(.5,0,.5,1) forwards; }
-    @keyframes run { 0% { transform: translateX(0) translateY(0); } 25% { transform: translateX(28vw) translateY(-40px); } 50% { transform: translateX(55vw) translateY(0); } 75% { transform: translateX(80vw) translateY(-40px); } 100% { transform: translateX(calc(100vw + 160px)) translateY(0); } }
+    .runner { position: fixed; z-index: 1600; bottom: 18%; right: -80px; font-size: 48px; pointer-events: none; animation: run 2.4s cubic-bezier(.5,0,.5,1) forwards; }
+    @keyframes run { 0% { transform: translateX(0) translateY(0); } 25% { transform: translateX(-28vw) translateY(-40px); } 50% { transform: translateX(-55vw) translateY(0); } 75% { transform: translateX(-80vw) translateY(-40px); } 100% { transform: translateX(calc(-100vw - 160px)) translateY(0); } }
     .toast { position: fixed; left: 50%; top: 72px; transform: translate(-50%, -20px); z-index: 1400; padding: 10px 16px; border: 1px solid var(--g); background: #000; color: var(--g); font-size: 12.5px; opacity: 0; transition: all .4s; pointer-events: none; box-shadow: 0 0 30px rgba(var(--g-rgb), .3); max-width: calc(100% - 32px); }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
@@ -932,7 +932,7 @@
         print(`switching to ${a[0]}...`, 'hi'); setTimeout(() => window.DesignSwitcher.go(a[0]), 400);
       },
       sudo: (a) => {
-        if (a.join(' ') === 'hire hiro') { print('[sudo] password for guest: ********', 'dim'); print('✔ Permission granted. 最高の判断です。メーラーを起動します...', 'hi'); setTimeout(() => { location.href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('お仕事のご相談'); }, 900); return; }
+        if (a.join(' ') === 'hire hiro') { print('[sudo] password for guest: ********', 'dim'); print('✔ Permission granted. 最高の判断です。Mailer を起動します...', 'hi'); setTimeout(() => { location.href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('お仕事のご相談'); }, 900); return; }
         if (a[0] === 'rm') return COMMANDS.rm(a.slice(1));
         print('guest is not in the sudoers file. This incident will be reported. 👀', 'err');
       },

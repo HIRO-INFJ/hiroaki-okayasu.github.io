@@ -9,7 +9,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet" />
 
   <style>
     :root {
@@ -348,6 +348,18 @@
     @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
     .letter { padding: 30px 34px; font-size: 14px; line-height: 2; color: #333; background: repeating-linear-gradient(#fffdf5 0 31px, #e9e3cf 31px 32px); min-height: 100%; }
     .letter h2 { font-size: 20px; margin-bottom: 12px; }
+    .memo { padding: 26px 30px 30px; min-height: 100%; font-family: "Klee One", "Noto Sans JP", sans-serif; font-size: 15px; line-height: 32px; color: #2b2b33;
+      background: repeating-linear-gradient(#fffdf5 0 31px, #e6dfc8 31px 32px); background-position: 0 18px; position: relative; }
+    .memo::before { content: ""; position: absolute; left: 22px; top: 0; bottom: 0; width: 1px; background: rgba(220,80,80,.35); }
+    .memo h2 { font-size: 19px; font-weight: 600; line-height: 32px; margin-bottom: 4px; }
+    .memo .stamp { position: absolute; right: 22px; top: 18px; transform: rotate(8deg); padding: 0 10px; border: 2px solid rgba(220,60,60,.6); color: rgba(220,60,60,.7); border-radius: 6px; font-weight: 600; font-size: 13px; line-height: 26px; }
+    .memo ul { list-style: none; }
+    .memo li::before { content: "・"; }
+    .memo li ul { padding-left: 1.4em; }
+    .memo li li::before { content: "– "; }
+    .memo del { color: #8a8a95; text-decoration-color: rgba(220,60,60,.8); text-decoration-thickness: 2px; }
+    .memo code { font-family: var(--mono); font-size: 12.5px; background: rgba(0,0,0,.06); padding: 1px 6px; border-radius: 4px; }
+    .memo .go { margin-top: 18px; font-family: var(--font); }
     .trash-list { padding: 8px; }
     .trash-list button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 7px; text-align: left; font-size: 13px; }
     .trash-list button:hover { background: rgba(0,0,0,.05); }
@@ -510,7 +522,8 @@
       browser:  { name: 'Browser', ic: 'globe', c: ['#7dd3fc', '#0284c7'], w: 900, h: 600 },
       settings: { name: 'Settings', ic: 'gear', c: ['#a1a1aa', '#52525b'], w: 560, h: 480 },
       secret:   { name: 'secret', ic: 'folder', c: ['#5ac8fa', '#1e88e5'], w: 420, h: 330, badge: 'lock' },
-      trash:    { name: 'Trash', ic: 'trash', c: ['#d4d4d8', '#71717a'], w: 460, h: 340 },
+      trash:    { name: 'Trash', ic: 'trash', c: ['#d4d4d8', '#71717a'], w: 460, h: 400 },
+      memo:     { name: 'Memo', ic: 'note', c: ['#ffe066', '#f7b500'], w: 470, h: 540 },
       dialog:   { name: '', ic: 'file', c: ['#d4d4d8', '#71717a'], w: 360, h: 260 },
     };
     const DOCK = ['about', 'works', 'skills', 'journal', 'mail', 'terminal', 'music', 'settings', '|', 'trash'];
@@ -670,11 +683,11 @@
               <p class="bio">テクノロジーと創造性の交差点で活動するフリーランス開発者。Python・JavaScript・PHP を中心に、業務自動化からモバイルアプリまで幅広く手がけています。</p>
               <p class="bio">コードを書かないときは、カメラを持って街を歩いたり、テニスコートに立ったり、ギターを弾いたりしています。</p>
               <dl class="spec">
-                <dt>プロセッサ</dt><dd>Curiosity Core™ i9（常時ターボ）</dd>
-                <dt>メモリ</dt><dd>アイデア 無制限</dd>
-                <dt>グラフィックス</dt><dd>Mirrorless Camera</dd>
+                <dt>プロセッサ</dt><dd>Curiosity InfinityCore™ i4869 turbo</dd>
+                <dt>メモリ</dt><dd>無制限</dd>
+                <dt>グラフィックス</dt><dd>Human-Scale</dd>
                 <dt>起動ディスク</dt><dd>Coffee SSD ☕</dd>
-                <dt>シリアル番号</dt><dd>HIRO-OKY-2025</dd>
+                <dt>シリアル番号</dt><dd>HIRO-OKYS-1994</dd>
               </dl>
               <div class="tagrow">${['Python', 'JavaScript', 'PHP', 'React / Next.js', 'Notion API', 'Playwright', 'Chrome Extension', 'note.com'].map(t => `<span class="chip">${t}</span>`).join('')}</div>
               <div class="btnrow">
@@ -803,7 +816,7 @@
         const pr = (t, c = '') => { const d = document.createElement('div'); d.className = 'ln ' + c; d.textContent = t; out.appendChild(d); term.scrollTop = term.scrollHeight; };
         const CMD = {
           help: () => { pr('commands:', 'h'); [['open <app>', 'アプリを開く (about, works, skills, journal, mail, music, settings)'], ['works', '作品一覧'], ['run <n>', '作品を起動'], ['whoami', '自己紹介'], ['neofetch', 'システム情報'], ['wallpaper <name>', 'aurora | sunset | forest | mono'], ['design [name]', 'デザイン切り替え'], ['ls -a', 'ファイル一覧'], ['clear', '画面クリア'], ['exit', 'ターミナルを閉じる']].forEach(([a, b]) => pr(`  ${a.padEnd(18)}${b}`)); },
-          open: (a) => { const id = a[0]; if (APPS[id] && id !== 'dialog') { pr(`opening ${id}...`, 'd'); openApp(id); } else pr(`open: ${id || ''}: アプリが見つかりません`, 'e'); },
+          open: (a) => { const id = a[0]; if (APPS[id] && !['dialog', 'memo'].includes(id)) { pr(`opening ${id}...`, 'd'); openApp(id); } else pr(`open: ${id || ''}: アプリが見つかりません`, 'e'); },
           works: () => WORKS.forEach((w, i) => pr(`  ${String(i + 1).padStart(2)}  ${w.name.padEnd(14)} ${w.kind}`)),
           run: (a) => { const w = WORKS[+a[0] - 1]; if (w) { pr(`launching ${w.name}...`, 'd'); launchWork(w); } else pr('run: 番号を指定してください (works で確認)', 'e'); },
           whoami: () => { pr('guest'); pr('...and the owner is Hiroaki Okayasu — developer · creator.', 'h'); },
@@ -891,15 +904,48 @@
       },
 
       trash(rec) {
+        const MEMOS = {
+          matrix: `<span class="stamp">ボツ?</span>
+            <h2>デザイン案 #2 ── 緑の雨</h2>
+            <ul>
+              <li>真っ黒な画面に、緑の文字が雨みたいに降ってくる</li>
+              <li>本物のターミナルを置いて、コマンドで遊べるように
+                <ul><li>まずは <code>help</code> から</li><li>隠しファイルは <code>ls -a</code> で見えるように</li><li>採用担当の人が <code>sudo</code> で何かしてくれたら嬉しい</li></ul></li>
+              <li>隠し要素のアイデア
+                <ul><li>昔のゲームの“あの”コマンドで世界の色が変わる</li><li>救世主の名前をタイプすると…？</li><li>白いうさぎをどこかの隅っこに 🐇</li></ul></li>
+              <li><del>やりすぎだからボツ</del> → やっぱり作った</li>
+            </ul>
+            <button class="btn primary go" data-design="matrix">緑の雨を見に行く →</button>`,
+          noir: `<span class="stamp">保留</span>
+            <h2>デザイン案 #3 ── Noir</h2>
+            <ul>
+              <li>色は使わない。白と黒と、グレーだけ</li>
+              <li>マウスを使わない人のためのサイトにする
+                <ul><li>⌘ と K（Windows は Ctrl と K）を押せば、どこへでも行ける</li><li>Gmail や GitHub みたいに「G のあとに頭文字」で移動
+                  <ul><li>G → W で Works、G → C で Contact …</li></ul></li></ul></li>
+              <li>日本時間の時計を置く。夜中に来た人には、ちょっとだけ違うことを言う 🌙</li>
+              <li>カードの縁がカーソルを追いかけて光る</li>
+              <li><del>地味すぎ？</del> → 大人っぽいからアリ</li>
+            </ul>
+            <button class="btn primary go" data-design="noir">Noir を見に行く →</button>`,
+        };
         const T = [
+          ['draft_02_緑の雨.txt', null, 'term', ['#22c55e', '#052e16'], '3 KB', 'matrix'],
+          ['draft_03_noir.txt', null, 'note', ['#d4d4d8', '#27272a'], '2 KB', 'noir'],
           ['bugs_2024.log', '1,024 件のバグ。すべて修正済み……のはず。', 'file', ['#fca5a5', '#dc2626'], '2.4 MB'],
           ['portfolio_final_final_v2(本当に最終).html', 'これが最終版だと思っていた頃のポートフォリオ。', 'globe', ['#7dd3fc', '#0284c7'], '48 KB'],
           ['sleep_schedule.pdf', '締切前には意味をなさないドキュメント。', 'note', ['#e5e7eb', '#9ca3af'], '12 KB'],
           ['node_modules/', '宇宙で最も重い物体。', 'folder', ['#5ac8fa', '#1e88e5'], '∞ GB'],
         ];
         rec.body.innerHTML = `<div class="trash-list">${T.map((t, i) => `<button data-i="${i}">${icon(t[2], t[3][0], t[3][1])}<span>${esc(t[0])}</span><small>${t[4]}</small></button>`).join('')}</div>`;
-        $$('button', rec.body).forEach(b => b.addEventListener('dblclick', () => { const t = T[b.dataset.i]; dialog(t[0], t[0], t[1], t[2], t[3]); }));
-        $$('button', rec.body).forEach(b => b.addEventListener('click', () => { if (isMobile()) { const t = T[b.dataset.i]; dialog(t[0], t[0], t[1], t[2], t[3]); } }));
+        const openItem = (t) => t[5] ? openApp('memo', { key: 'memo-' + t[5], title: t[0], html: MEMOS[t[5]] }) : dialog(t[0], t[0], t[1], t[2], t[3]);
+        $$('button', rec.body).forEach(b => b.addEventListener('dblclick', () => openItem(T[b.dataset.i])));
+        $$('button', rec.body).forEach(b => b.addEventListener('click', () => { if (isMobile()) openItem(T[b.dataset.i]); }));
+      },
+
+      memo(rec, o) {
+        rec.body.innerHTML = `<div class="memo selectable">${o.html}</div>`;
+        $$('[data-design]', rec.body).forEach(b => b.addEventListener('click', () => window.DesignSwitcher && window.DesignSwitcher.go(b.dataset.design)));
       },
 
       dialog(rec, o) {
@@ -1077,7 +1123,7 @@
     function renderSpot() {
       const q = spotIn.value.trim().toLowerCase();
       const all = [
-        ...Object.entries(APPS).filter(([k]) => !['dialog', 'secret'].includes(k)).map(([k, a]) => ({ label: a.name, sub: 'アプリ', ic: a.ic, c: a.c, run: () => openApp(k) })),
+        ...Object.entries(APPS).filter(([k]) => !['dialog', 'secret', 'memo'].includes(k)).map(([k, a]) => ({ label: a.name, sub: 'アプリ', ic: a.ic, c: a.c, run: () => openApp(k) })),
         ...WORKS.map(w => ({ label: w.name, sub: w.kind, ic: w.ic, c: w.c, run: () => launchWork(w), extra: w.desc + w.tech.join() })),
         { label: 'Matrix デザインへ', sub: 'デザイン', ic: 'term', c: ['#22c55e', '#052e16'], run: () => window.DesignSwitcher.go('matrix') },
         { label: 'Noir デザインへ', sub: 'デザイン', ic: 'note', c: ['#d6d3d1', '#44403c'], run: () => window.DesignSwitcher.go('noir') },
