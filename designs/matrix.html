@@ -334,8 +334,49 @@
     }
     .overlay.show { opacity: 1; visibility: visible; }
     .overlay .msg { font-size: clamp(18px, 3.4vw, 32px); color: var(--g); text-shadow: 0 0 14px var(--g); max-width: 900px; white-space: pre-wrap; }
-    .runner { position: fixed; z-index: 1600; bottom: 18%; right: -80px; font-size: 48px; pointer-events: none; animation: run 2.4s cubic-bezier(.5,0,.5,1) forwards; }
-    @keyframes run { 0% { transform: translateX(0) translateY(0); } 25% { transform: translateX(-28vw) translateY(-40px); } 50% { transform: translateX(-55vw) translateY(0); } 75% { transform: translateX(-80vw) translateY(-40px); } 100% { transform: translateX(calc(-100vw - 160px)) translateY(0); } }
+    .runner { position: fixed; z-index: 1600; bottom: 18%; right: -90px; padding: 14px; font-size: 48px; line-height: 1; cursor: pointer; user-select: none; animation: run 4s cubic-bezier(.45,.05,.55,.95) forwards; }
+    .runner:hover { filter: drop-shadow(0 0 12px #fff); }
+    @keyframes run { 0% { transform: translateX(0) translateY(0); } 25% { transform: translateX(-28vw) translateY(-40px); } 50% { transform: translateX(-55vw) translateY(0); } 75% { transform: translateX(-80vw) translateY(-40px); } 100% { transform: translateX(calc(-100vw - 180px)) translateY(0); } }
+    .runner.caught { animation-play-state: paused; }
+
+    /* rabbit hole → construct */
+    body.falling main, body.falling nav, body.falling footer { transition: transform 1.5s cubic-bezier(.6,0,.9,.35), opacity 1.4s ease-in, filter 1.4s; transform: perspective(900px) translateZ(-1400px) rotate(28deg); opacity: 0; filter: blur(4px); pointer-events: none; }
+    .hole { position: fixed; inset: 0; z-index: 1550; pointer-events: none; opacity: 0; overflow: hidden; transition: opacity .4s; background: radial-gradient(circle at 50% 50%, #000 0 8%, transparent 60%); }
+    .hole.on { opacity: 1; }
+    .hole i { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 1px solid rgba(var(--g-rgb), .7); box-shadow: 0 0 14px rgba(var(--g-rgb), .5); transform: scale(0); animation: ring 1.1s cubic-bezier(.5,0,1,1) infinite; }
+    @keyframes ring { to { transform: scale(40); opacity: 0; } }
+    .hole::after { content: ""; position: absolute; inset: 0; background: #fff; opacity: 0; transition: opacity .45s ease-in; }
+    .hole.white::after { opacity: 1; }
+    .construct { position: fixed; inset: 0; z-index: 1700; overflow-y: auto; display: grid; place-items: center; padding: 48px 16px;
+      background: radial-gradient(ellipse 120% 60% at 50% 105%, #d9d9d9, transparent 60%), radial-gradient(ellipse at 50% 40%, #fff 30%, #ededed 100%);
+      color: #141414; font-family: -apple-system, BlinkMacSystemFont, "Inter", "Hiragino Sans", "Noto Sans JP", sans-serif; opacity: 0; visibility: hidden; transition: opacity .8s, visibility .8s; }
+    .construct.show { opacity: 1; visibility: visible; }
+    .construct::selection, .construct *::selection { background: #141414; color: #fff; }
+    .c-in { width: min(640px, 100%); text-align: center; }
+    .c-k { font-family: var(--mono); font-size: 11.5px; letter-spacing: .18em; color: #8a8a8a; }
+    .c-in h2 { font-size: clamp(26px, 5vw, 40px); font-weight: 600; letter-spacing: -.03em; line-height: 1.25; margin: 14px 0 12px; }
+    .c-in > p { color: #555; font-size: 14px; line-height: 1.9; }
+    .c-in b { color: #141414; }
+    .c-list { margin: 30px auto 0; text-align: left; border-top: 1px solid #ddd; }
+    .c-list li { list-style: none; display: flex; gap: 12px; align-items: baseline; padding: 11px 4px; border-bottom: 1px solid #e3e3e3; font-size: 14px; color: #999; }
+    .c-list li.ok { color: #141414; }
+    .c-list li span { font-family: var(--mono); flex: none; white-space: nowrap; }
+    .c-list li small { margin-left: auto; font-family: var(--mono); font-size: 11px; color: #aaa; }
+    .c-score { font-family: var(--mono); font-size: 12px; color: #8a8a8a; margin-top: 12px; text-align: right; }
+    .c-msg { margin-top: 30px; padding: 18px 20px; border: 1px solid #ddd; background: rgba(255,255,255,.7); font-size: 14px; line-height: 1.9; color: #333; }
+    .c-msg a { color: #141414; text-decoration: underline; text-underline-offset: 3px; }
+    .c-doors { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 28px; }
+    .c-doors button { padding: 10px 18px; border: 1px solid #141414; font-size: 13px; font-family: inherit; color: #141414; background: transparent; transition: background .2s, color .2s; }
+    .c-doors button:hover, .c-doors button.main { background: #141414; color: #fff; }
+
+    /* déjà vu */
+    .cat { position: fixed; z-index: 1600; left: -90px; bottom: 7%; font-size: 44px; line-height: 1; pointer-events: none; animation: walk 3.6s linear forwards; }
+    .cat span { display: inline-block; transform: scaleX(-1); animation: bobc .3s ease-in-out infinite alternate; }
+    @keyframes walk { to { transform: translateX(calc(100vw + 180px)); } }
+    @keyframes bobc { to { transform: scaleX(-1) translateY(-5px); } }
+    body.glitch main, body.glitch nav { animation: gl .9s steps(1) forwards; }
+    @keyframes gl { 0% { transform: translate(0); } 10% { transform: translate(-6px, 3px); clip-path: inset(10% 0 40% 0); } 20% { transform: translate(5px, -2px); clip-path: inset(50% 0 10% 0); } 30% { transform: translate(0); clip-path: none; filter: invert(1); } 40% { filter: none; transform: translate(3px, 0) skewX(4deg); } 55% { transform: translate(-4px, 2px); clip-path: inset(30% 0 30% 0); } 70% { transform: none; clip-path: none; } 80% { transform: translateY(-3px); } 100% { transform: none; } }
+
     .toast { position: fixed; left: 50%; top: 72px; transform: translate(-50%, -20px); z-index: 1400; padding: 10px 16px; border: 1px solid var(--g); background: #000; color: var(--g); font-size: 12.5px; opacity: 0; transition: all .4s; pointer-events: none; box-shadow: 0 0 30px rgba(var(--g-rgb), .3); max-width: calc(100% - 32px); }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
@@ -638,6 +679,8 @@
 
   <div class="overlay" id="overlay" aria-hidden="true"><div class="msg" id="overlay-msg"></div></div>
   <div class="toast" id="toast" role="status"></div>
+  <div class="hole" id="hole" aria-hidden="true"><i></i><i style="animation-delay:.15s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.45s"></i><i style="animation-delay:.6s"></i><i style="animation-delay:.75s"></i><i style="animation-delay:.9s"></i></div>
+  <div class="construct" id="construct" role="dialog" aria-modal="true" aria-label="白い部屋"><div class="c-in" id="c-in"></div></div>
 
   <script>
   (function () {
@@ -932,7 +975,7 @@
         print(`switching to ${a[0]}...`, 'hi'); setTimeout(() => window.DesignSwitcher.go(a[0]), 400);
       },
       sudo: (a) => {
-        if (a.join(' ') === 'hire hiro') { print('[sudo] password for guest: ********', 'dim'); print('✔ Permission granted. 最高の判断です。Mailer を起動します...', 'hi'); setTimeout(() => { location.href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('お仕事のご相談'); }, 900); return; }
+        if (a.join(' ') === 'hire hiro') { found('sudo'); print('[sudo] password for guest: ********', 'dim'); print('✔ Permission granted. 最高の判断です。Mailer を起動します...', 'hi'); setTimeout(() => { location.href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('お仕事のご相談'); }, 900); return; }
         if (a[0] === 'rm') return COMMANDS.rm(a.slice(1));
         print('guest is not in the sudoers file. This incident will be reported. 👀', 'err');
       },
@@ -950,6 +993,7 @@
         print('usage: matrix <green|red|blue|gold|white|fast|slow>', 'dim');
       },
       hack: async () => {
+        found('hack');
         const hex = () => Array.from({ length: 8 }, () => Math.floor(Math.random() * 65536).toString(16).padStart(4, '0')).join(' ');
         Rain.setSpeed(3);
         for (let i = 0; i < 14; i++) { print(`0x${(0x7ff000 + i * 16).toString(16)}  ${hex()}`, 'dim'); await sleep(70); }
@@ -1008,7 +1052,7 @@
       }
       overlay.classList.remove('show'); busy = false;
     }
-    function wakeUp() { sequence(['Wake up, visitor...', 'The Matrix has you...', 'Follow the white rabbit. 🐇', 'Knock, knock.']); }
+    function wakeUp() { found('neo'); sequence(['Wake up, visitor...', 'The Matrix has you...', 'Follow the white rabbit. 🐇', 'Knock, knock.']); }
     overlay.addEventListener('click', () => { overlay.classList.remove('show'); });
 
     // "neo" をどこかでタイプ / コナミコマンド
@@ -1020,17 +1064,127 @@
       if (buf.slice(-3).join('') === 'neo') wakeUp();
       if (buf.join(',') === KONAMI.join(',')) {
         const on = !document.body.classList.contains('redpill');
-        (on ? COMMANDS.redpill : COMMANDS.bluepill)();
+        (on ? COMMANDS.redpill : COMMANDS.bluepill)(); found('konami');
         toast(on ? '🔴 RED PILL MODE — もう一度コマンドで戻れます' : '🔵 BLUE PILL — いつもの世界へ');
       }
     });
 
-    // 白うさぎ
+    // 見つけた隠し要素の記録（このブラウザだけ）
+    const SECRETS = [
+      ['konami', 'コナミコマンド — 赤い世界へ', '昔のゲームの有名コマンド'],
+      ['neo', 'neo — Wake up', '救世主の名前をタイプする'],
+      ['rabbit', '白うさぎを捕まえた', '白いうさぎを追え'],
+      ['deja', 'デジャヴ — 2度通る黒猫', '長居した人だけが見るもの'],
+      ['sudo', 'sudo hire hiro', '管理者の特権で、雇う'],
+      ['hack', 'hack', 'ターミナルで侵入を試みる'],
+    ];
+    const store = {
+      get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } },
+      set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+    };
+    function found(key) { const f = store.get('mx-found', []); if (!f.includes(key)) { f.push(key); store.set('mx-found', f); } }
+
+    // 白うさぎ：走っている間にクリックすると穴に落ちる
     $('#rabbit').addEventListener('click', () => {
-      const r = document.createElement('div'); r.className = 'runner'; r.textContent = '🐇'; document.body.appendChild(r);
-      setTimeout(() => r.remove(), 2500);
-      setTimeout(() => { $('#contact').scrollIntoView({ behavior: 'smooth' }); print('🐇 you found the white rabbit. try: cat .secrets', 'hi'); }, 1600);
+      if (busy || $('.runner')) return;
+      const r = document.createElement('div'); r.className = 'runner'; r.textContent = '🐇'; r.setAttribute('role', 'button'); r.setAttribute('aria-label', '白うさぎを捕まえる');
+      document.body.appendChild(r);
+      let caught = false;
+      r.addEventListener('pointerdown', (e) => { e.preventDefault(); if (caught) return; caught = true; r.classList.add('caught'); fall(r); });
+      const escaped = () => {
+        if (caught || !r.isConnected) return; r.remove();
+        $('#contact').scrollIntoView({ behavior: 'smooth' });
+        print('🐇 白うさぎに逃げられた… 走っている間にクリックしてみて。', 'hi');
+      };
+      r.addEventListener('animationend', escaped);
+      setTimeout(escaped, 4300);   // アニメーション無効環境の保険
     });
+
+    async function fall(runner) {
+      if (busy) return; busy = true;
+      found('rabbit');
+      store.set('mx-rabbit', store.get('mx-rabbit', 0) + 1);
+      const main = $('main');
+      main.style.transformOrigin = `50% ${scrollY + innerHeight / 2}px`;
+      Rain.setSpeed(4);
+      await sleep(250); runner.remove();
+      document.body.classList.add('falling');
+      $('#hole').classList.add('on');
+      await sleep(reduceMotion ? 0 : 1500);
+      $('#hole').classList.add('white');
+      await sleep(reduceMotion ? 0 : 500);
+      renderConstruct();
+      $('#construct').classList.add('show');
+      document.body.classList.remove('falling'); main.style.transformOrigin = '';
+      Rain.setSpeed(1);
+      setTimeout(() => $('#hole').classList.remove('on', 'white'), 300);
+      busy = false;
+    }
+
+    function renderConstruct() {
+      const f = store.get('mx-found', []), n = store.get('mx-rabbit', 1);
+      $('#c-in').innerHTML = `
+        <p class="c-k">LOADING PROGRAM ▸ construct</p>
+        <h2>うさぎの穴の、その先へ。</h2>
+        <p>ここは何もない白い部屋。緑の雨の外側、ロード前の世界です。<br>このブラウザで白うさぎを捕まえたのは <b>${n}</b> 回目。</p>
+        <ul class="c-list">${SECRETS.map(([k, name, hint]) => f.includes(k)
+          ? `<li class="ok"><span>[✓]</span>${name}<small>found</small></li>`
+          : `<li><span>[ ]</span>？？？ — ${hint}</li>`).join('')}</ul>
+        <p class="c-score">${f.length} / ${SECRETS.length} secrets</p>
+        <div class="c-msg">${f.length >= SECRETS.length
+          ? 'すべて見つけたあなたへ。ここまで遊んでくれて、本当にありがとう。<br>その好奇心で、一緒に何か作りませんか？ → <a id="c-mail" href="#">Mailer を開く</a>'
+          : 'ここまで来たあなたは、きっと細部にこだわる人。<br>残りの秘密も、緑の雨のどこかに隠れています。'}</div>
+        <div class="c-doors">
+          <button type="button" class="main" data-door="back">緑の雨に戻る</button>
+          <button type="button" data-door="os">HiroOS の扉</button>
+          <button type="button" data-door="noir">Noir の扉</button>
+        </div>`;
+      const m = $('#c-mail'); if (m) m.href = 'mailto:' + EMAIL;
+      $$('[data-door]', $('#c-in')).forEach(b => b.addEventListener('click', () => {
+        if (b.dataset.door === 'back') return closeConstruct();
+        if (window.DesignSwitcher) window.DesignSwitcher.go(b.dataset.door);
+      }));
+      setTimeout(() => $('[data-door="back"]').focus({ preventScroll: true }), 50);
+    }
+    function closeConstruct() { $('#construct').classList.remove('show'); }
+    addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#construct').classList.contains('show')) closeConstruct(); });
+
+    // デジャヴ：ページを見ている時間が 2 分、5〜10 分に達すると黒猫が 2 回通る
+    const DEJA_AT = [120, 300 + Math.floor(Math.random() * 300)];
+    let dwell = 0, dejaCount = 0;
+    setInterval(() => {
+      if (document.visibilityState !== 'visible' || dejaCount >= DEJA_AT.length) return;
+      dwell++;
+      if (dwell >= DEJA_AT[dejaCount] && !busy && !$('#construct').classList.contains('show')) dejaVu();
+    }, 1000);
+
+    async function dejaVu() {
+      busy = true; dejaCount++;
+      found('deja');
+      const walk = () => new Promise(res => {
+        if (reduceMotion) return res();
+        const c = document.createElement('div'); c.className = 'cat'; c.innerHTML = '<span>🐈‍⬛</span>';
+        document.body.appendChild(c);
+        const done = () => { if (c.isConnected) { c.remove(); res(); } };
+        c.addEventListener('animationend', (e) => { if (e.target === c) done(); });
+        setTimeout(done, 3900);   // animationend が来ない環境の保険
+      });
+      await walk();
+      await sleep(350);
+      await walk();                           // まったく同じ黒猫が、もう一度
+      await sleep(300);
+      document.body.classList.add('glitch');
+      Rain.setColor([230, 255, 235]);
+      await sleep(900);
+      document.body.classList.remove('glitch');
+      Rain.setColor(document.body.classList.contains('redpill') ? [255, 43, 74] : [0, 255, 65]);
+      $$('[data-scramble]').forEach(el => scramble(el, undefined, 1100));
+      const msg = dejaCount === 1
+        ? '🐈‍⬛ デジャヴ…？ 同じ黒猫が 2 回通った。マトリックスが書き換えられたのかも。'
+        : '🐈‍⬛ また…？ これは本当にバグかもしれない。';
+      toast(msg, 4200); print(msg, 'hi');
+      busy = false;
+    }
 
     // DevTools を開いた人へ
     console.log('%c\n  ██╗  ██╗ ██████╗\n  ██║  ██║██╔═══██╗\n  ███████║██║   ██║\n  ██╔══██║██║   ██║\n  ██║  ██║╚██████╔╝\n  ╚═╝  ╚═╝ ╚═════╝\n', 'color:#00ff41;font-family:monospace');
