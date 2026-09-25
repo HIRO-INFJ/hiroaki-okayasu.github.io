@@ -116,7 +116,14 @@
     .desk-icon.sel { background: rgba(255,255,255,.18); }
     .desk-icon.sel span { background: var(--accent); border-radius: 4px; padding: 0 5px; text-shadow: none; }
     .desk-icon.trash { position: fixed; right: 18px; bottom: 96px; }
-    @media (max-width: 720px) { .desk-icons { display: none; } .desk-icon.trash { display: none; } }
+    @media (max-width: 720px) {
+      .desk-icons { left: 12px; right: 12px; top: calc(var(--menubar) + 18px); grid-template-columns: repeat(4, 1fr); gap: 14px 6px; }
+      .desk-icon { width: auto; min-width: 0; }
+      .desk-icon span { font-size: 11px; overflow-wrap: anywhere; }
+      .desk-icon.trash { display: none; }   /* Trash は Dock から */
+      .wall-mark { top: 58%; }
+      .wall-mark p { font-size: 11px; letter-spacing: .2em; white-space: nowrap; }
+    }
 
     /* ── windows ── */
     #windows { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
@@ -665,7 +672,7 @@
     DESK.push({ id: 'trash', open: () => openApp('trash') });
     $$('.desk-icon').forEach(b => {
       const d = DESK.find(x => x.id === b.dataset.id);
-      b.addEventListener('click', () => { $$('.desk-icon').forEach(x => x.classList.toggle('sel', x === b)); });
+      b.addEventListener('click', () => { $$('.desk-icon').forEach(x => x.classList.toggle('sel', x === b)); if (isMobile()) d.open(); });
       b.addEventListener('dblclick', d.open);
       b.addEventListener('keydown', (e) => { if (e.key === 'Enter') d.open(); });
     });
@@ -1084,7 +1091,7 @@
     /* ── menus ── */
     const menu = $('#menu');
     const MENUS = {
-      system: [['HiroOS について', () => openApp('about')], ['システム設定…', () => openApp('settings')], ['デザインを切り替える…', () => window.DesignSwitcher && window.DesignSwitcher.open()], '-', ['再起動…', () => reboot()], ['画面をロック', () => lock(true), '⌃⌘Q']],
+      system: [['HiroOS について', () => openApp('about')], ['デスクトップを表示', () => $$('.win:not(.min)').forEach(minimize)], ['システム設定…', () => openApp('settings')], ['デザインを切り替える…', () => window.DesignSwitcher && window.DesignSwitcher.open()], '-', ['再起動…', () => reboot()], ['画面をロック', () => lock(true), '⌃⌘Q']],
       file: [['新規ターミナル', () => openApp('terminal', { key: 'terminal' + Date.now() })], ['すべて閉じる', () => [...wins.keys()].forEach(close)]],
       go: [['Works', () => openApp('works')], ['Journal', () => openApp('journal')], ['secret', () => openApp('secret')], ['Trash', () => openApp('trash')]],
       window: [['すべて整列', () => tile()], ['すべてしまう', () => $$('.win:not(.min)').forEach(minimize)]],
@@ -1197,7 +1204,7 @@
         openApp('works', { x: Math.max(12, innerWidth * .5 - 380), y: 96, w: Math.min(820, innerWidth - 60), h: Math.min(520, innerHeight - 200) });
         setTimeout(() => openApp('about', { x: Math.max(12, innerWidth * .5 - 460), y: 64 + 150, w: aw + 40, h: 470 }), 260);
       }
-      setTimeout(() => notify('HiroOS へようこそ 👋', 'Dock やデスクトップのアイコンから開けます。⌘K で Spotlight、右クリックにも仕掛けが。'), 900);
+      setTimeout(() => notify('HiroOS へようこそ 👋', isMobile() ? 'Dock からアプリを開けます。ウインドウを閉じると、デスクトップに気になるファイルが…？' : 'Dock やデスクトップのアイコンから開けます。⌘K で Spotlight、右クリックにも仕掛けが。'), 900);
     }
 
     async function reboot() {
