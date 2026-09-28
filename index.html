@@ -1034,7 +1034,7 @@
             <h3>おまけの推理メモ（${notes.filter(n => n.got).length} / ${notes.length}）</h3>
             <ul class="cards">${notes.map(n => n.got
               ? `<li><b>${esc(n.c.title)}</b><small>${esc(n.place)} ── ${esc(n.c.clue)}</small>${esc(n.c.body)}</li>`
-              : `<li class="un"><b>？？？</b>${s.solved ? esc(n.hint) : 'XXXXXXXX ── 事件が解けたら、ヒントが読めるようになる。'}</li>`).join('')}</ul>
+              : `<li class="un"><b>？？？</b>${s.solved ? esc(n.hint) : 'XXXXXXXX ── 事件とは関係なさそうだが……気づいたことは、メモしておこう。'}</li>`).join('')}</ul>
             ${all && !s.solved ? '<button class="btn primary go" data-door>規則は揃った。読めたら 221B の扉へ →</button>' : ''}
           </div>`;
           $('[data-letter]', rec.body).addEventListener('click', openLetter);
