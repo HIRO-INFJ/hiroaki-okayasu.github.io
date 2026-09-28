@@ -958,7 +958,7 @@
       about: () => ['Hiroaki Okayasu / フリーランス開発者', 'Python・JavaScript・PHP を中心に、業務自動化からモバイルアプリまで。', 'off-duty: 📷 camera / 🎾 tennis / 🎸 guitar'].forEach(l => print(l)),
       skills: () => $$('.module').forEach(m => print(`▸ ${$('.module-name', m).textContent.padEnd(20)} ${$$('.lbl', m).map(x => x.textContent).join(', ')}`)),
       works: () => { WORKS.forEach((w, i) => print(`  [${String(i + 1).padStart(2, '0')}] ${w.id.padEnd(15)} ${w.jp}`)); print("usage: open <番号 or 名前>", 'dim'); },
-      ls: (a) => a.join(' ').includes('-a') ? ['.', '..', '.secrets', 'about.md', 'skills/', 'works/', 'journal.log', 'contact.sh', 'history.log', 'wall.txt', 'note.txt', 'dancing_men.key'].forEach(f => print('  ' + f)) : COMMANDS.works(),
+      ls: (a) => a.join(' ').includes('-a') ? ['.', '..', '.secrets', 'about.md', 'skills/', 'works/', 'journal.log', 'contact.sh', 'history.log', 'wall.txt', 'note.txt', 'dancing_men.key', 'movies/'].forEach(f => print('  ' + f)) : /^movies/.test(a[0] || '') ? MOVIES() : COMMANDS.works(),
       open: (a) => {
         const q = (a[0] || '').toLowerCase();
         const w = WORKS[parseInt(q, 10) - 1] || WORKS.find(x => x.id.includes(q) && q);
@@ -1039,13 +1039,15 @@
       .concat(label ? ['  ' + [...word].map(c => ` ${c} `).join('  ')] : []);
     const CASE_FILES = {
       'history.log': () => [
-        '  101  cd ~/recipes',
+        '   98  echo "playstyle=spin_control" > ~/tennis/profile.txt',
+        '   99  string --racket "Pure Aero 2022" --main "RPM Blast 125" --tension 50',
+        '  100  open https://www.babolat.com/aero-pro-drive   # また見てる',
+        '  101  wallpaper set nadal.jpg shelton.jpg',
         '  102  grep -v "パクチー" recipes.txt > tonight.txt',
-        '  103  wc -l tonight.txt',
-        '  104  vim wall.txt',
-        '  105  cat note.txt',
-        '  106  cat dancing_men.key',
-        '  107  # 読めたら、その言葉をそのままコマンドとして打てばいい',
+        '  103  vim wall.txt',
+        '  104  cat note.txt',
+        '  105  cat dancing_men.key',
+        '  106  # 読めたら、その言葉をそのままコマンドとして打てばいい',
       ].forEach(l => print(l)),
       'wall.txt': () => {
         print('（壁一面に、赤い文字が殴り書きされている）', 'dim');
@@ -1058,13 +1060,17 @@
         dance('NORSTW', true).forEach(l => print(l));
       },
     };
+    function MOVIES() {
+      ['  school_of_rock.mkv', '  the_lord_of_the_rings_extended/  (合計 11 時間 26 分)', '  the_devil_wears_prada.mp4'].forEach(l => print(l));
+      if (window.Case && window.Case.bonus('movies')) print('……場違いな場所で本気を出す人の話ばかりだ。手帳に書き留めた。', 'dim');
+    }
     function solveDancingMen() {
       print('The game is afoot. ── 獲物は動き出した。', 'hi');
       print('  +--------+', 'hi'); print('  |   22   |  <- 番地の欠片', 'hi'); print('  +--------+', 'hi');
       found('sherlock');
       if (window.Case) {
         const fresh = window.Case.find('matrix');
-        print(fresh ? 'ワトソンの手帳に書き留めた。history.log の二行目も、ついでに。' : 'この欠片は、もう手帳に書き留めてある。', 'dim');
+        print(fresh ? 'ワトソンの手帳に書き留めた。history.log のテニスの行も、ついでに。' : 'この欠片は、もう手帳に書き留めてある。', 'dim');
         if (!window.Case.started()) print('……この欠片の意味は、HiroOS のターミナルにある手紙が知っている。', 'dim');
       }
     }

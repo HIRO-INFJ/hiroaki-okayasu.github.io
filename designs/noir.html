@@ -447,7 +447,7 @@
     <div class="case-note">
       <div class="k"><span>EXHIBIT — 夜の部屋</span><span>02:21 JST</span></div>
       <h3>奇妙なのは、時計が何もしなかったことだ。</h3>
-      <p>午前 2 時 21 分。ほかの部屋で事件が動き出したあの瞬間から、この時計は一秒も進んでいない。裏蓋を開けると、細かな砂利がこぼれ落ち、真鍮の小さな文字がひとつ。</p>
+      <p>午前 2 時 21 分。ほかの部屋で事件が動き出したあの瞬間から、この時計は一秒も進んでいない。裏蓋を開けると、細かな砂利がこぼれ落ち、真鍮の小さな文字がひとつ。机の上には、読みかけの文庫本と、底の乾いたコーヒーカップ。</p>
       <div class="frag">B</div>
       <p class="note" id="case-note-msg"></p>
       <button type="button" id="case-close">時計を元に戻す</button>
@@ -557,7 +557,7 @@
     function inspectClock() {
       if (!stopped()) return;
       const fresh = Case.find('noir');
-      $('#case-note-msg').textContent = (fresh ? '手帳に書き留めた。ついでに、この砂利の出どころも。' : '') + (Case.count() >= Case.ORDER.length ? ' 欠片は揃った ── HiroOS の「221B」へ。' : '');
+      $('#case-note-msg').textContent = (fresh ? '手帳に書き留めた。砂利と文庫本とカップの持ち主についても。' : '') + (Case.count() >= Case.ORDER.length ? ' 欠片は揃った ── HiroOS の「221B」へ。' : '');
       caseBg.classList.add('open'); setTimeout(() => $('#case-close').focus(), 50);
     }
     clockCard.addEventListener('click', inspectClock);

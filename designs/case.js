@@ -22,31 +22,51 @@
   // 欠片と一緒に手帳へ残る推理メモ（本編とは関係のない、依頼人の癖）
   const CARDS = {
     matrix: {
-      title: '香草の件',
-      clue: 'history.log に残っていた一行 ── grep -v "パクチー" recipes.txt',
-      body: 'このユーザーは、香草の類を好まない。レシピの一覧から、わざわざコマンドで除外している。手間を惜しまないほどに、だ。',
+      title: 'ラケットの件',
+      clue: 'history.log ── playstyle=spin_control / Pure Aero 2022 / RPM Blast 125 @ 50 lbs',
+      body: '彼は自分をスピンコントロール型だと信じている。だが、ブラスト 125 を 50 ポンドで張ったピュアアエロを、あのスイングで振り抜けば、ボールは唸りを上げてまっすぐ飛ぶ。フラットの剛速球だよ、ワトソン君。壁にはナダルとシェルトン。そして履歴には、アエロプロドライブの商品ページを何度も開いた跡 ── 未練というやつだ。',
       hint: '緑の雨の部屋。ターミナルで、隠れたファイルを探すといい。壁の赤い文字には気をつけて。',
     },
     pop: {
-      title: '旅の件',
-      clue: 'ノートPCのステッカーの裏にあった、入国印だらけのパスポート',
-      body: 'スーツケースの傷、行き先はいつも海の向こう。国内よりも海外を選ぶ性分と見た。',
+      title: '空の件',
+      clue: 'パスポートに挟まっていた、何枚かの写真',
+      body: '入国印は海の向こうばかり。挟まっていた写真を見て、最初は人物写真家かと思った ── が、違う。夕焼け、雲、飛行機雲。これだけ旅をしていながら、人はひとりも写っていない。彼がレンズを向けるのは、いつも頭上だけだ。',
       hint: '粘土の部屋。持ち主の持ち物をよく見ること。いちばん小さなものが、いちばん雄弁だ。',
     },
     noir: {
       title: '散歩道の件',
-      clue: '止まった時計の裏に残っていた、細かな砂利',
-      body: '靴の減り方と、この砂利。おそらく京都 ── 疎水に沿って、桜並木の続く道。考えごとをするとき、彼はあそこを歩く。',
+      clue: '止まった時計の裏の砂利と、ポケットの文庫本、乾いたカップ',
+      body: '砂利は京都、疎水沿いの道のものだ。ポケットには同じ京都が舞台の森見登美彦、栞がわりにベルクソンの走り書き。カップの底には深煎りのブラックが乾いている ── 砂糖もミルクも使った形跡がない。考えごとをするとき、彼はあの哲学の道を歩く。',
       hint: '夜の部屋。時計はまだ、正しい時刻を指している。ほかの欠片が揃えば、あるいは。',
       hintReady: '夜の部屋。あの時計が、何もしなくなった。',   // 緑の雨と粘土の欠片が揃ったあと
     },
   };
 
+  // おまけの推理メモ（欠片とは無関係。見つけなくても事件は解ける）
+  const BONUS = {
+    fm: {
+      title: 'テレキャスの件', place: 'HiroOS', clue: 'Hiro FM の再生履歴',
+      body: '再生履歴はアジカン、ベボベ、マイヘア。指先のタコと、Momose のテレキャスター。MURO FES のタイムテーブルに赤丸がついている。最前列で拳を上げる種類の人間だ。',
+      hint: 'HiroOS。ラジオは、誰が何を聴いてきたかを覚えている。',
+    },
+    movies: {
+      title: '映画棚の件', place: 'Matrix', clue: 'ターミナルの movies/ ディレクトリ',
+      body: 'スクール・オブ・ロック、ロード・オブ・ザ・リング、プラダを着た悪魔。ロックで教室を変える話、指輪を捨てに行く旅、場違いな職場で食らいつく話。どれも「場違いな場所で本気を出す人」の物語だ。',
+      hint: '緑の雨の部屋。ls -a の中に、夜更かしの痕跡がある。',
+    },
+    shelf: {
+      title: '本棚の件', place: '221B', clue: '221B の本棚',
+      body: '推理小説がぎっしり。はやみねかおるの背表紙がいちばん擦り切れていて、森晶麿の隣にニーチェが刺さっている。……これだけ謎が好きな依頼人なら、この事件を仕組んだのが誰かも、もう分かるだろう？',
+      hint: '事件を解いた者だけが、221B の本棚を見られる。',
+    },
+  };
+  const BONUS_ORDER = ['fm', 'movies', 'shelf'];
+
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
   const write = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
 
   const Case = {
-    ROOMS, ORDER, CARDS,
+    ROOMS, ORDER, CARDS, BONUS, BONUS_ORDER,
     state: read,
     started: () => !!read().started,
     solved: () => !!read().solved,
@@ -62,6 +82,15 @@
       toast(room);
       return true;
     },
+    hasBonus: (id) => !!(read().bonus || {})[id],
+    bonus(id) {
+      if (!BONUS[id]) return false;
+      const s = read(); s.bonus = s.bonus || {};
+      if (s.bonus[id]) return false;
+      s.bonus[id] = Date.now(); write(s);
+      paper(`<b>📓 ワトソンの手帳に記録した</b>おまけの推理メモ「${BONUS[id].title}」<small>おまけ ${BONUS_ORDER.filter(k => s.bonus[k]).length} / ${BONUS_ORDER.length}</small>`);
+      return true;
+    },
     solve() { const s = read(); if (!s.solved) { s.solved = Date.now(); write(s); } },
     reset() { try { localStorage.removeItem(KEY); } catch (e) {} },
   };
@@ -69,15 +98,18 @@
   // 手帳に書き留めたことを知らせる、デザイン共通の小さな紙片
   function toast(room) {
     const r = ROOMS[room], n = Case.count();
-    const host = document.createElement('div');
-    const sh = host.attachShadow({ mode: 'open' });
     const tail = Case.started()
       ? (n >= ORDER.length ? '欠片は揃った。HiroOS の「221B」へ。' : `欠片 ${n} / ${ORDER.length}`)
       : 'HiroOS のターミナルに、この欠片の意味を知る手紙があるらしい。';
+    paper(`<b>📓 ワトソンの手帳に記録した</b>${r.name}で、番地の欠片 <span class="f">「${r.frag}」</span><small>${tail}</small>`);
+  }
+  function paper(html) {
+    const host = document.createElement('div');
+    const sh = host.attachShadow({ mode: 'open' });
     sh.innerHTML = `
       <style>
         :host { all: initial; }
-        .t { position: fixed; z-index: 4000; left: 50%; bottom: 28px; width: min(360px, calc(100vw - 32px));
+        .t { position: fixed; z-index: 4000; left: 50%; bottom: ${document.getElementById('dock') ? 112 : 28}px; width: min(360px, calc(100vw - 32px));
           transform: translate(-50%, 24px) rotate(-1.2deg); opacity: 0; transition: transform .5s cubic-bezier(.34,1.4,.5,1), opacity .4s;
           padding: 14px 18px 14px 20px; border-radius: 3px; color: #2b2419; cursor: pointer;
           font: 14px/1.7 "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
@@ -87,7 +119,7 @@
         .f { font: 700 18px/1.4 Georgia, serif; letter-spacing: .1em; }
         small { display: block; color: #7a6d55; font-size: 12px; }
       </style>
-      <div class="t" role="status"><b>📓 ワトソンの手帳に記録した</b>${r.name}で、番地の欠片 <span class="f">「${r.frag}」</span><small>${tail}</small></div>`;
+      <div class="t" role="status">${html}</div>`;
     document.body.appendChild(host);
     const t = sh.querySelector('.t');
     const bye = () => { t.classList.remove('on'); setTimeout(() => host.remove(), 500); };

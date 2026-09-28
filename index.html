@@ -394,6 +394,10 @@
     .casebook .cards b { display: block; }
     .casebook .cards small { display: block; font-size: 12.5px; line-height: 24px; color: #8a7a5c; }
     .casebook .cards .un { color: #8a8a95; }
+    .mu-hist { margin: 4px 14px 12px; font-size: 12px; color: rgba(255,255,255,.55); }
+    .mu-hist summary { cursor: pointer; }
+    .mu-hist p { margin-top: 6px; line-height: 1.8; color: rgba(255,255,255,.8); }
+    .mu-hist small { color: rgba(255,255,255,.45); }
     .casebook .link { font: inherit; font-size: 13px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 
     .confetti { position: fixed; top: -12px; z-index: 4500; width: 8px; height: 12px; pointer-events: none; animation: fall linear forwards; }
@@ -927,7 +931,9 @@
               </div>
             </div>
             <div class="mu-list">${TRACKS.map((t, i) => `<button data-i="${i}" class="${i === 0 ? 'on' : ''}"><em>${i + 1}</em><span><b>${t.name}</b><small>${t.sub}</small></span><i>${t.prog.join(' → ')}</i></button>`).join('')}</div>
+            <details class="mu-hist"><summary>最近の再生履歴</summary><p>ASIAN KUNG-FU GENERATION ── リライト<br>Base Ball Bear ── 17才<br>My Hair is Bad ── 真赤<br><small>MURO FES タイムテーブル.pdf に赤丸が 7 つ</small></p></details>
           </div>`;
+        $('.mu-hist', rec.body).addEventListener('toggle', (e) => { if (e.target.open && Case.started() && Case.bonus('fm')) { const b = wins.get('casebook'); if (b && b.redraw) b.redraw(); } });
         const player = Guitar(rec);
         rec.onClose = player.stop;
       },
@@ -1012,6 +1018,13 @@
               return found[r]
                 ? `<li><b>${esc(c.title)}</b><small>${esc(c.clue)}</small>${esc(c.body)}</li>`
                 : `<li class="un"><b>？？？</b>${esc(Case.hint(r))} <button class="link" data-room="${r}">${Case.ROOMS[r].name}へ →</button></li>`;
+            }).join('')}</ul>
+            <h3>おまけ（${Case.BONUS_ORDER.filter(Case.hasBonus).length} / ${Case.BONUS_ORDER.length}）</h3>
+            <ul class="cards">${Case.BONUS_ORDER.map(k => {
+              const c = Case.BONUS[k];
+              return Case.hasBonus(k)
+                ? `<li><b>${esc(c.title)}</b><small>${esc(c.place)} ── ${esc(c.clue)}</small>${esc(c.body)}</li>`
+                : `<li class="un"><b>？？？</b>${esc(c.hint)}</li>`;
             }).join('')}</ul>
             ${all && !s.solved ? '<button class="btn primary go" data-door>欠片は揃った。221B の扉へ →</button>' : ''}
           </div>`;
@@ -1101,13 +1114,14 @@
         <h2>事件解決 ── 221B</h2>
         <p>扉の向こうは、見覚えのある部屋だった。暖炉の火、散らかった書類、ソファに投げ出されたヴァイオリン。</p>
         <p>依頼人の住所は、最初からここにあった。三つの部屋に散っていたのは住所ではなく ── 四つの姿に分かれた、このサイトの持ち主そのものだったのかもしれない。</p>
-        <p>君の手帳には、事件とは関係のない彼の癖が、いくつか書き留められている。</p>
+        <p>君の手帳には、事件とは関係のない彼の癖が、いくつか書き留められている。そして部屋の奥には、推理小説がぎっしり詰まった本棚。</p>
         <p>「さて、ワトソン君。次の事件だ」<br>── S.H.</p>
         <p>追伸: 依頼人は、まだ君からの便りを待っている。</p>
         <p style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap"><button class="btn primary" id="case-mail">依頼人（Hiro）に手紙を書く</button><button class="btn" id="case-book">手帳を開く</button></p>
       </div>`;
       $('#case-mail', rec.body).addEventListener('click', () => openApp('mail', { subject: '221B より' }));
       $('#case-book', rec.body).addEventListener('click', () => openApp('casebook'));
+      setTimeout(() => { if (Case.bonus('shelf')) { const b = wins.get('casebook'); if (b && b.redraw) b.redraw(); } }, 1200);
     }
 
     let dlgN = 0;

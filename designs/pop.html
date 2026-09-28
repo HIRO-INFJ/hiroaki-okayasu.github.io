@@ -1561,7 +1561,7 @@
         if (!s.hit) { b.classList.remove('miss'); void b.offsetWidth; b.classList.add('miss'); say.textContent = s.say; return; }
         b.classList.add('hit');
         const fresh = window.Case && window.Case.find('pop');
-        say.textContent = '霧の街、ロンドン。日付の横に、インクで小さく「1」。' + (fresh ? ' ── 手帳に書き留めた。ついでに、この人の旅好きも。' : '');
+        say.textContent = '霧の街、ロンドン。日付の横に、インクで小さく「1」。ページの間から写真が何枚か落ちた ── 空ばかりだ。' + (fresh ? ' 手帳に書き留めた。' : '');
       }));
       const open = () => { bg.classList.add('open'); say.textContent = ''; if (window.Case && window.Case.has('pop')) box.querySelector('.stamp:nth-child(4)').classList.add('hit'); };
       const close = () => bg.classList.remove('open');
