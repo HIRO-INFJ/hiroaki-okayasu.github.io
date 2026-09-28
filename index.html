@@ -401,6 +401,8 @@
     .casebook .rules { padding-left: 1.4em; }
     .casebook .rules li::before { content: none; }
     .casebook .rules .un { color: #8a8a95; }
+    .letter .attic { margin-top: 22px; padding-top: 14px; border-top: 1px dashed #d8cfb4; font-size: 12.5px; color: #7a6d55; }
+    .letter .link { font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
     .door .door-q { margin-top: 10px; font-size: 13px; color: var(--ink-2); }
     .casebook .link { font: inherit; font-size: 13px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 
@@ -1057,7 +1059,8 @@
         inp.addEventListener('keydown', (e) => {
           if (e.key !== 'Enter') return;
           const v = inp.value;
-          if (/221\s*b|baker/i.test(v)) { msg.textContent = '「それは住所だ、ワトソン君。合言葉ではない」'; return shake(); }
+          const said = DOOR_LINES.find(([re]) => re.test(v.trim()));
+          if (said) { msg.textContent = said[1]; return shake(); }
           if (!Case.check(v)) { msg.textContent = '扉は沈黙している。合言葉が違うようだ。'; return shake(); }
           // 規則を集めずに答えても開かない（『四つの署名』より）
           if (Case.count() < Case.ORDER.length) { msg.textContent = '「当て推量はしない主義でね」── 規則が揃ってから、もう一度。'; return shake(); }
@@ -1074,7 +1077,7 @@
       },
 
       dialog(rec, o) {
-        rec.body.innerHTML = `<div class="dialog">${icon(o.ic, o.c[0], o.c[1])}<b>${esc(o.head)}</b><p>${esc(o.msg)}</p><div class="btnrow">${(o.actions || []).map((a, i) => `<button class="btn primary" data-i="${i}">${a[0]}</button>`).join('')}<button class="btn" data-x>OK</button></div></div>`;
+        rec.body.innerHTML = `<div class="dialog">${icon(o.ic, o.c[0], o.c[1])}<b>${esc(o.head)}</b><p>${esc(o.msg)}</p><div class="btnrow">${(o.actions || []).map((a, i) => `<button class="btn primary" data-i="${i}">${a[0]}</button>`).join('')}<button class="btn" data-x>${esc(o.cancel || 'OK')}</button></div></div>`;
         $$('[data-i]', rec.body).forEach(b => b.addEventListener('click', () => { o.actions[b.dataset.i][1](); close(rec.key); }));
         $('[data-x]', rec.body).addEventListener('click', () => close(rec.key));
       },
@@ -1126,10 +1129,46 @@
         <p>「さて、ワトソン君。次の事件だ」<br>── S.H.</p>
         <p>追伸: 依頼人は、まだ君からの便りを待っている。</p>
         <p style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap"><button class="btn primary" id="case-mail">依頼人（Hiro）に手紙を書く</button><button class="btn" id="case-book">手帳を開く</button></p>
+        <p class="attic">部屋の隅に、古びた箒が立てかけてある。「人間の頭は屋根裏部屋のようなものだ。要らないものは、片付けてしまえばいい」<br><button class="link" id="case-attic">🧹 頭の屋根裏部屋を掃除する</button></p>
       </div>`;
+      $('#case-attic', rec.body).addEventListener('click', forgetAll);
       $('#case-mail', rec.body).addEventListener('click', () => openApp('mail', { subject: '221B より' }));
       $('#case-book', rec.body).addEventListener('click', () => openApp('casebook'));
       setTimeout(() => { if (Case.bonus('shelf')) { const b = wins.get('casebook'); if (b && b.redraw) b.redraw(); } }, 1200);
+    }
+
+    // 221B の扉に、合言葉ではないが関係のある言葉を告げたとき
+    const DOOR_LINES = [
+      [/221\s*b|baker|ベイカー|ベーカー/i, '「それは住所だ、ワトソン君。合言葉ではない」'],
+      [/^(dr\.?\s*)?watson$|ワトソン/i, '「君の名前を呼んでどうする。扉は、自分の名前では開かないよ」'],
+      [/sherlock|holmes|ホームズ|シャーロック/i, '「僕を呼んでも無駄だ。僕は今、ヴァイオリンを……おっと」'],
+      [/moriarty|モリアーティ/i, '扉の向こうで、息をのむ気配。「……その名前を、この部屋で口にしないでくれ」'],
+      [/mycroft|マイクロフト/i, '「兄は今ごろディオゲネス・クラブだ。あそこは、しゃべると追い出される」'],
+      [/lestrade|レストレード/i, '「スコットランド・ヤードの助けが要るほど、難しい事件ではないはずだ」'],
+      [/irene|adler|the\s*woman|アイリーン|アドラー/i, '沈黙。……それから、少しだけ柔らかい声。「あの女性の話は、また今度にしよう」'],
+      [/hudson|ハドソン/i, '「ハドソンさんなら下の階だ。紅茶を頼むなら、合言葉のあとにしてくれ」'],
+      [/elementary|初歩/i, '「僕はその台詞を一度も言っていない。……たぶんね」'],
+      [/afoot|the\s*game/i, '「獲物はもう動き出している。あとは、読むだけだ」'],
+      [/rache|rachel|レイチェル/i, '「壁の血文字に、まだ気を取られているのかい？」'],
+      [/^(three|stop|london|ロンドン)$/i, '「それは読み方だ。答えは、その先にある」'],
+      [/^(client|hiro|ひろ|ヒロ)$/i, '「依頼人の正体に気づいたか。……だが、それは合言葉ではない」'],
+      [/pipe|パイプ|deerstalker|鹿撃ち/i, '「パイプ三服ぶんの問題だ。もう少し考えるといい」'],
+      [/tennis|テニス/i, '「それは secret の鍵だろう。部屋を間違えている」'],
+    ];
+
+    // 頭の屋根裏部屋（『緋色の研究』）── 謎解きと隠し要素の進捗だけを忘れる。壁紙やテーマ、各作品のセーブは残す
+    const PROGRESS_KEYS = ['os-secret', 'hs-case', 'mx-found', 'mx-rabbit'];
+    function forgetAll() {
+      openApp('dialog', {
+        key: 'dialog-attic', title: '屋根裏部屋の掃除', w: 400, h: 330, ic: 'trash', c: ['#c99a6b', '#7c4a24'], cancel: 'やめておく',
+        head: '本当に、すべて忘れますか？',
+        msg: 'secret の鍵、ホームズの事件（電報・規則・手帳・推理メモ）、Matrix の隠し要素の記録が消え、最初から遊び直せるようになります。壁紙やテーマ、作品のセーブデータは残ります。',
+        actions: [['忘れる', () => {
+          PROGRESS_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+          notify('屋根裏部屋は空になった', '「地球が太陽の周りを回っていようと、僕には関係ない」── もう一度、最初から。', 'trash', ['#c99a6b', '#7c4a24']);
+          setTimeout(() => location.reload(), 1800);
+        }]],
+      });
     }
 
     let dlgN = 0;
