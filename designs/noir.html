@@ -274,7 +274,7 @@
     .case-note .k { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); display: flex; justify-content: space-between; }
     .case-note h3 { font-size: 21px; letter-spacing: -.03em; font-weight: 600; line-height: 1.5; margin: 14px 0 12px; font-family: var(--jp); }
     .case-note p { font-family: var(--jp); color: var(--text-2); font-size: 14px; line-height: 1.95; }
-    .case-note .frag { font-size: 72px; font-weight: 500; letter-spacing: -.05em; line-height: 1; text-align: center; margin: 22px 0 18px; }
+    .case-note .frag { font-family: var(--jp); font-size: 22px; font-weight: 500; line-height: 1.5; text-align: center; margin: 22px 0 18px; }
     .case-note .note { color: var(--text-3); font-size: 12.5px; margin-top: 10px; }
     .case-note button { margin-top: 18px; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line-2); font-size: 13px; color: var(--text); }
     .case-note button:hover { background: rgba(255,255,255,.06); }
@@ -447,8 +447,8 @@
     <div class="case-note">
       <div class="k"><span>EXHIBIT — 夜の部屋</span><span>02:21 JST</span></div>
       <h3>奇妙なのは、時計が何もしなかったことだ。</h3>
-      <p>午前 2 時 21 分。ほかの部屋で事件が動き出したあの瞬間から、この時計は一秒も進んでいない。裏蓋を開けると、細かな砂利がこぼれ落ち、真鍮の小さな文字がひとつ。机の上には、読みかけの文庫本と、底の乾いたコーヒーカップ。</p>
-      <div class="frag">B</div>
+      <p>午前 2 時 21 分。ほかの部屋で事件が動き出したあの瞬間から、この時計は一秒も進んでいない。裏蓋を開けると、細かな砂利がこぼれ落ち、内側に小さな刻印がひとつ。机の上には、読みかけの文庫本と、底の乾いたコーヒーカップ。</p>
+      <div class="frag">「止まったものは、数えるな」</div>
       <p class="note" id="case-note-msg"></p>
       <button type="button" id="case-close">時計を元に戻す</button>
     </div>
@@ -538,7 +538,7 @@
       const r = c.getBoundingClientRect(); c.style.setProperty('--x', e.clientX - r.left + 'px'); c.style.setProperty('--y', e.clientY - r.top + 'px');
     });
 
-    /* clock — 四つの部屋の事件：ほかの 2 部屋の欠片が揃うと、02:21 で止まる（『白銀号事件』） */
+    /* clock — 四つの部屋の事件：ほかの 2 部屋の規則が揃うと、02:21 で止まる（『白銀号事件』） */
     const Case = window.Case;
     const stopped = () => !!Case && Case.has('matrix') && Case.has('pop') && !Case.has('noir');
     const clockCard = $('.b-clock');
@@ -557,7 +557,7 @@
     function inspectClock() {
       if (!stopped()) return;
       const fresh = Case.find('noir');
-      $('#case-note-msg').textContent = (fresh ? '手帳に書き留めた。砂利と文庫本とカップの持ち主についても。' : '') + (Case.count() >= Case.ORDER.length ? ' 欠片は揃った ── HiroOS の「221B」へ。' : '');
+      $('#case-note-msg').textContent = (fresh ? '手帳に書き留めた。砂利と文庫本とカップの持ち主についても。' : '') + (Case.count() >= Case.ORDER.length ? ' 規則は揃った ── HiroOS の手帳で、電報を読み直せ。' : '');
       caseBg.classList.add('open'); setTimeout(() => $('#case-close').focus(), 50);
     }
     clockCard.addEventListener('click', inspectClock);
@@ -616,7 +616,7 @@
       { g: 'Case', l: '221B ── 事件の進捗を確かめる', ic: 'hash', kw: 'sherlock holmes watson baker 221b シャーロック ホームズ ワトソン 事件', run: () => {
         if (!Case) return;
         if (stopped()) { $('#about').scrollIntoView({ behavior: 'smooth' }); return toast('時計を見るといい。何かが、起きていない。'); }
-        toast(Case.has('noir') ? `欠片 ${Case.count()} / ${Case.ORDER.length} ── この部屋の用は済んだ。` : `欠片 ${Case.count()} / ${Case.ORDER.length} ── 時計はまだ、正しい時刻を指している。`);
+        toast(Case.has('noir') ? `規則 ${Case.count()} / ${Case.ORDER.length} ── この部屋の用は済んだ。` : `規則 ${Case.count()} / ${Case.ORDER.length} ── 時計はまだ、正しい時刻を指している。`);
       } },
       ...WORKS.map(w => ({ g: 'Projects', l: w.t, ic: w.ic, run: () => { if (!w.url) return toast('非公開プロジェクトです'); if (w.url.startsWith('http')) window.open(w.url, '_blank', 'noopener'); else location.href = w.url; } })),
     ];

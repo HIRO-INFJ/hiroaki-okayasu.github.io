@@ -4,22 +4,27 @@
    同一オリジンの localStorage で、4 つのデザインの進捗を共有する。
 
    window.Case.start()       事件を始める（HiroOS の .sherlock を読んだとき）
-   window.Case.find(room)    その部屋の欠片を見つけた（新規なら true）。手帳に書き留めた旨のトーストも出す
+   window.Case.find(room)    その部屋で電報の「読み方の規則」を見つけた（新規なら true）。手帳に書き留めた旨のトーストも出す
    window.Case.has(room) / count() / started() / solved() / solve()
 ============================================================ */
 (function () {
   'use strict';
   const KEY = 'hs-case';
 
-  // 番地の欠片（並べると 221B）
+  // 奇妙な電報（『グロリア・スコット号』）。三つの部屋の規則で読むと、隠れた一文が現れる：
+  //   STOP を数えない → 4 語目から → 3 語ごと ＝ CLIENT IS HIRO HIMSELF ANSWER IS VIOLIN
+  const TELEGRAM = 'ARRIVED LONDON FOGGY STOP CLIENT WAITING NERVOUS STOP IS STILL SILENT STOP HIRO SENT WORD HIMSELF STOP SEEMS TIRED STOP ANSWER PROMPTLY PLEASE STOP IS MYCROFT AWARE STOP VIOLIN CASE MISSING STOP';
+  const ANSWER = 'violin';
+
+  // 電報の読み方の規則（三つ揃うまで、電報はただの旅の報告にしか見えない）
   const ROOMS = {
-    matrix: { frag: '22', name: '緑の雨の部屋', design: 'matrix' },
-    pop:    { frag: '1',  name: '粘土の部屋',   design: 'pop' },
-    noir:   { frag: 'B',  name: '夜の部屋',     design: 'noir' },
+    matrix: { rule: '三語ごとに読め', name: '緑の雨の部屋', design: 'matrix' },
+    pop:    { rule: '着いた日の語から読め', name: '粘土の部屋', design: 'pop' },
+    noir:   { rule: '止まったものは数えるな', name: '夜の部屋', design: 'noir' },
   };
   const ORDER = ['matrix', 'pop', 'noir'];
 
-  // 欠片と一緒に手帳へ残る推理メモ（本編とは関係のない、依頼人の癖）
+  // 規則と一緒に手帳へ残る推理メモ（本編とは関係のない、依頼人の癖）
   const CARDS = {
     matrix: {
       title: 'ラケットの件',
@@ -37,12 +42,12 @@
       title: '散歩道の件',
       clue: '止まった時計の裏の砂利と、ポケットの文庫本、乾いたカップ',
       body: '砂利は京都、疎水沿いの道のものだ。ポケットには同じ京都が舞台の森見登美彦、栞がわりにベルクソンの走り書き。カップの底には深煎りのブラックが乾いている ── 砂糖もミルクも使った形跡がない。考えごとをするとき、彼はあの哲学の道を歩く。',
-      hint: '夜の部屋。時計はまだ、正しい時刻を指している。ほかの欠片が揃えば、あるいは。',
-      hintReady: '夜の部屋。あの時計が、何もしなくなった。',   // 緑の雨と粘土の欠片が揃ったあと
+      hint: '夜の部屋。時計はまだ、正しい時刻を指している。ほかの規則が揃えば、あるいは。',
+      hintReady: '夜の部屋。あの時計が、何もしなくなった。',   // 緑の雨と粘土の規則が揃ったあと
     },
   };
 
-  // おまけの推理メモ（欠片とは無関係。見つけなくても事件は解ける）
+  // おまけの推理メモ（規則とは無関係。見つけなくても事件は解ける）
   const BONUS = {
     fm: {
       title: 'テレキャスの件', place: 'HiroOS', clue: 'Hiro FM の再生履歴',
@@ -66,7 +71,8 @@
   const write = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
 
   const Case = {
-    ROOMS, ORDER, CARDS, BONUS, BONUS_ORDER,
+    ROOMS, ORDER, CARDS, TELEGRAM,
+    check: (v) => String(v).trim().toLowerCase() === ANSWER, BONUS, BONUS_ORDER,
     state: read,
     started: () => !!read().started,
     solved: () => !!read().solved,
@@ -99,9 +105,9 @@
   function toast(room) {
     const r = ROOMS[room], n = Case.count();
     const tail = Case.started()
-      ? (n >= ORDER.length ? '欠片は揃った。HiroOS の「221B」へ。' : `欠片 ${n} / ${ORDER.length}`)
-      : 'HiroOS のターミナルに、この欠片の意味を知る手紙があるらしい。';
-    paper(`<b>📓 ワトソンの手帳に記録した</b>${r.name}で、番地の欠片 <span class="f">「${r.frag}」</span><small>${tail}</small>`);
+      ? (n >= ORDER.length ? '規則は揃った。手帳の電報を読み直せ。' : `規則 ${n} / ${ORDER.length}`)
+      : 'HiroOS のターミナルに、この規則の意味を知る手紙があるらしい。';
+    paper(`<b>📓 ワトソンの手帳に記録した</b>${r.name}で、電報の読み方 <span class="f">「${r.rule}」</span><small>${tail}</small>`);
   }
   function paper(html) {
     const host = document.createElement('div');
@@ -116,7 +122,7 @@
           background: repeating-linear-gradient(#fbf6e6 0 23px, #e8dfc4 23px 24px); box-shadow: 0 12px 32px rgba(0,0,0,.35); }
         .t.on { transform: translate(-50%, 0) rotate(-1.2deg); opacity: 1; }
         b { display: block; font-size: 12px; letter-spacing: .12em; color: #8a5a2b; }
-        .f { font: 700 18px/1.4 Georgia, serif; letter-spacing: .1em; }
+        .f { font-weight: 700; }
         small { display: block; color: #7a6d55; font-size: 12px; }
       </style>
       <div class="t" role="status">${html}</div>`;

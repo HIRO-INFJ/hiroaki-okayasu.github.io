@@ -1537,7 +1537,7 @@
   <div class="passport-bg" id="passportBg" role="dialog" aria-modal="true" aria-label="パスポートの写し">
     <div class="passport">
       <h3>パスポートの写し</h3>
-      <p class="pp-lead">ノートPCのステッカーの裏に、古いパスポートの写しが挟まっていた。入国印ばかりで、国内の記録はひとつもない。<br>依頼人の住所がある街 ── その入国印に、番地の欠片が隠れているはずだ。</p>
+      <p class="pp-lead">ノートPCのステッカーの裏に、古いパスポートの写しが挟まっていた。入国印ばかりで、国内の記録はひとつもない。<br>依頼人の住む街 ── ホームズが暮らす、あの霧の街の入国印に、何か書き込まれているはずだ。</p>
       <div class="stamps" id="stamps"></div>
       <p class="pp-say" id="ppSay" aria-live="polite"></p>
       <button type="button" class="pp-close" id="ppClose">閉じる</button>
@@ -1555,13 +1555,13 @@
         { city: 'BANGKOK', code: 'BKK', date: '2024.05.19', c: '#b45309', rot: '-5deg', say: 'バンコク。暑すぎる。依頼人の街では、暖炉に火が入っている。' },
       ];
       const bg = document.getElementById('passportBg'), box = document.getElementById('stamps'), say = document.getElementById('ppSay');
-      box.innerHTML = STAMPS.map((s, i) => `<button type="button" class="stamp" data-i="${i}" style="--sc:${s.c};--rot:${s.rot}"><b>${s.code}</b><small>${s.city}</small><small>${s.date}</small><span class="frag">1</span></button>`).join('');
+      box.innerHTML = STAMPS.map((s, i) => `<button type="button" class="stamp" data-i="${i}" style="--sc:${s.c};--rot:${s.rot}"><b>${s.code}</b><small>${s.city}</small><small>${s.date}</small><span class="frag">✎</span></button>`).join('');
       box.querySelectorAll('.stamp').forEach(b => b.addEventListener('click', () => {
         const s = STAMPS[b.dataset.i];
         if (!s.hit) { b.classList.remove('miss'); void b.offsetWidth; b.classList.add('miss'); say.textContent = s.say; return; }
         b.classList.add('hit');
         const fresh = window.Case && window.Case.find('pop');
-        say.textContent = '霧の街、ロンドン。日付の横に、インクで小さく「1」。ページの間から写真が何枚か落ちた ── 空ばかりだ。' + (fresh ? ' 手帳に書き留めた。' : '');
+        say.textContent = '霧の街、ロンドン。入国印の余白に、インクの走り書き ──「電報は、ロンドンに着いた日の語から読め」。ページの間から写真が何枚か落ちた ── 空ばかりだ。' + (fresh ? ' 手帳に書き留めた。' : '');
       }));
       const open = () => { bg.classList.add('open'); say.textContent = ''; if (window.Case && window.Case.has('pop')) box.querySelector('.stamp:nth-child(4)').classList.add('hit'); };
       const close = () => bg.classList.remove('open');

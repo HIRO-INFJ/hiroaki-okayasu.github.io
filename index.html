@@ -383,12 +383,8 @@
     .dialog p { font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
 
     /* ── app: 221B / Watson の手帳 ── */
-    .frags { display: flex; gap: 6px; justify-content: center; margin: 14px 0 4px; }
-    .frags span { min-width: 44px; height: 46px; padding: 0 8px; display: grid; place-items: center; border-radius: 6px; font: 700 22px/1 Georgia, "Times New Roman", serif; letter-spacing: .06em; color: var(--ink-3); background: rgba(0,0,0,.04); border: 1.5px dashed rgba(0,0,0,.2); }
-    .frags span.on { color: #2b2419; background: #fbf6e6; border: 1.5px solid #c99a6b; }
     .door .msg { min-height: 3.6em; line-height: 1.7; max-width: 300px; margin-left: auto; margin-right: auto; }
     .casebook h3 { font-size: 15px; font-weight: 600; line-height: 32px; margin-top: 8px; color: #7c4a24; }
-    .casebook .frags { justify-content: flex-start; margin: 6px 0 10px; }
     .casebook .cards li::before { content: none; }
     .casebook .cards li { margin-bottom: 12px; }
     .casebook .cards b { display: block; }
@@ -398,6 +394,14 @@
     .mu-hist summary { cursor: pointer; }
     .mu-hist p { margin-top: 6px; line-height: 1.8; color: rgba(255,255,255,.8); }
     .mu-hist small { color: rgba(255,255,255,.45); }
+    .casebook h3 small { font-size: 11.5px; font-weight: 400; color: #a08b6a; }
+    .casebook .tg { font-family: var(--mono); font-size: 12.5px; line-height: 32px; }
+    .casebook .tg button { font: inherit; padding: 0 2px; border-radius: 3px; color: #2b2419; }
+    .casebook .tg button.mk { background: #ffd60a88; box-shadow: 0 0 0 1px #c99a6b; }
+    .casebook .rules { padding-left: 1.4em; }
+    .casebook .rules li::before { content: none; }
+    .casebook .rules .un { color: #8a8a95; }
+    .door .door-q { margin-top: 10px; font-size: 13px; color: var(--ink-2); }
     .casebook .link { font: inherit; font-size: 13px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 
     .confetti { position: fixed; top: -12px; z-index: 4500; width: 8px; height: 12px; pointer-events: none; animation: fall linear forwards; }
@@ -1009,9 +1013,11 @@
             <span class="stamp">${s.solved ? '解決' : '捜査中'}</span>
             <h2>Watson の手帳</h2>
             <h3>依頼</h3>
-            <p>依頼人の住所が引き裂かれ、三つの部屋に撒かれた。欠片をすべて集め、「221B」の扉に番地を告げること。── S.H. より <button class="link" data-letter>手紙を読み返す</button></p>
-            <h3>番地の欠片</h3>
-            <div class="frags">${Case.ORDER.map(r => `<span class="${found[r] ? 'on' : ''}">${found[r] ? Case.ROOMS[r].frag : '?'}</span>`).join('')}</div>
+            <p>ただの旅の報告に見える電報。三つの部屋から読み方の規則を集めて読み解き、隠れた合言葉を「221B」の扉に告げること。── S.H. より <button class="link" data-letter>手紙を読み返す</button></p>
+            <h3>電報 <small class="tg-note">（単語をタップすると印がつく）</small></h3>
+            <p class="tg">${Case.TELEGRAM.split(' ').map(w => `<button type="button">${w}</button>`).join(' ')}</p>
+            <h3>読み方の規則</h3>
+            <ol class="rules">${Case.ORDER.map(r => `<li class="${found[r] ? '' : 'un'}">${found[r] ? esc(Case.ROOMS[r].rule) : `？？？ ── ${Case.ROOMS[r].name}`}</li>`).join('')}</ol>
             <h3>推理メモ</h3>
             <ul class="cards">${Case.ORDER.map(r => {
               const c = Case.CARDS[r];
@@ -1026,34 +1032,35 @@
                 ? `<li><b>${esc(c.title)}</b><small>${esc(c.place)} ── ${esc(c.clue)}</small>${esc(c.body)}</li>`
                 : `<li class="un"><b>？？？</b>${esc(c.hint)}</li>`;
             }).join('')}</ul>
-            ${all && !s.solved ? '<button class="btn primary go" data-door>欠片は揃った。221B の扉へ →</button>' : ''}
+            ${all && !s.solved ? '<button class="btn primary go" data-door>規則は揃った。読めたら 221B の扉へ →</button>' : ''}
           </div>`;
           $('[data-letter]', rec.body).addEventListener('click', openLetter);
+          $$('.tg button', rec.body).forEach(b => b.addEventListener('click', () => b.classList.toggle('mk')));
           $$('[data-room]', rec.body).forEach(b => b.addEventListener('click', () => window.DesignSwitcher && window.DesignSwitcher.go(Case.ROOMS[b.dataset.room].design)));
           const door = $('[data-door]', rec.body); if (door) door.addEventListener('click', () => openApp('b221'));
         };
         draw();
         rec.redraw = draw;
-        const onStorage = (e) => { if (e.key === 'hs-case') draw(); };   // 別タブで欠片を拾ったとき
+        const onStorage = (e) => { if (e.key === 'hs-case') draw(); };   // 別タブで規則を拾ったとき
         addEventListener('storage', onStorage);
         rec.onClose = () => removeEventListener('storage', onStorage);
       },
 
       b221(rec) {
         if (Case.solved()) return caseSolved(rec);
-        const found = Case.state().found || {};
         rec.body.innerHTML = `<div class="secret door"><div>${icon('door', '#4b4b55', '#18181d')}<b>221B の扉には、鍵がかかっている</b>
-          <div class="frags">${Case.ORDER.map(r => `<span class="${found[r] ? 'on' : ''}">${found[r] ? Case.ROOMS[r].frag : '?'}</span>`).join('')}</div>
-          <input placeholder="番地を告げる" aria-label="番地" autocomplete="off" spellcheck="false" />
-          <small class="msg">欠片 ${Case.count()} / ${Case.ORDER.length} ── 手帳に書き留めたものを、並べてみるといい。</small></div></div>`;
+          <p class="door-q">扉の向こうから声がする ──「合言葉は？」</p>
+          <input placeholder="合言葉を告げる" aria-label="合言葉" autocomplete="off" spellcheck="false" autocapitalize="off" />
+          <small class="msg">読み方の規則 ${Case.count()} / ${Case.ORDER.length} ── 答えは、手帳の電報の中にある。</small></div></div>`;
         const inp = $('input', rec.body), box = $('.secret', rec.body), msg = $('.msg', rec.body);
         const shake = () => { box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); inp.value = ''; };
         inp.addEventListener('keydown', (e) => {
           if (e.key !== 'Enter') return;
-          const v = inp.value.replace(/[\s.]/g, '').toLowerCase();
-          if (!v.startsWith('221b')) { msg.textContent = '扉は沈黙している。番地が違うようだ。'; return shake(); }
-          // 番地は有名すぎるので、欠片を集めずに答えても開かない（『四つの署名』より）
-          if (Case.count() < Case.ORDER.length) { msg.textContent = '「当て推量はしない主義でね」── 欠片が揃ってから、もう一度。'; return shake(); }
+          const v = inp.value;
+          if (/221\s*b|baker/i.test(v)) { msg.textContent = '「それは住所だ、ワトソン君。合言葉ではない」'; return shake(); }
+          if (!Case.check(v)) { msg.textContent = '扉は沈黙している。合言葉が違うようだ。'; return shake(); }
+          // 規則を集めずに答えても開かない（『四つの署名』より）
+          if (Case.count() < Case.ORDER.length) { msg.textContent = '「当て推量はしない主義でね」── 規則が揃ってから、もう一度。'; return shake(); }
           Case.solve(); confetti(); caseSolved(rec);
           const badge = $('.desk-icon[data-id="b221"] .badge'); if (badge) badge.remove();
           const book = wins.get('casebook'); if (book && book.redraw) book.redraw();
@@ -1085,14 +1092,15 @@
       '親愛なるワトソン君へ',
       '',
       'ひとつ、奇妙な依頼が舞い込んだ。',
-      '依頼人の「住所」が引き裂かれ、この机の外にある三つの部屋へ撒かれてしまったという。',
+      '依頼人から電報が届いた。一見、ただの旅の報告だ。だが、何かを隠している。',
+      '読み方の規則は、この机の外にある三つの部屋に散らばっているらしい。',
       '',
       '  ・緑の雨が降りしきる部屋',
       '  ・色とりどりの粘土でできた部屋',
       '  ・色を失った、夜の部屋',
       '',
-      '欠片をすべて拾い集めたら、この机の「221B」の扉に番地を告げてほしい。',
-      '道中で気づいたことは、手帳に書き留めておくといい。',
+      '規則を三つ集めて電報を読み解き、隠れた合言葉を、この机の「221B」の扉に告げてほしい。',
+      '電報は手帳に写しておいた。道中で気づいたことも、そこに書き留めるといい。',
       '些細なことほど、雄弁なものだ。',
       '',
       '── S.H.',
@@ -1112,8 +1120,8 @@
       rec.el.style.width = Math.min(540, innerWidth - 24) + 'px'; rec.el.style.height = Math.min(560, innerHeight - 120) + 'px';
       rec.body.innerHTML = `<div class="letter selectable">
         <h2>事件解決 ── 221B</h2>
-        <p>扉の向こうは、見覚えのある部屋だった。暖炉の火、散らかった書類、ソファに投げ出されたヴァイオリン。</p>
-        <p>依頼人の住所は、最初からここにあった。三つの部屋に散っていたのは住所ではなく ── 四つの姿に分かれた、このサイトの持ち主そのものだったのかもしれない。</p>
+        <p>「VIOLIN」── 扉が開く。暖炉の火、散らかった書類、そしてソファの上には、ケースから出されたままのヴァイオリン。電報の「VIOLIN CASE MISSING」は、ただの嘘ではなかったわけだ。</p>
+        <p>電報はこう言っていた ── CLIENT IS HIRO HIMSELF。依頼人は、このサイトの持ち主本人。三つの部屋に散っていたのは規則ではなく ── 四つの姿に分かれた、彼自身だったのかもしれない。</p>
         <p>君の手帳には、事件とは関係のない彼の癖が、いくつか書き留められている。そして部屋の奥には、推理小説がぎっしり詰まった本棚。</p>
         <p>「さて、ワトソン君。次の事件だ」<br>── S.H.</p>
         <p>追伸: 依頼人は、まだ君からの便りを待っている。</p>

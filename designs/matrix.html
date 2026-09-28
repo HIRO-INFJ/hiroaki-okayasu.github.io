@@ -1024,10 +1024,9 @@
         print('目を引くものほど疑うといい。本物の手がかりは、もっと静かに踊っている。', 'dim');
       },
       rachel: () => print('レイチェル嬢を探すのは、時間の無駄というものだ。', 'dim'),
-      afoot: () => solveDancingMen(),
-      the: (a) => a.join(' ').toLowerCase() === 'game is afoot' ? solveDancingMen() : print('zsh: command not found: the  — try \'help\'', 'err'),
+      three: () => solveDancingMen(),
     };
-    const NAMES = Object.keys(COMMANDS).filter(n => !['rache', 'rachel', 'afoot', 'the'].includes(n));
+    const NAMES = Object.keys(COMMANDS).filter(n => !['rache', 'rachel', 'three'].includes(n));
 
     /* ── 踊る人形（『踊る人形』より）── 3 行の棒人間 1 体が 1 文字 */
     const DANCERS = {
@@ -1053,7 +1052,7 @@
         print('（壁一面に、赤い文字が殴り書きされている）', 'dim');
         ['  ####    ###    ####  #   #  #####', '  #   #  #   #  #      #   #  #    ', '  ####   #####  #      #####  #### ', '  #  #   #   #  #      #   #  #    ', '  #   #  #   #   ####  #   #  #####'].forEach(l => print(l, 'err'));
       },
-      'note.txt': () => { print('（紙の切れ端に、小さな人形が並んで踊っている）', 'dim'); dance('AFOOT').forEach(l => print(l, 'hi')); },
+      'note.txt': () => { print('（紙の切れ端に、小さな人形が並んで踊っている）', 'dim'); dance('THREE').forEach(l => print(l, 'hi')); },
       'dancing_men.key': () => {
         print('# 踊る人形 ── 対応表（一部）', 'dim');
         dance('AEFHKL', true).forEach(l => print(l)); print('');
@@ -1065,13 +1064,14 @@
       if (window.Case && window.Case.bonus('movies')) print('……場違いな場所で本気を出す人の話ばかりだ。手帳に書き留めた。', 'dim');
     }
     function solveDancingMen() {
-      print('The game is afoot. ── 獲物は動き出した。', 'hi');
-      print('  +--------+', 'hi'); print('  |   22   |  <- 番地の欠片', 'hi'); print('  +--------+', 'hi');
+      print('THREE ── The game is afoot. 獲物は動き出した。', 'hi');
+      print('人形の足元に、小さな走り書きがある。', 'dim');
+      print('  「電報は、三語ごとに読め」', 'hi');
       found('sherlock');
       if (window.Case) {
         const fresh = window.Case.find('matrix');
-        print(fresh ? 'ワトソンの手帳に書き留めた。history.log のテニスの行も、ついでに。' : 'この欠片は、もう手帳に書き留めてある。', 'dim');
-        if (!window.Case.started()) print('……この欠片の意味は、HiroOS のターミナルにある手紙が知っている。', 'dim');
+        print(fresh ? 'ワトソンの手帳に書き留めた。history.log のテニスの行も、ついでに。' : 'この規則は、もう手帳に書き留めてある。', 'dim');
+        if (!window.Case.started()) print('……どの電報のことかは、HiroOS のターミナルにある手紙が知っている。', 'dim');
       }
     }
     function run(line) {
