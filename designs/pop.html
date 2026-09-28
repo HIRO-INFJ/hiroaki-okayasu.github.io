@@ -1553,17 +1553,25 @@
         { city: 'TAIPEI', code: 'TPE', date: '2022.12.27', c: '#be123c', rot: '-2deg', say: '台北。夜市の匂いがする。……だが、辻馬車が走る街ではない。' },
         { city: 'LONDON', code: 'LHR', date: '1881.03.04', c: '#1e3a8a', rot: '5deg', hit: true },
         { city: 'BANGKOK', code: 'BKK', date: '2024.05.19', c: '#b45309', rot: '-5deg', say: 'バンコク。暑すぎる。依頼人の街では、暖炉に火が入っている。' },
+        { city: 'SANTIAGO DE COMPOSTELA', code: 'SCQ', date: '2016.05.13', c: '#a16207', rot: '2deg', bonus: 'camino', say: 'サンティアゴ・デ・コンポステーラ。ロンドンの妙な日付を除けば、いちばん古い印だ。靴底に巡礼路の土 ── 何百キロも歩き通した者の印だよ。ここで出会った仲間たちが、この後の旅の行き先をすべて決めている。……だが、依頼人の街ではない。' },
+        { city: 'FRANKFURT', code: 'FRA', date: '2019.02.09', c: '#374151', rot: '-3deg', say: 'フランクフルト。巡礼路で出会ったドイツ人の友人を訪ねたらしい。速度無制限のアウトバーンを時速 200 キロ ── 目が覚めるような体験をした顔だ。だが、霧の街ではない。' },
+        { city: 'MILANO', code: 'MXP', date: '2019.02.10', c: '#047857', rot: '4deg', say: 'ミラノ。ドイツの翌日にはもうイタリアだ。カミーノの友人と雪山へ ── スキーに、スノーモービル。頬の日焼けは雪焼けだな。依頼人の街はもっと北、もっと霧深い。' },
+        { city: 'SEOUL', code: 'ICN', date: '2019.02.23', c: '#1d4ed8', rot: '-4deg', say: 'ソウル。これもカミーノの縁だ。袖に残る炭火の匂い ── ソソモンヌンカルビチッのカルビを、まだ夢に見ている。だが、辻馬車の走る街ではない。' },
       ];
       const bg = document.getElementById('passportBg'), box = document.getElementById('stamps'), say = document.getElementById('ppSay');
       box.innerHTML = STAMPS.map((s, i) => `<button type="button" class="stamp" data-i="${i}" style="--sc:${s.c};--rot:${s.rot}"><b>${s.code}</b><small>${s.city}</small><small>${s.date}</small><span class="frag">✎</span></button>`).join('');
       box.querySelectorAll('.stamp').forEach(b => b.addEventListener('click', () => {
         const s = STAMPS[b.dataset.i];
-        if (!s.hit) { b.classList.remove('miss'); void b.offsetWidth; b.classList.add('miss'); say.textContent = s.say; return; }
+        if (!s.hit) {
+          b.classList.remove('miss'); void b.offsetWidth; b.classList.add('miss'); say.textContent = s.say;
+          if (s.bonus && window.Case && window.Case.bonus(s.bonus)) say.textContent += ' ── 手帳に書き留めた。';
+          return;
+        }
         b.classList.add('hit');
         const fresh = window.Case && window.Case.find('pop');
-        say.textContent = '霧の街、ロンドン。入国印の余白に、インクの走り書き ──「電報は、ロンドンに着いた日の語から読め」。ページの間から写真が何枚か落ちた ── 空ばかりだ。' + (fresh ? ' 手帳に書き留めた。' : '');
+        say.textContent = '霧の街、ロンドン。入国印の余白に、インクの走り書き ──「電報は、霧に着いたら、次の語から読め」。ページの間から写真が何枚か落ちた ── 空ばかりだ。' + (fresh ? ' 手帳に書き留めた。' : '');
       }));
-      const open = () => { bg.classList.add('open'); say.textContent = ''; if (window.Case && window.Case.has('pop')) box.querySelector('.stamp:nth-child(4)').classList.add('hit'); };
+      const open = () => { bg.classList.add('open'); say.textContent = ''; if (window.Case && window.Case.has('pop')) box.querySelector(`.stamp[data-i="${STAMPS.findIndex(s => s.hit)}"]`).classList.add('hit'); };
       const close = () => bg.classList.remove('open');
       document.getElementById('tripSticker').addEventListener('click', (e) => { e.stopPropagation(); open(); });
       document.getElementById('ppClose').addEventListener('click', close);

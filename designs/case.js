@@ -12,14 +12,14 @@
   const KEY = 'hs-case';
 
   // 奇妙な電報（『グロリア・スコット号』）。三つの部屋の規則で読むと、隠れた一文が現れる：
-  //   STOP を数えない → 4 語目から → 3 語ごと ＝ CLIENT IS HIRO HIMSELF ANSWER IS VIOLIN
+  //   STOP を数えない → FOGGY（霧）の次の語から → 3 語ごと ＝ CLIENT IS HIRO HIMSELF ANSWER IS VIOLIN
   const TELEGRAM = 'ARRIVED LONDON FOGGY STOP CLIENT WAITING NERVOUS STOP IS STILL SILENT STOP HIRO SENT WORD HIMSELF STOP SEEMS TIRED STOP ANSWER PROMPTLY PLEASE STOP IS MYCROFT AWARE STOP VIOLIN CASE MISSING STOP';
   const ANSWER = 'violin';
 
   // 電報の読み方の規則（三つ揃うまで、電報はただの旅の報告にしか見えない）
   const ROOMS = {
     matrix: { rule: '三語ごとに読め', name: '緑の雨の部屋', design: 'matrix' },
-    pop:    { rule: '着いた日の語から読め', name: '粘土の部屋', design: 'pop' },
+    pop:    { rule: '霧に着いたら、次の語から読め', name: '粘土の部屋', design: 'pop' },
     noir:   { rule: '止まったものは数えるな', name: '夜の部屋', design: 'noir' },
   };
   const ORDER = ['matrix', 'pop', 'noir'];
@@ -59,13 +59,18 @@
       body: 'スクール・オブ・ロック、ロード・オブ・ザ・リング、プラダを着た悪魔。ロックで教室を変える話、指輪を捨てに行く旅、場違いな職場で食らいつく話。どれも「場違いな場所で本気を出す人」の物語だ。',
       hint: '緑の雨の部屋。ls -a の中に、夜更かしの痕跡がある。',
     },
+    camino: {
+      title: '巡礼の件', place: 'Pop', clue: 'パスポートのサンティアゴ・デ・コンポステーラの入国印',
+      body: '2016 年 5 月 13 日、彼はカミーノ・デ・サンティアゴを歩き通した。そこで出会った仲間を訪ねて、2019 年 2 月にはフランクフルト、ミラノ、ソウルへ。アウトバーンを時速 200 キロで走り、雪山でスノーモービルを駆り、炭火のカルビに唸った。彼の旅の地図は、一本の巡礼路から枝分かれしているのだよ、ワトソン君。',
+      hint: '粘土の部屋。パスポートの入国印をすべて確かめること。一枚だけ、すべての旅の始まりになっている。',
+    },
     shelf: {
       title: '本棚の件', place: '221B', clue: '221B の本棚',
       body: '推理小説がぎっしり。はやみねかおるの背表紙がいちばん擦り切れていて、森晶麿の隣にニーチェが刺さっている。……これだけ謎が好きな依頼人なら、この事件を仕組んだのが誰かも、もう分かるだろう？',
       hint: '事件を解いた者だけが、221B の本棚を見られる。',
     },
   };
-  const BONUS_ORDER = ['fm', 'movies', 'shelf'];
+  const BONUS_ORDER = ['fm', 'movies', 'camino', 'shelf'];
 
   const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
   const write = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };

@@ -398,6 +398,9 @@
     .casebook .tg { font-family: var(--mono); font-size: 12.5px; line-height: 32px; }
     .casebook .tg button { font: inherit; padding: 0 2px; border-radius: 3px; color: #2b2419; }
     .casebook .tg button.mk { background: #ffd60a88; box-shadow: 0 0 0 1px #c99a6b; }
+    .casebook .tg button.answer { background: #7c4a24; color: #fff8e6; box-shadow: 0 0 0 2px #c99a6b, 0 0 14px rgba(201,154,107,.9); animation: tgAns .6s cubic-bezier(.34,1.6,.5,1); }
+    @keyframes tgAns { from { transform: scale(.6); } }
+    .casebook .tg-got { color: #7c4a24; font-weight: 600; }
     .casebook .rules { padding-left: 1.4em; }
     .casebook .rules li::before { content: none; }
     .casebook .rules .un { color: #8a8a95; }
@@ -1011,33 +1014,41 @@
       casebook(rec) {
         const draw = () => {
           const s = Case.state(), found = s.found || {}, all = Case.count() === Case.ORDER.length;
+          // 事件とは関係のない、依頼人の人となり。部屋の規則と一緒に拾うものと、寄り道で拾うもの
+          const notes = [
+            ...Case.ORDER.map(r => ({ c: Case.CARDS[r], got: !!found[r], place: Case.ROOMS[r].name, hint: `${Case.ROOMS[r].name}の規則を見つけると、一緒に書き留められる。` })),
+            ...Case.BONUS_ORDER.map(k => ({ c: Case.BONUS[k], got: Case.hasBonus(k), place: Case.BONUS[k].place, hint: Case.BONUS[k].hint })),
+          ];
           rec.body.innerHTML = `<div class="memo casebook selectable">
             <span class="stamp">${s.solved ? '解決' : '捜査中'}</span>
             <h2>Watson の手帳</h2>
             <h3>依頼</h3>
             <p>ただの旅の報告に見える電報。三つの部屋から読み方の規則を集めて読み解き、隠れた合言葉を「221B」の扉に告げること。── S.H. より <button class="link" data-letter>手紙を読み返す</button></p>
             <h3>電報 <small class="tg-note">（単語をタップすると印がつく）</small></h3>
-            <p class="tg">${Case.TELEGRAM.split(' ').map(w => `<button type="button">${w}</button>`).join(' ')}</p>
+            <p class="tg">${Case.TELEGRAM.split(' ').map((w, i) => `<button type="button" data-w="${i}">${w}</button>`).join(' ')}</p>
+            <p class="tg-got" hidden>印をつけた語が、一本の文になった ── 最後の一語が、扉の合言葉だ。</p>
             <h3>読み方の規則</h3>
-            <ol class="rules">${Case.ORDER.map(r => `<li class="${found[r] ? '' : 'un'}">${found[r] ? esc(Case.ROOMS[r].rule) : `？？？ ── ${Case.ROOMS[r].name}`}</li>`).join('')}</ol>
-            <h3>推理メモ</h3>
-            <ul class="cards">${Case.ORDER.map(r => {
-              const c = Case.CARDS[r];
-              return found[r]
-                ? `<li><b>${esc(c.title)}</b><small>${esc(c.clue)}</small>${esc(c.body)}</li>`
-                : `<li class="un"><b>？？？</b>${esc(Case.hint(r))} <button class="link" data-room="${r}">${Case.ROOMS[r].name}へ →</button></li>`;
-            }).join('')}</ul>
-            <h3>おまけ（${Case.BONUS_ORDER.filter(Case.hasBonus).length} / ${Case.BONUS_ORDER.length}）</h3>
-            <ul class="cards">${Case.BONUS_ORDER.map(k => {
-              const c = Case.BONUS[k];
-              return Case.hasBonus(k)
-                ? `<li><b>${esc(c.title)}</b><small>${esc(c.place)} ── ${esc(c.clue)}</small>${esc(c.body)}</li>`
-                : `<li class="un"><b>？？？</b>${esc(c.hint)}</li>`;
-            }).join('')}</ul>
+            <ol class="rules">${Case.ORDER.map(r => found[r]
+              ? `<li>${esc(Case.ROOMS[r].rule)}</li>`
+              : `<li class="un">？？？ ── ${esc(Case.hint(r))} <button class="link" data-room="${r}">${Case.ROOMS[r].name}へ →</button></li>`).join('')}</ol>
+            <h3>おまけの推理メモ（${notes.filter(n => n.got).length} / ${notes.length}）</h3>
+            <ul class="cards">${notes.map(n => n.got
+              ? `<li><b>${esc(n.c.title)}</b><small>${esc(n.place)} ── ${esc(n.c.clue)}</small>${esc(n.c.body)}</li>`
+              : `<li class="un"><b>？？？</b>${s.solved ? esc(n.hint) : 'XXXXXXXX ── 事件が解けたら、ヒントが読めるようになる。'}</li>`).join('')}</ul>
             ${all && !s.solved ? '<button class="btn primary go" data-door>規則は揃った。読めたら 221B の扉へ →</button>' : ''}
           </div>`;
           $('[data-letter]', rec.body).addEventListener('click', openLetter);
-          $$('.tg button', rec.body).forEach(b => b.addEventListener('click', () => b.classList.toggle('mk')));
+          // 規則どおりの語（STOP を除いて 4 語目から 3 語ごと）にだけ印がついたら、最後の語が浮かび上がる
+          const words = Case.TELEGRAM.split(' '), right = new Set();
+          words.reduce((n, w, i) => { if (w === 'STOP') return n; n++; if (n >= 4 && (n - 4) % 3 === 0) right.add(i); return n; }, 0);
+          const last = Math.max(...right);
+          const judge = () => {
+            const marked = $$('.tg button.mk', rec.body).map(b => +b.dataset.w);
+            const ok = marked.length === right.size && marked.every(i => right.has(i));
+            $(`.tg [data-w="${last}"]`, rec.body).classList.toggle('answer', ok);
+            $('.tg-got', rec.body).hidden = !ok;
+          };
+          $$('.tg button', rec.body).forEach(b => b.addEventListener('click', () => { b.classList.toggle('mk'); judge(); }));
           $$('[data-room]', rec.body).forEach(b => b.addEventListener('click', () => window.DesignSwitcher && window.DesignSwitcher.go(Case.ROOMS[b.dataset.room].design)));
           const door = $('[data-door]', rec.body); if (door) door.addEventListener('click', () => openApp('b221'));
         };
