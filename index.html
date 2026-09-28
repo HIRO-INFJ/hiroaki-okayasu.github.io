@@ -481,12 +481,12 @@
 
     /* ================= DATA ================= */
     const WORKS = [
-      { id: 'gut', name: 'ガット張り管理', cat: 'web', kind: 'Web App', ic: 'tennis', c: ['#34d399', '#059669'], url: 'https://tennis-stringing-tracker.vercel.app/', desc: 'ラケットのガット張り履歴を管理するモバイル対応 Web アプリ。Next.js + Supabase 構成。', tech: ['Next.js', 'Supabase', 'Capacitor'] },
+      { id: 'stringing', name: 'ストリング張り管理', cat: 'web', kind: 'Web App', ic: 'tennis', c: ['#34d399', '#059669'], url: 'https://tennis-stringing-tracker.vercel.app/', desc: 'ラケットのストリング張り履歴を管理するモバイル対応 Web アプリ。Next.js + Supabase 構成。', tech: ['Next.js', 'Supabase', 'Capacitor'] },
       { id: 'cost', name: 'テニス代計算', cat: 'web', kind: 'Web App', ic: 'calc', c: ['#fbbf24', '#f59e0b'], url: 'https://tenniscost-dukz4cqj.manus.space/', desc: 'テニスコート代・ボール代の立替金を瞬時に参加者人数で割り勘計算。', tech: ['Next.js'] },
       { id: 'score', name: 'テニススコア', cat: 'web', kind: 'Web App', ic: 'chart', c: ['#60a5fa', '#2563eb'], url: 'https://tennis-scoring-app-six.vercel.app/', desc: '試合中のスコアをリアルタイムで記録・表示できるテニス専用スコアアプリ。', tech: ['React', 'Vercel'] },
-      { id: 'td', name: '影喰いの砦', cat: 'game', kind: 'Game', ic: 'bolt', c: ['#86efac', '#166534'], url: 'works/shadow-fort-td.html', desc: '塔を建てて影の魔物から砦を守る、ローグライトのタワーディフェンス。上級職・予知・呪文を集めて強くなる。', tech: ['HTML', 'JavaScript'] },
-      { id: 'tower', name: '夜明けに崩れる塔', cat: 'game', kind: 'Game', ic: 'cards', c: ['#fbbf24', '#9a3412'], url: 'works/yoake-no-tou.html', desc: 'カードバトルで塔を登る、ループ型のRPG。負けても“知ったこと”だけは次の夜へ持ち越せる。', tech: ['HTML', 'JavaScript'] },
-      { id: 'island', name: '十日目に、島は落ちる', cat: 'game', kind: 'Game', ic: 'mail', c: ['#7dd3fc', '#1e3a8a'], url: 'works/tenth-day-island.html', desc: '落ちる運命の空の島で、同じ10日間をくり返して謎を解く推理アドベンチャー。エンディングは6種類。', tech: ['HTML', 'JavaScript'] },
+      { id: 'tower-defense', name: '影喰いの砦', cat: 'game', kind: 'Tower Defense', ic: 'bolt', c: ['#86efac', '#166534'], url: 'works/shadow-fort-td.html', desc: '塔を建てて影の魔物から砦を守る、ローグライトのタワーディフェンス。上級職・予知・呪文を集めて強くなる。', tech: ['HTML', 'JavaScript'] },
+      { id: 'deckbuilder', name: '夜明けに崩れる塔', cat: 'game', kind: 'Deckbuilder', ic: 'cards', c: ['#fbbf24', '#9a3412'], url: 'works/yoake-no-tou.html', desc: 'カードバトルで塔を登る、ループ型のRPG。負けても“知ったこと”だけは次の夜へ持ち越せる。', tech: ['HTML', 'JavaScript'] },
+      { id: 'island-mystery', name: '十日目に、島は落ちる', cat: 'game', kind: 'Mystery Adventure', ic: 'mail', c: ['#7dd3fc', '#1e3a8a'], url: 'works/tenth-day-island.html', desc: '落ちる運命の空の島で、同じ10日間をくり返して謎を解く推理アドベンチャー。エンディングは6種類。', tech: ['HTML', 'JavaScript'] },
       { id: 'space', name: 'Space Salvage', cat: 'game', kind: 'Game', ic: 'rocket', c: ['#818cf8', '#312e81'], url: 'works/space_salvage_v111.html', desc: '宇宙を舞台にしたサルベージアクションゲーム。', tech: ['HTML', 'JavaScript'] },
       { id: 'rpg', name: '魔王討伐クエスト', cat: 'game', kind: 'Game', ic: 'sword', c: ['#f87171', '#b91c1c'], url: 'works/maou-quest.html', desc: '冒険に出て魔石を集め、武器を鍛えて魔王を倒す。コマンド選択式のレトロRPG。', tech: ['HTML', 'JavaScript'] },
       { id: 'chord', name: 'コード進行', cat: 'web', kind: 'Web App', ic: 'guitar', c: ['#fb923c', '#c2410c'], url: 'works/guitar_chord.html', desc: 'ジャンルに合わせた王道のコード進行をキーごとに生成できるアプリ。', tech: ['HTML', 'JavaScript'] },
@@ -740,7 +740,7 @@
         const grid = $('.f-grid', rec.body), info = $('.f-info', rec.body), status = $('.f-status', rec.body), q = $('input', rec.body);
         let cat = 'all', sel = null;
         const draw = () => {
-          const list = WORKS.filter(w => (cat === 'all' || w.cat === cat) && (!q.value || (w.name + w.desc + w.tech.join()).toLowerCase().includes(q.value.toLowerCase())));
+          const list = WORKS.filter(w => (cat === 'all' || w.cat === cat) && (!q.value || (w.id + w.name + w.kind + w.desc + w.tech.join()).toLowerCase().includes(q.value.toLowerCase())));
           grid.innerHTML = list.map(w => `<button class="f-item ${sel === w.id ? 'sel' : ''}" data-id="${w.id}">${icon(w.ic, w.c[0], w.c[1])}<span>${esc(w.name)}</span></button>`).join('');
           status.textContent = `${list.length} 項目 ・ ${innerWidth < 900 ? "タップ" : "ダブルクリック"}で開く`;
           $$('.f-item', grid).forEach(b => {
@@ -1133,7 +1133,7 @@
       const q = spotIn.value.trim().toLowerCase();
       const all = [
         ...Object.entries(APPS).filter(([k]) => !['dialog', 'secret', 'memo'].includes(k)).map(([k, a]) => ({ label: a.name, sub: 'アプリ', ic: a.ic, c: a.c, run: () => openApp(k) })),
-        ...WORKS.map(w => ({ label: w.name, sub: w.kind, ic: w.ic, c: w.c, run: () => launchWork(w), extra: w.desc + w.tech.join() })),
+        ...WORKS.map(w => ({ label: w.name, sub: w.kind, ic: w.ic, c: w.c, run: () => launchWork(w), extra: w.id + w.desc + w.tech.join() })),
         { label: 'Matrix デザインへ', sub: 'デザイン', ic: 'term', c: ['#22c55e', '#052e16'], run: () => window.DesignSwitcher.go('matrix') },
         { label: 'Noir デザインへ', sub: 'デザイン', ic: 'note', c: ['#d6d3d1', '#44403c'], run: () => window.DesignSwitcher.go('noir') },
         { label: 'Pop デザインへ', sub: 'デザイン', ic: 'user', c: ['#fdba74', '#ea580c'], run: () => window.DesignSwitcher.go('pop') },
