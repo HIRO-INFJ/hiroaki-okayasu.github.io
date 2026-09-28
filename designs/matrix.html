@@ -684,6 +684,7 @@
   <div class="hole" id="hole" aria-hidden="true"><i></i><i style="animation-delay:.15s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.45s"></i><i style="animation-delay:.6s"></i><i style="animation-delay:.75s"></i><i style="animation-delay:.9s"></i></div>
   <div class="construct" id="construct" role="dialog" aria-modal="true" aria-label="白い部屋"><div class="c-in" id="c-in"></div></div>
 
+  <script src="case.js"></script>
   <script>
   (function () {
     'use strict';
@@ -957,7 +958,7 @@
       about: () => ['Hiroaki Okayasu / フリーランス開発者', 'Python・JavaScript・PHP を中心に、業務自動化からモバイルアプリまで。', 'off-duty: 📷 camera / 🎾 tennis / 🎸 guitar'].forEach(l => print(l)),
       skills: () => $$('.module').forEach(m => print(`▸ ${$('.module-name', m).textContent.padEnd(20)} ${$$('.lbl', m).map(x => x.textContent).join(', ')}`)),
       works: () => { WORKS.forEach((w, i) => print(`  [${String(i + 1).padStart(2, '0')}] ${w.id.padEnd(15)} ${w.jp}`)); print("usage: open <番号 or 名前>", 'dim'); },
-      ls: (a) => a.join(' ').includes('-a') ? ['.', '..', '.secrets', 'about.md', 'skills/', 'works/', 'journal.log', 'contact.sh'].forEach(f => print('  ' + f)) : COMMANDS.works(),
+      ls: (a) => a.join(' ').includes('-a') ? ['.', '..', '.secrets', 'about.md', 'skills/', 'works/', 'journal.log', 'contact.sh', 'history.log', 'wall.txt', 'note.txt', 'dancing_men.key'].forEach(f => print('  ' + f)) : COMMANDS.works(),
       open: (a) => {
         const q = (a[0] || '').toLowerCase();
         const w = WORKS[parseInt(q, 10) - 1] || WORKS.find(x => x.id.includes(q) && q);
@@ -1007,6 +1008,7 @@
       cat: (a) => {
         if (a[0] === '.secrets') { print('↑ ↑ ↓ ↓ ← → ← → B A', 'hi'); print('...or type "neo" anywhere on this page.', 'dim'); }
         else if (a[0] === 'about.md') COMMANDS.about();
+        else if (CASE_FILES[a[0]]) CASE_FILES[a[0]]();
         else print(`cat: ${a[0] || ''}: No such file or directory`, 'err');
       },
       redpill: () => { document.body.classList.add('redpill'); Rain.setColor([255, 43, 74]); print('You took the red pill. 真実の世界へようこそ。', 'hi'); },
@@ -1015,8 +1017,57 @@
       neo: () => wakeUp(),
       pwd: () => print('/home/guest/okayasu'),
       vim: () => print('vim を起動しようとしました。終了方法は... 誰も知りません。', 'dim'),
+      // ── 四つの部屋の事件（designs/case.js）──
+      rache: () => {
+        print('Rache ── ドイツ語で「復讐」。', 'err');
+        print('……あるいは、書きかけの「Rachel」か。どちらにせよ、壁の血文字は目くらましだ。', 'dim');
+        print('目を引くものほど疑うといい。本物の手がかりは、もっと静かに踊っている。', 'dim');
+      },
+      rachel: () => print('レイチェル嬢を探すのは、時間の無駄というものだ。', 'dim'),
+      afoot: () => solveDancingMen(),
+      the: (a) => a.join(' ').toLowerCase() === 'game is afoot' ? solveDancingMen() : print('zsh: command not found: the  — try \'help\'', 'err'),
     };
-    const NAMES = Object.keys(COMMANDS);
+    const NAMES = Object.keys(COMMANDS).filter(n => !['rache', 'rachel', 'afoot', 'the'].includes(n));
+
+    /* ── 踊る人形（『踊る人形』より）── 3 行の棒人間 1 体が 1 文字 */
+    const DANCERS = {
+      A: [' o ', '/|\\', '/ \\'], E: ['_o_', ' | ', '/ \\'], F: ['\\o/', ' | ', '/ \\'], H: ['_o/', ' | ', '/ \\'],
+      K: [' o ', '<|>', '/ \\'], L: [' o_', '/| ', '/ \\'], N: ['\\o_', ' | ', '/ \\'], O: [' o/', '/| ', '/ \\'],
+      R: [' o ', '/|\\', '/ >'], S: ['\\o/', ' | ', '< >'], T: ['\\o ', ' |\\', '/ \\'], W: [' o ', '/|\\', '< >'],
+    };
+    const dance = (word, label) => [0, 1, 2].map(i => '  ' + [...word].map(c => DANCERS[c][i]).join('  '))
+      .concat(label ? ['  ' + [...word].map(c => ` ${c} `).join('  ')] : []);
+    const CASE_FILES = {
+      'history.log': () => [
+        '  101  cd ~/recipes',
+        '  102  grep -v "パクチー" recipes.txt > tonight.txt',
+        '  103  wc -l tonight.txt',
+        '  104  vim wall.txt',
+        '  105  cat note.txt',
+        '  106  cat dancing_men.key',
+        '  107  # 読めたら、その言葉をそのままコマンドとして打てばいい',
+      ].forEach(l => print(l)),
+      'wall.txt': () => {
+        print('（壁一面に、赤い文字が殴り書きされている）', 'dim');
+        ['  ####    ###    ####  #   #  #####', '  #   #  #   #  #      #   #  #    ', '  ####   #####  #      #####  #### ', '  #  #   #   #  #      #   #  #    ', '  #   #  #   #   ####  #   #  #####'].forEach(l => print(l, 'err'));
+      },
+      'note.txt': () => { print('（紙の切れ端に、小さな人形が並んで踊っている）', 'dim'); dance('AFOOT').forEach(l => print(l, 'hi')); },
+      'dancing_men.key': () => {
+        print('# 踊る人形 ── 対応表（一部）', 'dim');
+        dance('AEFHKL', true).forEach(l => print(l)); print('');
+        dance('NORSTW', true).forEach(l => print(l));
+      },
+    };
+    function solveDancingMen() {
+      print('The game is afoot. ── 獲物は動き出した。', 'hi');
+      print('  +--------+', 'hi'); print('  |   22   |  <- 番地の欠片', 'hi'); print('  +--------+', 'hi');
+      found('sherlock');
+      if (window.Case) {
+        const fresh = window.Case.find('matrix');
+        print(fresh ? 'ワトソンの手帳に書き留めた。history.log の二行目も、ついでに。' : 'この欠片は、もう手帳に書き留めてある。', 'dim');
+        if (!window.Case.started()) print('……この欠片の意味は、HiroOS のターミナルにある手紙が知っている。', 'dim');
+      }
+    }
     function run(line) {
       line = line.trim();
       print(`<span class="u">guest@okayasu:~$</span> ${esc(line)}`, 'in', true);
@@ -1079,6 +1130,7 @@
       ['deja', 'デジャヴ — 2度通る黒猫', '長居した人だけが見るもの'],
       ['sudo', 'sudo hire hiro', '管理者の特権で、雇う'],
       ['hack', 'hack', 'ターミナルで侵入を試みる'],
+      ['sherlock', '踊る人形を読んだ', '隠れたファイルの中で、誰かが踊っている'],
     ];
     const store = {
       get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } },

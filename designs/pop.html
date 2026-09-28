@@ -793,6 +793,49 @@
       footer { flex-direction: column; text-align: center; }
     }
 
+    /* ============================================================
+       四つの部屋の事件 — ノートPCのステッカーと、パスポートの写し
+    ============================================================ */
+    .trip-sticker {
+      position: absolute; left: 56%; top: 20%; font: 700 max(.09em, 10.5px)/1 var(--font-body); width: 2.1em; height: 2.1em; padding: 0;
+      display: grid; place-items: center; border-radius: 50%; pointer-events: auto; cursor: zoom-in;
+      color: #8a3b12; background: #fbf1dc; border: .13em dashed #c26a2e; box-shadow: 0 .1em 0 rgba(0,0,0,.25); transform: rotate(-14deg); opacity: .92;
+      transition: transform .25s;
+    }
+    .trip-sticker:hover { transform: rotate(-4deg) scale(1.25); }
+    .passport-bg {
+      position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; padding: 16px;
+      background: rgba(40,16,0,.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .passport-bg.open { opacity: 1; pointer-events: auto; }
+    .passport {
+      width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; padding: 26px 26px 22px; border-radius: 22px;
+      color: #3a2a1c; background: #fbf4e4; font-family: var(--font-body);
+      box-shadow: 0 12px 0 #d9c7a6, 0 22px 44px rgba(0,0,0,.35), inset 0 2px 0 #fff;
+      transform: translateY(14px) scale(.97); transition: transform .4s cubic-bezier(.34,1.4,.5,1);
+    }
+    .passport-bg.open .passport { transform: none; }
+    .passport h3 { font-family: var(--font-display); font-size: 22px; margin-bottom: 6px; }
+    .passport .pp-lead { font-size: 13.5px; line-height: 1.8; color: #6b5540; }
+    .stamps { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; margin: 18px 0 12px; }
+    .stamp {
+      position: relative; aspect-ratio: 1.5; border-radius: 14px; padding: 10px; display: grid; place-content: center; text-align: center; gap: 2px;
+      border: 2.5px solid var(--sc); color: var(--sc); background: rgba(255,255,255,.55); transform: rotate(var(--rot));
+      box-shadow: 0 5px 0 rgba(0,0,0,.08); cursor: pointer; font: inherit; transition: transform .25s, box-shadow .25s;
+    }
+    .stamp:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 8px 0 rgba(0,0,0,.08); }
+    .stamp b { font-size: 18px; letter-spacing: .14em; }
+    .stamp small { font-size: 11px; letter-spacing: .08em; opacity: .85; }
+    .stamp .frag { display: none; position: absolute; right: 8px; bottom: 6px; font: 700 26px/1 var(--font-display); color: #3a2a1c; }
+    .stamp.hit { background: #fff; }
+    .stamp.hit .frag { display: block; animation: fragIn .5s cubic-bezier(.34,1.6,.5,1); }
+    .stamp.miss { animation: stampNo .4s; }
+    @keyframes fragIn { from { transform: scale(0) rotate(-30deg); } }
+    @keyframes stampNo { 25%, 75% { transform: translateX(-6px) rotate(var(--rot)); } 50% { transform: translateX(6px) rotate(var(--rot)); } }
+    .pp-say { min-height: 3.4em; font-size: 13.5px; line-height: 1.7; color: #8a3b12; }
+    .pp-close { margin-top: 8px; padding: 9px 18px; border-radius: 999px; border: 0; font: 600 13px var(--font-body); color: #fff; background: #F05A00; box-shadow: 0 4px 0 #A83D00; cursor: pointer; }
+
     @media (prefers-reduced-motion: reduce) {
       .clay-obj, .glow-dot, .scroll-wheel { animation: none !important; }
       .reveal { opacity: 1; transform: none; transition: none; }
@@ -841,7 +884,7 @@
       <canvas id="particle-canvas" aria-hidden="true"></canvas>
       <div class="emoji-scene">
         <span class="clay-obj obj-sun" aria-hidden="true">☀️</span>
-        <span class="clay-obj obj-laptop" aria-hidden="true">💻</span>
+        <span class="clay-obj obj-laptop" aria-hidden="true">💻<button type="button" class="trip-sticker" id="tripSticker" tabindex="-1" title="……ステッカー？">✈</button></span>
         <span class="clay-obj obj-camera" aria-hidden="true">📷</span>
         <span class="clay-obj obj-guitar" aria-hidden="true">🎸</span>
         <span class="clay-obj obj-racket" aria-hidden="true">🎾</span>
@@ -1487,6 +1530,45 @@
         document.addEventListener('mouseover', (e) => { if (e.target.closest('a, button, .work-card, .skill-card, .journal-card, .about-visual')) ring.classList.add('hover'); });
         document.addEventListener('mouseout', (e) => { if (e.target.closest('a, button, .work-card, .skill-card, .journal-card, .about-visual')) ring.classList.remove('hover'); });
       }
+    })();
+  </script>
+
+  <!-- 四つの部屋の事件（designs/case.js）-->
+  <div class="passport-bg" id="passportBg" role="dialog" aria-modal="true" aria-label="パスポートの写し">
+    <div class="passport">
+      <h3>パスポートの写し</h3>
+      <p class="pp-lead">ノートPCのステッカーの裏に、古いパスポートの写しが挟まっていた。入国印ばかりで、国内の記録はひとつもない。<br>依頼人の住所がある街 ── その入国印に、番地の欠片が隠れているはずだ。</p>
+      <div class="stamps" id="stamps"></div>
+      <p class="pp-say" id="ppSay" aria-live="polite"></p>
+      <button type="button" class="pp-close" id="ppClose">閉じる</button>
+    </div>
+  </div>
+  <script src="case.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const STAMPS = [
+        { city: 'HONOLULU', code: 'HNL', date: '2019.08.12', c: '#0e7490', rot: '-4deg', say: 'ホノルル。いい海だが、S.H. が住むには陽気すぎる街だ。' },
+        { city: 'PARIS', code: 'CDG', date: '2023.03.02', c: '#7c3aed', rot: '3deg', say: 'パリ。美しい街だが、依頼人の住所は、霧の立ちこめる街にある。' },
+        { city: 'TAIPEI', code: 'TPE', date: '2022.12.27', c: '#be123c', rot: '-2deg', say: '台北。夜市の匂いがする。……だが、辻馬車が走る街ではない。' },
+        { city: 'LONDON', code: 'LHR', date: '1881.03.04', c: '#1e3a8a', rot: '5deg', hit: true },
+        { city: 'BANGKOK', code: 'BKK', date: '2024.05.19', c: '#b45309', rot: '-5deg', say: 'バンコク。暑すぎる。依頼人の街では、暖炉に火が入っている。' },
+      ];
+      const bg = document.getElementById('passportBg'), box = document.getElementById('stamps'), say = document.getElementById('ppSay');
+      box.innerHTML = STAMPS.map((s, i) => `<button type="button" class="stamp" data-i="${i}" style="--sc:${s.c};--rot:${s.rot}"><b>${s.code}</b><small>${s.city}</small><small>${s.date}</small><span class="frag">1</span></button>`).join('');
+      box.querySelectorAll('.stamp').forEach(b => b.addEventListener('click', () => {
+        const s = STAMPS[b.dataset.i];
+        if (!s.hit) { b.classList.remove('miss'); void b.offsetWidth; b.classList.add('miss'); say.textContent = s.say; return; }
+        b.classList.add('hit');
+        const fresh = window.Case && window.Case.find('pop');
+        say.textContent = '霧の街、ロンドン。日付の横に、インクで小さく「1」。' + (fresh ? ' ── 手帳に書き留めた。ついでに、この人の旅好きも。' : '');
+      }));
+      const open = () => { bg.classList.add('open'); say.textContent = ''; if (window.Case && window.Case.has('pop')) box.querySelector('.stamp:nth-child(4)').classList.add('hit'); };
+      const close = () => bg.classList.remove('open');
+      document.getElementById('tripSticker').addEventListener('click', (e) => { e.stopPropagation(); open(); });
+      document.getElementById('ppClose').addEventListener('click', close);
+      bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
+      addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
     })();
   </script>
 

@@ -118,6 +118,9 @@
     .desk-icon.sel { background: rgba(255,255,255,.18); }
     .desk-icon.sel span { background: var(--accent); border-radius: 4px; padding: 0 5px; text-shadow: none; }
     .desk-icon.trash { position: fixed; right: 18px; bottom: 96px; }
+    @media (min-width: 721px) {   /* アイコンが増えて Trash に届きそうなら、左の列へ折り返す */
+      .desk-icons { display: flex; flex-direction: column; flex-wrap: wrap-reverse; align-items: center; align-content: flex-start; gap: 10px 6px; max-height: calc(100vh - var(--menubar) - 218px); }
+    }
     @media (max-width: 720px) {
       .desk-icons { left: 12px; right: 12px; top: calc(var(--menubar) + 18px); grid-template-columns: repeat(4, 1fr); gap: 14px 6px; }
       .desk-icon { width: auto; min-width: 0; }
@@ -379,6 +382,20 @@
     .dialog b { font-size: 14px; }
     .dialog p { font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
 
+    /* ── app: 221B / Watson の手帳 ── */
+    .frags { display: flex; gap: 6px; justify-content: center; margin: 14px 0 4px; }
+    .frags span { min-width: 44px; height: 46px; padding: 0 8px; display: grid; place-items: center; border-radius: 6px; font: 700 22px/1 Georgia, "Times New Roman", serif; letter-spacing: .06em; color: var(--ink-3); background: rgba(0,0,0,.04); border: 1.5px dashed rgba(0,0,0,.2); }
+    .frags span.on { color: #2b2419; background: #fbf6e6; border: 1.5px solid #c99a6b; }
+    .door .msg { min-height: 3.6em; line-height: 1.7; max-width: 300px; margin-left: auto; margin-right: auto; }
+    .casebook h3 { font-size: 15px; font-weight: 600; line-height: 32px; margin-top: 8px; color: #7c4a24; }
+    .casebook .frags { justify-content: flex-start; margin: 6px 0 10px; }
+    .casebook .cards li::before { content: none; }
+    .casebook .cards li { margin-bottom: 12px; }
+    .casebook .cards b { display: block; }
+    .casebook .cards small { display: block; font-size: 12.5px; line-height: 24px; color: #8a7a5c; }
+    .casebook .cards .un { color: #8a8a95; }
+    .casebook .link { font: inherit; font-size: 13px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
     .confetti { position: fixed; top: -12px; z-index: 4500; width: 8px; height: 12px; pointer-events: none; animation: fall linear forwards; }
     @keyframes fall { to { transform: translate(var(--dx), 110vh) rotate(var(--r)); } }
 
@@ -436,6 +453,7 @@
   <div class="notif" id="notif" role="status"></div>
   <div class="spot-bg" id="spot-bg"><div class="spot" role="dialog" aria-label="Spotlight"><div class="spot-in"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="spot-in" placeholder="Spotlight 検索 — アプリ・作品" autocomplete="off" /></div><div class="spot-res" id="spot-res"></div></div></div>
 
+  <script src="designs/case.js"></script>
   <script>
   (function () {
     'use strict';
@@ -449,6 +467,7 @@
     const isMobile = () => innerWidth <= 720;
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+    const Case = window.Case;   // designs/case.js — 4 デザイン共通の事件簿
 
     /* ================= ICONS ================= */
     const P = {
@@ -475,6 +494,7 @@
       receipt: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
       calc: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
       chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+      door: '<path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18"/><path d="M9 7h6"/><circle cx="15" cy="13" r=".9"/>',
     };
     const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${P[k] || P.file}</svg>`;
     const icon = (k, c1, c2, cls = '', badge = '') => `<span class="ico ${cls}" style="--c1:${c1};--c2:${c2}">${svg(k)}${badge ? `<span class="badge">${svg(badge)}</span>` : ''}</span>`;
@@ -535,7 +555,10 @@
       trash:    { name: 'Trash', ic: 'trash', c: ['#d4d4d8', '#71717a'], w: 460, h: 400 },
       memo:     { name: 'Memo', ic: 'note', c: ['#ffe066', '#f7b500'], w: 470, h: 540 },
       dialog:   { name: '', ic: 'file', c: ['#d4d4d8', '#71717a'], w: 360, h: 260 },
+      b221:     { name: '221B', ic: 'door', c: ['#4b4b55', '#18181d'], w: 440, h: 400 },
+      casebook: { name: 'Watson の手帳', ic: 'note', c: ['#c99a6b', '#7c4a24'], w: 520, h: 600 },
     };
+    const CASE_APPS = ['b221', 'casebook'];   // .sherlock を読むまでは存在しない
     const DOCK = ['about', 'works', 'skills', 'journal', 'mail', 'terminal', 'music', 'settings', '|', 'trash'];
 
     /* ================= WINDOW MANAGER ================= */
@@ -673,12 +696,28 @@
     trashIcon.innerHTML = `${icon('trash', '#d4d4d8', '#71717a')}<span>Trash</span>`;
     document.body.appendChild(trashIcon);
     DESK.push({ id: 'trash', open: () => openApp('trash') });
-    $$('.desk-icon').forEach(b => {
+    function bindDesk(b) {
       const d = DESK.find(x => x.id === b.dataset.id);
       b.addEventListener('click', () => { $$('.desk-icon').forEach(x => x.classList.toggle('sel', x === b)); if (isMobile()) d.open(); });
       b.addEventListener('dblclick', d.open);
       b.addEventListener('keydown', (e) => { if (e.key === 'Enter') d.open(); });
-    });
+    }
+    $$('.desk-icon').forEach(bindDesk);
+
+    // 事件が始まると、デスクトップに増えるもの
+    function showCaseDesk() {
+      [
+        { id: 'b221', label: '221B', html: icon('door', '#4b4b55', '#18181d', '', Case.solved() ? '' : 'lock'), open: () => openApp('b221') },
+        { id: 'casebook', label: 'Watson の手帳', html: icon('note', '#c99a6b', '#7c4a24'), open: () => openApp('casebook') },
+      ].forEach(d => {
+        if (DESK.some(x => x.id === d.id)) return;
+        DESK.push(d);
+        const b = document.createElement('button');
+        b.className = 'desk-icon'; b.dataset.id = d.id; b.innerHTML = `${d.html}<span>${d.label}</span>`;
+        deskEl.appendChild(b); bindDesk(b);
+      });
+    }
+    if (Case.started()) showCaseDesk();
     document.addEventListener('pointerdown', (e) => { if (!e.target.closest('.desk-icon')) $$('.desk-icon').forEach(x => x.classList.remove('sel')); });
 
     /* ================= RENDERERS ================= */
@@ -803,11 +842,11 @@
         show(0);
       },
 
-      mail(rec) {
+      mail(rec, o = {}) {
         rec.body.innerHTML = `
           <div class="mail">
             <div class="m-row"><label>宛先:</label><span class="m-to">Hiroaki Okayasu &lt;${esc(EMAIL)}&gt;</span></div>
-            <div class="m-row"><label>件名:</label><input id="m-sub" value="お仕事のご相談" /></div>
+            <div class="m-row"><label>件名:</label><input id="m-sub" value="${esc(o.subject || 'お仕事のご相談')}" /></div>
             <textarea id="m-body" aria-label="本文" placeholder="ご依頼・コラボレーション・ご質問など、お気軽にどうぞ。">はじめまして。ポートフォリオを拝見しました。\n\n</textarea>
             <div class="m-foot">
               <div class="soc"><a href="https://twitter.com/" target="_blank" rel="noopener">𝕏</a><a href="https://Instagram.com/" target="_blank" rel="noopener">Instagram</a><a href="https://note.com/" target="_blank" rel="noopener">note</a><a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></div>
@@ -826,16 +865,21 @@
         const pr = (t, c = '') => { const d = document.createElement('div'); d.className = 'ln ' + c; d.textContent = t; out.appendChild(d); term.scrollTop = term.scrollHeight; };
         const CMD = {
           help: () => { pr('commands:', 'h'); [['open <app>', 'アプリを開く (about, works, skills, journal, mail, music, settings)'], ['works', '作品一覧'], ['run <n>', '作品を起動'], ['whoami', '自己紹介'], ['neofetch', 'システム情報'], ['wallpaper <name>', 'aurora | sunset | forest | mono'], ['design [name]', 'デザイン切り替え'], ['ls -a', 'ファイル一覧'], ['clear', '画面クリア'], ['exit', 'ターミナルを閉じる']].forEach(([a, b]) => pr(`  ${a.padEnd(18)}${b}`)); },
-          open: (a) => { const id = a[0]; if (APPS[id] && !['dialog', 'memo'].includes(id)) { pr(`opening ${id}...`, 'd'); openApp(id); } else pr(`open: ${id || ''}: アプリが見つかりません`, 'e'); },
+          open: (a) => { const id = a[0]; if (APPS[id] && !['dialog', 'memo'].includes(id) && (Case.started() || !CASE_APPS.includes(id))) { pr(`opening ${id}...`, 'd'); openApp(id); } else pr(`open: ${id || ''}: アプリが見つかりません`, 'e'); },
           works: () => WORKS.forEach((w, i) => pr(`  ${String(i + 1).padStart(2)}  ${w.name.padEnd(14)} ${w.kind}`)),
           run: (a) => { const w = WORKS[+a[0] - 1]; if (w) { pr(`launching ${w.name}...`, 'd'); launchWork(w); } else pr('run: 番号を指定してください (works で確認)', 'e'); },
-          whoami: () => { pr('guest'); pr('...and the owner is Hiroaki Okayasu — developer · creator.', 'h'); },
+          whoami: () => { pr(Case.started() ? 'guest ...いや、今は Dr. Watson か。' : 'guest'); pr('...and the owner is Hiroaki Okayasu — developer · creator.', 'h'); },
           neofetch: () => { pr('       ___        guest@hiroos', 'p'); pr('      / H \\       ------------', 'p'); pr('     /_____\\      OS: HiroOS 3.0', 'p'); pr('                  Shell: zsh + coffee', 'p'); pr(`                  Resolution: ${innerWidth}x${innerHeight}`, 'p'); pr(`                  Windows: ${wins.size} open`, 'p'); pr('                  Hobbies: camera, tennis, guitar', 'p'); },
           wallpaper: (a) => { const w = WALLS.find(x => x.id === a[0] || x.name.toLowerCase() === (a[0] || '').toLowerCase()); if (w) { setWall(w.id); pr(`wallpaper → ${w.name}`, 'h'); } else pr('usage: wallpaper aurora|sunset|forest|mono', 'd'); },
           design: (a) => { const ids = window.DesignSwitcher ? window.DesignSwitcher.list : []; if (!a[0]) { pr('designs: ' + ids.join(' | '), 'h'); return; } if (ids.includes(a[0])) window.DesignSwitcher.go(a[0]); else pr(`design: ${a[0]}: not found`, 'e'); },
           matrix: () => { pr('Wake up, guest...', 'p'); setTimeout(() => window.DesignSwitcher && window.DesignSwitcher.go('matrix'), 900); },
-          ls: (a) => { pr((a[0] === '-a' ? '.hint  ' : '') + 'Works/  secret/  resume.pdf  README.txt  Trash/'); },
-          cat: (a) => { if (a[0] === '.hint') pr('secret のパスワードは、僕が週末に立っているコートのスポーツ（英語・小文字）。', 'y'); else if (a[0] === 'README.txt') pr('HiroOS へようこそ。⌘K で Spotlight。'); else pr(`cat: ${a[0] || ''}: No such file`, 'e'); },
+          ls: (a) => { pr((a[0] === '-a' ? '.hint  .sherlock  ' : '') + 'Works/  secret/  resume.pdf  README.txt  Trash/'); },
+          cat: (a) => {
+            if (a[0] === '.hint') pr('secret のパスワードは、僕が週末に立っているコートのスポーツ（英語・小文字）。', 'y');
+            else if (a[0] === '.sherlock') { LETTER.forEach(l => pr(l || ' ', 'y')); startCase(); }
+            else if (a[0] === 'README.txt') pr('HiroOS へようこそ。⌘K で Spotlight。');
+            else pr(`cat: ${a[0] || ''}: No such file`, 'e');
+          },
           sudo: (a) => a.join(' ') === 'hire hiro' ? (pr('Permission granted ✔ 最高の判断です。', 'p'), openApp('mail')) : pr('guest is not in the sudoers file. This incident will be reported. 👀', 'e'),
           date: () => pr(new Date().toString()),
           echo: (a) => pr(a.join(' ')),
@@ -952,6 +996,58 @@
         $$('button', rec.body).forEach(b => b.addEventListener('click', () => { if (isMobile()) openItem(T[b.dataset.i]); }));
       },
 
+      casebook(rec) {
+        const draw = () => {
+          const s = Case.state(), found = s.found || {}, all = Case.count() === Case.ORDER.length;
+          rec.body.innerHTML = `<div class="memo casebook selectable">
+            <span class="stamp">${s.solved ? '解決' : '捜査中'}</span>
+            <h2>Watson の手帳</h2>
+            <h3>依頼</h3>
+            <p>依頼人の住所が引き裂かれ、三つの部屋に撒かれた。欠片をすべて集め、「221B」の扉に番地を告げること。── S.H. より <button class="link" data-letter>手紙を読み返す</button></p>
+            <h3>番地の欠片</h3>
+            <div class="frags">${Case.ORDER.map(r => `<span class="${found[r] ? 'on' : ''}">${found[r] ? Case.ROOMS[r].frag : '?'}</span>`).join('')}</div>
+            <h3>推理メモ</h3>
+            <ul class="cards">${Case.ORDER.map(r => {
+              const c = Case.CARDS[r];
+              return found[r]
+                ? `<li><b>${esc(c.title)}</b><small>${esc(c.clue)}</small>${esc(c.body)}</li>`
+                : `<li class="un"><b>？？？</b>${esc(Case.hint(r))} <button class="link" data-room="${r}">${Case.ROOMS[r].name}へ →</button></li>`;
+            }).join('')}</ul>
+            ${all && !s.solved ? '<button class="btn primary go" data-door>欠片は揃った。221B の扉へ →</button>' : ''}
+          </div>`;
+          $('[data-letter]', rec.body).addEventListener('click', openLetter);
+          $$('[data-room]', rec.body).forEach(b => b.addEventListener('click', () => window.DesignSwitcher && window.DesignSwitcher.go(Case.ROOMS[b.dataset.room].design)));
+          const door = $('[data-door]', rec.body); if (door) door.addEventListener('click', () => openApp('b221'));
+        };
+        draw();
+        rec.redraw = draw;
+        const onStorage = (e) => { if (e.key === 'hs-case') draw(); };   // 別タブで欠片を拾ったとき
+        addEventListener('storage', onStorage);
+        rec.onClose = () => removeEventListener('storage', onStorage);
+      },
+
+      b221(rec) {
+        if (Case.solved()) return caseSolved(rec);
+        const found = Case.state().found || {};
+        rec.body.innerHTML = `<div class="secret door"><div>${icon('door', '#4b4b55', '#18181d')}<b>221B の扉には、鍵がかかっている</b>
+          <div class="frags">${Case.ORDER.map(r => `<span class="${found[r] ? 'on' : ''}">${found[r] ? Case.ROOMS[r].frag : '?'}</span>`).join('')}</div>
+          <input placeholder="番地を告げる" aria-label="番地" autocomplete="off" spellcheck="false" />
+          <small class="msg">欠片 ${Case.count()} / ${Case.ORDER.length} ── 手帳に書き留めたものを、並べてみるといい。</small></div></div>`;
+        const inp = $('input', rec.body), box = $('.secret', rec.body), msg = $('.msg', rec.body);
+        const shake = () => { box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); inp.value = ''; };
+        inp.addEventListener('keydown', (e) => {
+          if (e.key !== 'Enter') return;
+          const v = inp.value.replace(/[\s.]/g, '').toLowerCase();
+          if (!v.startsWith('221b')) { msg.textContent = '扉は沈黙している。番地が違うようだ。'; return shake(); }
+          // 番地は有名すぎるので、欠片を集めずに答えても開かない（『四つの署名』より）
+          if (Case.count() < Case.ORDER.length) { msg.textContent = '「当て推量はしない主義でね」── 欠片が揃ってから、もう一度。'; return shake(); }
+          Case.solve(); confetti(); caseSolved(rec);
+          const badge = $('.desk-icon[data-id="b221"] .badge'); if (badge) badge.remove();
+          const book = wins.get('casebook'); if (book && book.redraw) book.redraw();
+        });
+        setTimeout(() => inp.focus(), 50);
+      },
+
       memo(rec, o) {
         rec.body.innerHTML = `<div class="memo selectable">${o.html}</div>`;
         $$('[data-design]', rec.body).forEach(b => b.addEventListener('click', () => window.DesignSwitcher && window.DesignSwitcher.go(b.dataset.design)));
@@ -969,6 +1065,49 @@
       rec.el.style.width = Math.min(520, innerWidth - 24) + 'px'; rec.el.style.height = Math.min(440, innerHeight - 120) + 'px';
       rec.body.innerHTML = `<div class="letter selectable"><h2>🎉 見つけてくれてありがとう。</h2><p>ここまで辿り着いたあなたは、きっと細部にこだわる人。僕もそうです。</p><p>このサイトは「作ること」がとにかく好き、という気持ちだけで作っています。もし何か一緒に作れたら、それ以上に嬉しいことはありません。</p><p>— Hiro</p><p style="margin-top:14px"><button class="btn primary" id="sec-mail">Hiro に連絡する</button></p></div>`;
       $('#sec-mail', rec.body).addEventListener('click', () => openApp('mail'));
+    }
+
+    /* ── 四つの部屋の事件 ── */
+    const LETTER = [
+      '親愛なるワトソン君へ',
+      '',
+      'ひとつ、奇妙な依頼が舞い込んだ。',
+      '依頼人の「住所」が引き裂かれ、この机の外にある三つの部屋へ撒かれてしまったという。',
+      '',
+      '  ・緑の雨が降りしきる部屋',
+      '  ・色とりどりの粘土でできた部屋',
+      '  ・色を失った、夜の部屋',
+      '',
+      '欠片をすべて拾い集めたら、この机の「221B」の扉に番地を告げてほしい。',
+      '道中で気づいたことは、手帳に書き留めておくといい。',
+      '些細なことほど、雄弁なものだ。',
+      '',
+      '── S.H.',
+      '',
+      '追伸: 部屋の渡り方は、ターミナルで design と打てば分かる。',
+    ];
+    function openLetter() {
+      openApp('memo', { key: 'memo-sherlock', title: '.sherlock', html: `<span class="stamp">親展</span>${LETTER.map(l => esc(l)).join('<br>')}` });
+    }
+    function startCase() {
+      const first = !Case.started();
+      Case.start(); showCaseDesk();
+      if (first) setTimeout(() => notify('デスクトップに何かが増えた', '「221B」の扉と、Watson の手帳。事件の始まりだ。', 'note', APPS.casebook.c), 600);
+    }
+    function caseSolved(rec) {
+      $('.ttl-t', rec.el).textContent = '221B — Baker Street';
+      rec.el.style.width = Math.min(540, innerWidth - 24) + 'px'; rec.el.style.height = Math.min(560, innerHeight - 120) + 'px';
+      rec.body.innerHTML = `<div class="letter selectable">
+        <h2>事件解決 ── 221B</h2>
+        <p>扉の向こうは、見覚えのある部屋だった。暖炉の火、散らかった書類、ソファに投げ出されたヴァイオリン。</p>
+        <p>依頼人の住所は、最初からここにあった。三つの部屋に散っていたのは住所ではなく ── 四つの姿に分かれた、このサイトの持ち主そのものだったのかもしれない。</p>
+        <p>君の手帳には、事件とは関係のない彼の癖が、いくつか書き留められている。</p>
+        <p>「さて、ワトソン君。次の事件だ」<br>── S.H.</p>
+        <p>追伸: 依頼人は、まだ君からの便りを待っている。</p>
+        <p style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap"><button class="btn primary" id="case-mail">依頼人（Hiro）に手紙を書く</button><button class="btn" id="case-book">手帳を開く</button></p>
+      </div>`;
+      $('#case-mail', rec.body).addEventListener('click', () => openApp('mail', { subject: '221B より' }));
+      $('#case-book', rec.body).addEventListener('click', () => openApp('casebook'));
     }
 
     let dlgN = 0;
@@ -1132,7 +1271,7 @@
     function renderSpot() {
       const q = spotIn.value.trim().toLowerCase();
       const all = [
-        ...Object.entries(APPS).filter(([k]) => !['dialog', 'secret', 'memo'].includes(k)).map(([k, a]) => ({ label: a.name, sub: 'アプリ', ic: a.ic, c: a.c, run: () => openApp(k) })),
+        ...Object.entries(APPS).filter(([k]) => !['dialog', 'secret', 'memo'].includes(k) && (Case.started() || !CASE_APPS.includes(k))).map(([k, a]) => ({ label: a.name, sub: 'アプリ', ic: a.ic, c: a.c, run: () => openApp(k) })),
         ...WORKS.map(w => ({ label: w.name, sub: w.kind, ic: w.ic, c: w.c, run: () => launchWork(w), extra: w.id + w.desc + w.tech.join() })),
         { label: 'Matrix デザインへ', sub: 'デザイン', ic: 'term', c: ['#22c55e', '#052e16'], run: () => window.DesignSwitcher.go('matrix') },
         { label: 'Noir デザインへ', sub: 'デザイン', ic: 'note', c: ['#d6d3d1', '#44403c'], run: () => window.DesignSwitcher.go('noir') },

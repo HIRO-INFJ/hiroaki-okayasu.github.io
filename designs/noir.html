@@ -263,6 +263,21 @@
       *, *::before, *::after { animation: none !important; transition: none !important; }
       .rv, .fade-up, .hero-h .w { opacity: 1 !important; transform: none !important; filter: none !important; }
     }
+
+    /* 四つの部屋の事件 — 止まった時計 */
+    .b-clock.stopped { cursor: zoom-in; }
+    .b-clock.stopped .big-time { animation: stall 5s steps(1) infinite; }
+    @keyframes stall { 0%, 90% { opacity: 1; } 92% { opacity: .3; } 94% { opacity: 1; } 96% { opacity: .55; } }
+    .case-bg { position: fixed; inset: 0; z-index: 500; display: none; place-items: center; padding: 16px; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .case-bg.open { display: grid; }
+    .case-note { width: min(520px, 100%); padding: 28px 28px 24px; border-radius: 16px; background: rgba(18,18,22,.96); border: 1px solid var(--line-2); box-shadow: 0 30px 90px rgba(0,0,0,.6); animation: pop .3s var(--ease); }
+    .case-note .k { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); display: flex; justify-content: space-between; }
+    .case-note h3 { font-size: 21px; letter-spacing: -.03em; font-weight: 600; line-height: 1.5; margin: 14px 0 12px; font-family: var(--jp); }
+    .case-note p { font-family: var(--jp); color: var(--text-2); font-size: 14px; line-height: 1.95; }
+    .case-note .frag { font-size: 72px; font-weight: 500; letter-spacing: -.05em; line-height: 1; text-align: center; margin: 22px 0 18px; }
+    .case-note .note { color: var(--text-3); font-size: 12.5px; margin-top: 10px; }
+    .case-note button { margin-top: 18px; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line-2); font-size: 13px; color: var(--text); }
+    .case-note button:hover { background: rgba(255,255,255,.06); }
   </style>
 </head>
 <body>
@@ -428,6 +443,17 @@
     </div>
   </footer>
 
+  <div class="case-bg" id="case-bg" role="dialog" aria-modal="true" aria-label="止まった時計">
+    <div class="case-note">
+      <div class="k"><span>EXHIBIT — 夜の部屋</span><span>02:21 JST</span></div>
+      <h3>奇妙なのは、時計が何もしなかったことだ。</h3>
+      <p>午前 2 時 21 分。ほかの部屋で事件が動き出したあの瞬間から、この時計は一秒も進んでいない。裏蓋を開けると、細かな砂利がこぼれ落ち、真鍮の小さな文字がひとつ。</p>
+      <div class="frag">B</div>
+      <p class="note" id="case-note-msg"></p>
+      <button type="button" id="case-close">時計を元に戻す</button>
+    </div>
+  </div>
+
   <div class="cmdk-bg" id="cmdk-bg">
     <div class="cmdk" role="dialog" aria-modal="true" aria-label="コマンドパレット">
       <input id="cmdk-in" placeholder="Type a command or search…" autocomplete="off" />
@@ -437,6 +463,7 @@
   </div>
   <div class="toast" id="toast" role="status"></div>
 
+  <script src="case.js"></script>
   <script>
   (function () {
     'use strict';
@@ -511,14 +538,33 @@
       const r = c.getBoundingClientRect(); c.style.setProperty('--x', e.clientX - r.left + 'px'); c.style.setProperty('--y', e.clientY - r.top + 'px');
     });
 
-    /* clock */
+    /* clock — 四つの部屋の事件：ほかの 2 部屋の欠片が揃うと、02:21 で止まる（『白銀号事件』） */
+    const Case = window.Case;
+    const stopped = () => !!Case && Case.has('matrix') && Case.has('pop') && !Case.has('noir');
+    const clockCard = $('.b-clock');
     function clock() {
+      const st = stopped();
+      clockCard.classList.toggle('stopped', st);
+      if (st) { clockCard.tabIndex = 0; clockCard.setAttribute('role', 'button'); } else { clockCard.removeAttribute('tabindex'); clockCard.removeAttribute('role'); }
+      if (st) { $('#time').firstChild.nodeValue = '02:21'; $('#sec').textContent = ':00'; $('#time-sub').textContent = '……秒が、進んでいない。'; return; }
       const [hh, mm, ss] = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Tokyo', hour12: false }).split(':');
       $('#time').firstChild.nodeValue = `${hh}:${mm}`; $('#sec').textContent = ':' + ss;
       const hr = +hh;
       $('#time-sub').textContent = hr >= 23 || hr < 7 ? 'いまは就寝中かも。返信は朝になります 🌙' : hr < 12 ? '朝のコーヒーを片手に作業中 ☕' : hr < 18 ? '集中モードでコードを書いています。' : '夜はギターかテニスの時間かも 🎸';
     }
     clock(); setInterval(clock, 1000);
+    const caseBg = $('#case-bg');
+    function inspectClock() {
+      if (!stopped()) return;
+      const fresh = Case.find('noir');
+      $('#case-note-msg').textContent = (fresh ? '手帳に書き留めた。ついでに、この砂利の出どころも。' : '') + (Case.count() >= Case.ORDER.length ? ' 欠片は揃った ── HiroOS の「221B」へ。' : '');
+      caseBg.classList.add('open'); setTimeout(() => $('#case-close').focus(), 50);
+    }
+    clockCard.addEventListener('click', inspectClock);
+    clockCard.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inspectClock(); } });
+    const closeCase = () => { caseBg.classList.remove('open'); clock(); };
+    $('#case-close').addEventListener('click', closeCase);
+    caseBg.addEventListener('click', (e) => { if (e.target === caseBg) closeCase(); });
 
     /* works */
     const grid = $('#works-grid');
@@ -567,12 +613,17 @@
       { g: 'Actions', l: 'メールアドレスをコピー', ic: 'copy', run: copyEmail },
       { g: 'Actions', l: 'メールを送る', ic: 'mail', run: () => { location.href = 'mailto:' + EMAIL; } },
       { g: 'Actions', l: 'デザインを切り替える', ic: 'palette', k: 'D', run: () => window.DesignSwitcher && window.DesignSwitcher.open() },
+      { g: 'Case', l: '221B ── 事件の進捗を確かめる', ic: 'hash', kw: 'sherlock holmes watson baker 221b シャーロック ホームズ ワトソン 事件', run: () => {
+        if (!Case) return;
+        if (stopped()) { $('#about').scrollIntoView({ behavior: 'smooth' }); return toast('時計を見るといい。何かが、起きていない。'); }
+        toast(Case.has('noir') ? `欠片 ${Case.count()} / ${Case.ORDER.length} ── この部屋の用は済んだ。` : `欠片 ${Case.count()} / ${Case.ORDER.length} ── 時計はまだ、正しい時刻を指している。`);
+      } },
       ...WORKS.map(w => ({ g: 'Projects', l: w.t, ic: w.ic, run: () => { if (!w.url) return toast('非公開プロジェクトです'); if (w.url.startsWith('http')) window.open(w.url, '_blank', 'noopener'); else location.href = w.url; } })),
     ];
     let items = [], act = 0;
     function render() {
       const q = inp.value.trim().toLowerCase();
-      items = CMDS.filter(c => !q || (c.l + c.g).toLowerCase().includes(q));
+      items = CMDS.filter(c => c.kw ? q.length >= 3 && c.kw.includes(q) : !q || (c.l + c.g).toLowerCase().includes(q));
       act = Math.min(act, Math.max(0, items.length - 1));
       let g = '', html = '';
       items.forEach((c, i) => { if (c.g !== g) { g = c.g; html += `<h6>${g}</h6>`; } html += `<button data-i="${i}" class="${i === act ? 'act' : ''}">${svg(c.ic)}${esc(c.l)}${c.k ? `<small>${c.k}</small>` : ''}</button>`; });
@@ -596,7 +647,7 @@
     let gPending = false;
     addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); bg.classList.contains('open') ? close() : open(); return; }
-      if (e.key === 'Escape') { close(); return; }
+      if (e.key === 'Escape') { close(); if (caseBg.classList.contains('open')) closeCase(); return; }
       if (e.target.matches('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key.toLowerCase();
       if (gPending) { gPending = false; const m = { a: '#about', e: '#expertise', w: '#works', j: '#journal', c: '#contact' }[k]; if (m) go(m)(); return; }

@@ -1,0 +1,100 @@
+/* ============================================================
+   CASE — 「四つの部屋の事件」全デザイン共通の事件簿
+   <script src="designs/case.js"></script>（各ページの本体スクリプトより前に読む）
+   同一オリジンの localStorage で、4 つのデザインの進捗を共有する。
+
+   window.Case.start()       事件を始める（HiroOS の .sherlock を読んだとき）
+   window.Case.find(room)    その部屋の欠片を見つけた（新規なら true）。手帳に書き留めた旨のトーストも出す
+   window.Case.has(room) / count() / started() / solved() / solve()
+============================================================ */
+(function () {
+  'use strict';
+  const KEY = 'hs-case';
+
+  // 番地の欠片（並べると 221B）
+  const ROOMS = {
+    matrix: { frag: '22', name: '緑の雨の部屋', design: 'matrix' },
+    pop:    { frag: '1',  name: '粘土の部屋',   design: 'pop' },
+    noir:   { frag: 'B',  name: '夜の部屋',     design: 'noir' },
+  };
+  const ORDER = ['matrix', 'pop', 'noir'];
+
+  // 欠片と一緒に手帳へ残る推理メモ（本編とは関係のない、依頼人の癖）
+  const CARDS = {
+    matrix: {
+      title: '香草の件',
+      clue: 'history.log に残っていた一行 ── grep -v "パクチー" recipes.txt',
+      body: 'このユーザーは、香草の類を好まない。レシピの一覧から、わざわざコマンドで除外している。手間を惜しまないほどに、だ。',
+      hint: '緑の雨の部屋。ターミナルで、隠れたファイルを探すといい。壁の赤い文字には気をつけて。',
+    },
+    pop: {
+      title: '旅の件',
+      clue: 'ノートPCのステッカーの裏にあった、入国印だらけのパスポート',
+      body: 'スーツケースの傷、行き先はいつも海の向こう。国内よりも海外を選ぶ性分と見た。',
+      hint: '粘土の部屋。持ち主の持ち物をよく見ること。いちばん小さなものが、いちばん雄弁だ。',
+    },
+    noir: {
+      title: '散歩道の件',
+      clue: '止まった時計の裏に残っていた、細かな砂利',
+      body: '靴の減り方と、この砂利。おそらく京都 ── 疎水に沿って、桜並木の続く道。考えごとをするとき、彼はあそこを歩く。',
+      hint: '夜の部屋。時計はまだ、正しい時刻を指している。ほかの欠片が揃えば、あるいは。',
+      hintReady: '夜の部屋。あの時計が、何もしなくなった。',   // 緑の雨と粘土の欠片が揃ったあと
+    },
+  };
+
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const write = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
+
+  const Case = {
+    ROOMS, ORDER, CARDS,
+    state: read,
+    started: () => !!read().started,
+    solved: () => !!read().solved,
+    has: (room) => !!(read().found || {})[room],
+    count: () => ORDER.filter(r => (read().found || {})[r]).length,
+    hint(room) { const c = CARDS[room]; return c.hintReady && Case.has('matrix') && Case.has('pop') ? c.hintReady : c.hint; },
+    start() { const s = read(); if (!s.started) { s.started = Date.now(); write(s); } },
+    find(room) {
+      if (!ROOMS[room]) return false;
+      const s = read(); s.found = s.found || {};
+      if (s.found[room]) return false;
+      s.found[room] = Date.now(); write(s);
+      toast(room);
+      return true;
+    },
+    solve() { const s = read(); if (!s.solved) { s.solved = Date.now(); write(s); } },
+    reset() { try { localStorage.removeItem(KEY); } catch (e) {} },
+  };
+
+  // 手帳に書き留めたことを知らせる、デザイン共通の小さな紙片
+  function toast(room) {
+    const r = ROOMS[room], n = Case.count();
+    const host = document.createElement('div');
+    const sh = host.attachShadow({ mode: 'open' });
+    const tail = Case.started()
+      ? (n >= ORDER.length ? '欠片は揃った。HiroOS の「221B」へ。' : `欠片 ${n} / ${ORDER.length}`)
+      : 'HiroOS のターミナルに、この欠片の意味を知る手紙があるらしい。';
+    sh.innerHTML = `
+      <style>
+        :host { all: initial; }
+        .t { position: fixed; z-index: 4000; left: 50%; bottom: 28px; width: min(360px, calc(100vw - 32px));
+          transform: translate(-50%, 24px) rotate(-1.2deg); opacity: 0; transition: transform .5s cubic-bezier(.34,1.4,.5,1), opacity .4s;
+          padding: 14px 18px 14px 20px; border-radius: 3px; color: #2b2419; cursor: pointer;
+          font: 14px/1.7 "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+          background: repeating-linear-gradient(#fbf6e6 0 23px, #e8dfc4 23px 24px); box-shadow: 0 12px 32px rgba(0,0,0,.35); }
+        .t.on { transform: translate(-50%, 0) rotate(-1.2deg); opacity: 1; }
+        b { display: block; font-size: 12px; letter-spacing: .12em; color: #8a5a2b; }
+        .f { font: 700 18px/1.4 Georgia, serif; letter-spacing: .1em; }
+        small { display: block; color: #7a6d55; font-size: 12px; }
+      </style>
+      <div class="t" role="status"><b>📓 ワトソンの手帳に記録した</b>${r.name}で、番地の欠片 <span class="f">「${r.frag}」</span><small>${tail}</small></div>`;
+    document.body.appendChild(host);
+    const t = sh.querySelector('.t');
+    const bye = () => { t.classList.remove('on'); setTimeout(() => host.remove(), 500); };
+    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('on')));
+    t.addEventListener('click', bye);
+    setTimeout(bye, 7000);
+  }
+
+  window.Case = Case;
+})();
