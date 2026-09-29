@@ -11,7 +11,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Klee+One:wght@400;600&display=swap" rel="stylesheet" /></noscript>
 
   <style>
     :root {
@@ -430,7 +432,7 @@
     <div class="lock-date" id="lock-date"></div>
     <div class="lock-time" id="lock-time"></div>
     <div class="lock-user">
-      <img src="hiroaki.webp" alt="" />
+      <img src="hiroaki-144.webp" width="72" height="72" alt="" fetchpriority="high" />
       <b>Hiroaki Okayasu</b>
       <div class="lock-pass" id="lock-pass"><span>クリックしてログイン</span></div>
       <span class="lock-hint">guest としてログインします</span>
