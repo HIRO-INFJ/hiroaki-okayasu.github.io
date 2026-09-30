@@ -1313,17 +1313,20 @@ function towerStats(tw) {
   if (!A || A.dmg == null) s.dmg = T.dmg * LV_MULT[lv - 1] * (A ? 1.25 : 1);
   if (!A || A.range == null) s.range = T.range * (1 + 0.1 * (lv - 1));
   if (!A || A.rate == null) s.rate = T.rate * (1 - 0.08 * (lv - 1));
-  // 強化（極めは1段ごとに攻撃+20%・射程+4%）
+  // 強化（極めは1段ごとに攻撃+20%・射程+4%。吹雪使いは範囲+8%・減速+5%、地震術士は範囲+6%）
   const buff = shrineBuff(tw);
   const mm = CURMAP.mod || {};
   const star = tw.star || 0;
   s.dmg *= (1 + (m.dmg[tw.type] || 0) + (m.dmgAll || 0) + buff.dmg) * (1 + 0.2 * star);
   s.range *= (1 + (m.range || 0) + 0.04 * star) * (1 + (mm.range || 0));
+  // 周囲に効く塔（吹雪使い・地震術士）の範囲にも、射程の増減と極めを効かせる
+  if (s.aura) s.aura *= (1 + (m.range || 0) + 0.08 * star) * (1 + (mm.range || 0));
+  if (s.pulse) s.pulse *= (1 + (m.range || 0) + 0.06 * star) * (1 + (mm.range || 0));
   if (s.buff) s.buff *= 1 + 0.12 * star;
   if (s.income) s.income = Math.round(s.income * (1 + 0.25 * star));
   s.rate /= 1 + (m.speed || 0) + buff.haste;
   if (s.splash) s.splash *= 1 + ((m.splash && m.splash[tw.type]) || 0);
-  if (s.slow) { s.slow = Math.min(0.85, s.slow + (m.slow || 0)); s.slowT = (s.slowT || 1.6) * (m.slow ? 1.5 : 1); }
+  if (s.slow) { s.slow = Math.min(0.85, s.slow + (m.slow || 0) + (s.aura ? 0.05 * star : 0)); s.slowT = (s.slowT || 1.6) * (m.slow ? 1.5 : 1); }
   if (s.burn) s.burn *= 1 + (m.burn || 0) + (mm.burn || 0);
   if (s.chain) s.chain += m.chain || 0;
   if (!tw.target) tw.target = (A && A.target) || 'first';
@@ -2225,8 +2228,9 @@ function towerPanel() {
   const name = tw.adv ? `${T.adv[tw.adv].name} Lv4${tw.star ? ' ' + '★'.repeat(tw.star) : ''}` : `${T.name} Lv${tw.lvl}`;
   const stats = [];
   if (s.dmg) stats.push(`攻撃 ${Math.round(s.dmg)}`);
-  if (s.dmg || s.aura) stats.push(`間隔 ${s.rate.toFixed(2)}秒`);
-  if (s.range && T.range) stats.push(`射程 ${Math.round(s.pulse || s.aura || s.range)}`);
+  if (s.dmg) stats.push(`間隔 ${s.rate.toFixed(2)}秒`);
+  if (s.range && T.range) stats.push(`${s.pulse || s.aura ? '範囲' : '射程'} ${Math.round(s.pulse || s.aura || s.range)}`);
+  if (s.slow) stats.push(`減速 ${Math.round(s.slow * 100)}%`);
   if (tw.type === 'shrine') stats.push(`強化 +${Math.round(((tw.adv && T.adv[tw.adv].buff) || T.buff * (1 + 0.3 * (tw.lvl - 1))) * 100)}%`);
   if (tw.type === 'mine') stats.push(`収入 ${tw.adv ? T.adv[tw.adv].income : Math.round(T.income * (1 + 0.6 * (tw.lvl - 1)))}/波`);
   if (tw.kills) stats.push(`撃破 ${tw.kills}`);
@@ -2434,7 +2438,7 @@ function showHowTo() {
     h('p', {}, '影の魔物が、道を通って右の砦へ押し寄せてくる。道ばたの台座に塔を建てて守ろう。全20波、5波ごとにボスが来る。'),
     h('p', {}, '■ 台座をタップ → 塔を選ぶ（もう一度押すと建つ）。塔をタップ → 強化・狙いの変更・売却。レベル3になると上級職に転職できる。'),
     h('p', {}, '■ 狙い：「先頭」「最後尾」「いちばん硬い」「いちばん弱った」から、塔ごとに選べる。'),
-    h('p', {}, '■ Lv3からLv4に上げるときに、2つの上級職から1つを選ぶ。上級職のあとは「極める」で★5まで強くできる（値段はどんどん上がる）。'),
+    h('p', {}, '■ Lv3からLv4に上げるときに、2つの上級職から1つを選ぶ。上級職のあとは「極める」で★5まで強くできる（値段はどんどん上がる）。★1つごとに攻撃+20%・射程+4%。吹雪使いは範囲+8%・減速+5%、地震術士は範囲+6%も上がる。'),
     h('p', {}, '■ 金貨が余ったら、500でもう一方の上級職に転職し直せる（★はそのまま）。'),
     h('p', {}, '■ ふつうの難しさでは、いつも「森の街道」で戦う。20波を守りきると昇格できるようになり、昇格すると5つの戦場からランダムに飛ばされる（難易度の★が多いほど手ごわい）。'),
     h('p', {}, '■ 8波目からは、敵に「特性」がつく（精鋭・俊足・装甲・再生・大群）。予知があれば事前に見える。'),
