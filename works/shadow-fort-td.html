@@ -644,10 +644,10 @@ const WAVE_HP = w => (1 + BAL.hp * (w - 1)) * Math.pow(BAL.exp, Math.max(0, w - 
 
 // ===== 波の特性（8波目から）=====
 const AFFIXES = {
-  elite: { name: '精鋭', desc: '体力+60%' },
+  elite: { name: '精鋭', desc: '体力+60%（ボスには効かない）' },
   swift: { name: '俊足', desc: '速さ+35%' },
   armored: { name: '装甲', desc: '防御+4（弱い攻撃が効きにくい）' },
-  regen: { name: '再生', desc: '体力が少しずつ回復する' },
+  regen: { name: '再生', desc: '体力が少しずつ回復する（ボスは控えめ）' },
   horde: { name: '大群', desc: '数+40%' },
 };
 
@@ -1583,11 +1583,11 @@ function spawnEnemy(type, at = null) {
   const d = ENEMIES[type];
   const af = (R.next && R.next.affix) || [];
   const has = k => af.includes(k);
-  const hp = Math.round(d.hp * WAVE_HP(R.wave + 1) * (1 + (R.mods.enemyHp || 0)) * (has('elite') ? 1.6 : 1));
+  const hp = Math.round(d.hp * WAVE_HP(R.wave + 1) * (1 + (R.mods.enemyHp || 0)) * (has('elite') && !d.boss ? 1.6 : 1));
   const pi = at ? at.pi : (W.spawnCount = (W.spawnCount || 0) + 1) % ROUTES.length;
   const spMod = d.fly ? 1 : 1 + ((CURMAP.mod && CURMAP.mod.enemySpeed) || 0);
   const e = { id: ++enemyUid, type, d, hp, maxHp: hp, pos: at ? at.pos : 0, pi, x: 0, y: 0,
-    speed: d.speed * spMod * (has('swift') ? 1.35 : 1), fly: !!d.fly, regen: has('regen') ? 0.025 : 0,
+    speed: d.speed * spMod * (has('swift') ? 1.35 : 1), fly: !!d.fly, regen: has('regen') ? (d.boss ? 0.004 : 0.025) : 0,
     armor: (d.armor || 0) + (has('armored') ? 4 : 0), slowAmt: 0, slowUntil: 0, frozenUntil: 0, burnDps: 0, burnUntil: 0, burnSpread: 0, alive: true, summonT: 3 };
   placeEnemy(e);
   W.enemies.push(e);
