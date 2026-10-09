@@ -503,6 +503,7 @@
       cog: '<path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/><circle cx="12" cy="12" r="4"/>',
       cart: '<circle cx="9" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/><path d="M3 4h2l2.4 11h11L21 8H6"/>',
       tennis: '<circle cx="12" cy="12" r="9"/><path d="M5.5 5.5a9 9 0 0 1 0 13M18.5 5.5a9 9 0 0 0 0 13"/>',
+      video: '<rect x="3" y="5" width="14" height="14" rx="2"/><path d="m17 10 4-2.5v9L17 14"/><path d="m8.5 9.5 3.5 2.5-3.5 2.5z"/>',
       guitar: '<path d="m19 5-6.5 6.5"/><path d="M11 10.5a4 4 0 0 0-5.3.3 3.5 3.5 0 0 0-1 2.2 3 3 0 0 1-1.7 2.3 3.6 3.6 0 0 0 5.4 5.4 3 3 0 0 1 2.3-1.7 3.5 3.5 0 0 0 2.2-1 4 4 0 0 0 .3-5.3"/><path d="m17 3 4 4"/>',
       rocket: '<path d="M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M14 4c3-1 6-1 6-1s0 3-1 6l-7 7-5-5z"/><circle cx="15" cy="9" r="1.5"/>',
       sword: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/>',
@@ -518,6 +519,7 @@
     const WORKS = [
       { id: 'stringing', name: 'ガット張り管理', cat: 'web', kind: 'Web App', ic: 'tennis', c: ['#34d399', '#059669'], url: 'https://tennis-stringing-tracker.vercel.app/', desc: 'ラケットのガット張り履歴を管理するモバイル対応 Web アプリ。Next.js + Supabase 構成。', tech: ['Next.js', 'Supabase', 'Capacitor'] },
       { id: 'cost', name: 'テニス代計算', cat: 'web', kind: 'Web App', ic: 'calc', c: ['#fbbf24', '#f59e0b'], url: 'https://tenniscost-dukz4cqj.manus.space/', desc: 'テニスコート代・ボール代の立替金を瞬時に参加者人数で割り勘計算。', tech: ['Next.js'] },
+      { id: 'match-editor', name: '試合動画エディタ', cat: 'web', kind: 'Web App', ic: 'video', c: ['#d9e54b', '#2d6450'], url: 'works/tennis-match-editor.html', desc: 'テニスの試合動画にサーブの時刻を打刻して、ポイントだけをつないだスコアボード入りの動画を作るツール。動画は端末の外に出ない。', tech: ['HTML', 'JavaScript', 'Web Audio API'] },
       { id: 'score', name: 'テニススコア', cat: 'web', kind: 'Web App', ic: 'chart', c: ['#60a5fa', '#2563eb'], url: 'https://tennis-scoring-app-six.vercel.app/', desc: '試合中のスコアをリアルタイムで記録・表示できるテニス専用スコアアプリ。', tech: ['React', 'Vercel'] },
       { id: 'tower-defense', name: '影喰いの砦', cat: 'game', kind: 'Tower Defense', ic: 'bolt', c: ['#86efac', '#166534'], url: 'works/shadow-fort-td.html', desc: '塔を建てて影の魔物から砦を守る、ローグライトのタワーディフェンス。上級職・予知・呪文を集めて強くなる。', tech: ['HTML', 'JavaScript'] },
       { id: 'deckbuilder', name: '夜明けに崩れる塔', cat: 'game', kind: 'Deckbuilder', ic: 'cards', c: ['#fbbf24', '#9a3412'], url: 'works/yoake-no-tou.html', desc: 'カードバトルで塔を登る、ループ型のRPG。負けても“知ったこと”だけは次の夜へ持ち越せる。', tech: ['HTML', 'JavaScript'] },
