@@ -432,7 +432,7 @@ function drawBoard(ctx,W,st){
       let fs=(isSet?36:44)*k; ctx.font=`500 ${fs}px "Zen Kaku Gothic New","Noto Sans JP",sans-serif`;
       while(c===0&&ctx.measureText(txt).width>cw[0]-16*k&&fs>18*k){fs-=2*k;ctx.font=`500 ${fs}px "Zen Kaku Gothic New",sans-serif`;}
       if(txt) ctx.fillText(txt,x+cw[c]/2,y+rh/2+2*k);
-      if(c===0&&pi===st.server&&txt){ const tw=ctx.measureText(txt).width; ctx.fillStyle="#E6461E"; ctx.fillRect(x+(cw[c]-tw)/2-6*k,y+rh-10*k,tw+12*k,4*k); }
+      if(c===0&&pi===st.server&&txt){ const tw=ctx.measureText(txt).width; ctx.fillStyle="#E6461E"; ctx.fillRect(x+(cw[c]-tw)/2-6*k,y+rh-7*k,tw+12*k,4*k); }
       x+=cw[c]+bw;
     });
   });
