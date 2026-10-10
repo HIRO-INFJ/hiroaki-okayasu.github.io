@@ -100,6 +100,10 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
 #scene { position: fixed; inset: 0; z-index: 9; display: none; }
 #scene.show { display: block; }
 #ovTitle { background: none; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 0; }
+/* タイトルのすき間をタップすると、うしろの背景（Scene）に届く */
+#ovTitle, #ovTitle .title-wrap { pointer-events: none; }
+#ovTitle .title-wrap > * { pointer-events: auto; }
+#ovTitle .title-logo { pointer-events: none; }
 .title-wrap { position: relative; width: 100%; height: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: calc(14px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom)); }
 .title-sound { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 12px; width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(20,14,48,.5); font-size: 17px; }
 .title-catch { font-family: "Mochiy Pop One", "Hiragino Maru Gothic ProN", sans-serif; color: #ffe9a8; font-size: clamp(12px, 3.6vw, 16px); letter-spacing: .14em; text-shadow: 0 2px 0 #2a1460, 0 0 12px rgba(255,200,120,.5); animation: rise .5s .1s both; }
@@ -408,7 +412,7 @@ const LOCK_T = 0.5, POP_T = 0.5, DAS = 0.16, ARR = 0.045;
 const OJAMA_RATE = 70;
 
 /* ===== ステージのルール ===== */
-const RULE_DEFAULT = { cols: 6, rows: 13, clearN: 4, ice: false, quake: false, dark: false, bg: null, lv: 0 };   // lv：はじめから落ちる速さを何段階上げるか
+const RULE_DEFAULT = { cols: 6, rows: 13, clearN: 4, colors: 4, ice: false, quake: false, dark: false, bg: null, lv: 0 };   // lv：はじめから落ちる速さを何段階上げるか
 let RULE = RULE_DEFAULT;
 function applyRule(r) {
   RULE = Object.assign({}, RULE_DEFAULT, r || {});
@@ -431,17 +435,26 @@ const STAGES = [
   { name: 'ぷるの王', theme: 'castle', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震（落石も凍っている）。はじめから落ちるのが速く、ボスのおじゃまは1.5倍', s: ['#c99a2e', '#5a3c0a'],
     rule: { ice: true, quake: true, lv: 3, bg: ['#5a4316', '#2a1d08'] }, atk: 1.5,
     cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .02, first: .05, counter: 4, kill: 6, harass: 22 } },
+  // ひみつのステージ：タイトル背景のぷるを「ぜんけし」すると開く。開くまで一覧にも出さない
+  { name: 'にじの間', theme: 'rainbow', boss: 'にじいろぷる', secret: true, desc: 'ひみつのステージ。5色目の紫のぷるが落ちてくるので、つながりにくい', s: ['#c45fd8', '#3a2a8a'],
+    rule: { colors: 5, lv: 2, bg: ['#3a2466', '#1c1240'] }, atk: 1.3,
+    cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .025, first: .06, counter: 4, kill: 6, harass: 24 } },
 ];
+const MAIN_STAGES = 6;   // ふつうに順番に開くステージの数（7つめはひみつ）
 const Hidden = {
   wins() { const rec = store.get('purutto.vs', [[0, 0], [0, 0], [0, 0]]); return (rec[2] && rec[2][0]) || 0; },
-  unlocked() { return this.wins() >= 3; },
+  unlocked() { return this.wins() >= 3 || this.secret(); },
+  secret() { return !!store.get('purutto.secret', false); },
   cleared() { const c = store.get('purutto.hidden', []); return STAGES.map((_, i) => !!c[i]); },
   setCleared(i) { const c = this.cleared(); c[i] = true; store.set('purutto.hidden', c); },
-  isOpen(i) { return i === 0 || this.cleared()[i - 1]; },
+  isOpen(i) {
+    if (STAGES[i].secret) return this.secret();
+    return i === 0 ? this.wins() >= 3 : this.cleared()[i - 1];
+  },
 };
 const OFF = [[0, -1], [1, 0], [0, 1], [-1, 0]];   // 子ぷるの位置（上・右・下・左）
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-const PCOL = { 1: ['#ff7b7b', '#d0283c'], 2: ['#6ee98a', '#1c9a47'], 3: ['#6aa8ff', '#2550c8'], 4: ['#ffe066', '#d89a00'], 8: ['#d4f1ff', '#5aa3d8'], 9: ['#dcd9ec', '#8a86a6'] };
+const PCOL = { 5: ['#d9a8ff', '#7d36c9'], 1: ['#ff7b7b', '#d0283c'], 2: ['#6ee98a', '#1c9a47'], 3: ['#6aa8ff', '#2550c8'], 4: ['#ffe066', '#d89a00'], 8: ['#d4f1ff', '#5aa3d8'], 9: ['#dcd9ec', '#8a86a6'] };
 const CHAIN_POW = [0, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512];
 const COLOR_BONUS = [0, 3, 6, 12, 24];
 const GROUP_BONUS = n => n <= 4 ? 0 : n >= 11 ? 10 : [0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7][n];
@@ -852,7 +865,7 @@ function potential(g) {
   let best = 0;
   for (let x = 0; x < COLS; x++) {
     const t = colTop(g, x); if (t <= 3) continue;
-    for (let c = 1; c <= 4; c++) for (let k = 1; k <= 2; k++) {
+    for (let c = 1; c <= RULE.colors; c++) for (let k = 1; k <= 2; k++) {
       const g2 = cloneGrid(g);
       for (let i = 0; i < k; i++) g2[t - 1 - i][x] = c;
       const r = resolve(g2);
@@ -940,7 +953,7 @@ const G = {
   pair(i) {
     while (this.seq.length <= i) {
       const n = this.seq.length;
-      const pool = n < 2 ? this.first3 : [1, 2, 3, 4];
+      const pool = n < 2 ? this.first3 : Array.from({ length: RULE.colors }, (_, i) => i + 1);
       const pick = () => pool[Math.floor(this.rng() * pool.length)];
       this.seq.push([pick(), pick()]);
     }
@@ -1043,17 +1056,17 @@ const G = {
       Net.paintPick();
       Net.againStatus();
     } else if (this.mode === 'boss') {
-      const st = STAGES[this.stage], win = this.lastWin = this.loser !== me, last = this.stage === STAGES.length - 1;
+      const st = STAGES[this.stage], win = this.lastWin = this.loser !== me, last = this.stage >= MAIN_STAGES - 1;
       const first = win && !Hidden.cleared()[this.stage];
       if (win) { Snd.win(); Hidden.setCleared(this.stage); }
-      $('#resTitle').textContent = win ? (last ? 'ぷるの王をたおした!' : 'STAGE CLEAR!') : 'まけ…';
+      $('#resTitle').textContent = !win ? 'まけ…' : st.secret ? 'にじの間をクリア!' : last ? 'ぷるの王をたおした!' : 'STAGE CLEAR!';
       body.innerHTML =
-        row('ステージ', `${this.stage + 1}. ${st.name}`) +
+        row('ステージ', st.secret ? `ひみつ. ${st.name}` : `${this.stage + 1}. ${st.name}`) +
         row('ボス', st.boss) +
         row('あなたの最大れんさ', me.maxChain) +
         row('ボスの最大れんさ', this.players[1].maxChain) +
         (first && !last ? `<p class="new">STAGE ${this.stage + 2}「${STAGES[this.stage + 1].name}」が開いた!</p>` : '') +
-        (win && last ? '<p class="new">★ 全ステージクリア! おめでとう! ★</p>' : '');
+        (win && st.secret ? '<p class="new">★ ひみつのステージまでクリア! すごい! ★</p>' : win && last ? '<p class="new">★ 全ステージクリア! おめでとう! ★</p>' : '');
       $('#btnAgain').textContent = win && !last ? '次のステージへ' : 'もう一度';
       $('#btnResTitle').textContent = 'ステージえらびへ';
     } else {
@@ -1503,7 +1516,7 @@ function drawBoard(pl) {
   const P = (x, y) => [x * c + c / 2, oy + y * c + c / 2];
   // つながり
   for (let y = 1; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
-    const v = g[y][x]; if (v < 1 || v > 4 || Skin.hidesColor(v)) continue;
+    const v = g[y][x]; if (v < 1 || v > 5 || Skin.hidesColor(v)) continue;
     if (isPop(x, y) && popPhase > .6) continue;
     const [px, py] = P(x, y);
     ctx.fillStyle = PCOL[v][0];
@@ -1570,7 +1583,7 @@ function drawBoard(pl) {
   }
   ctx.restore();
 }
-const MIX = { 1: '#e84d5c', 2: '#3cc365', 3: '#4479e6', 4: '#f2c22b' };
+const MIX = { 1: '#e84d5c', 2: '#3cc365', 3: '#4479e6', 4: '#f2c22b', 5: '#a35be0' };
 const mix = v => MIX[v];
 function drawNext(pl) {
   const cv = pl.els.next, ctx = cv.getContext('2d'), c = CELL;
@@ -1607,7 +1620,7 @@ const Skin = {
     this.data = d && Array.isArray(d.presets) && d.presets.length === 3 ? d : { active: 0, presets: [blank(), blank(), blank()] };
     this.load();
   },
-  slotOf(c) { return c === OJ ? 4 : c - 1; },
+  slotOf(c) { return c === OJ ? 4 : c <= 4 ? c - 1 : -1; },   // 5色目（にじの間の紫）はきせかえなし
   cur() { return this.data.active ? this.data.presets[this.data.active - 1] : null; },
   load() {
     this.cache.clear(); this.imgs = [];
@@ -1804,6 +1817,7 @@ const BG_THEMES = {
   ice:     { sky: ['#0a2036', '#154468', '#2a6e95'], glow: 'rgba(180,235,255,.16)', moon: null, stars: 25, parts: 'snow' },
   volcano: { sky: ['#160705', '#3a110a', '#6e2210'], glow: 'rgba(255,120,60,.24)', moon: null, stars: 15, parts: 'ember' },
   mansion: { sky: ['#0b0613', '#1d112e', '#34204a'], glow: 'rgba(200,170,255,.12)', moon: [.8, .14], stars: 55, parts: 'fog' },
+  rainbow: { sky: ['#1c1240', '#3a2466', '#6a3a8a'], glow: 'rgba(255,190,240,.24)', moon: null, stars: 90, parts: 'gold' },
   castle:  { sky: ['#190f2e', '#3a2160', '#7a4a3a'], glow: 'rgba(255,215,120,.24)', moon: null, stars: 70, parts: 'gold' },
 };
 function bgHills(x, W, H, base, amp, col, rnd) {
@@ -1875,6 +1889,16 @@ function bgVolcano(x, cx, base, w, h, col) {
   for (const k of [-.06, .02, .07]) { x.beginPath(); x.moveTo(cx + k * w, base - h); x.quadraticCurveTo(cx + k * w * 2.2, base - h * .6, cx + k * w * 3.2, base - h * .25); x.stroke(); }
 }
 const SCENERY = {
+  rainbow(x, W, H, rnd) {
+    const cx = W / 2, cy = H * .95, R = Math.max(W, H) * .62;
+    ['#ff7b7b', '#ffb36b', '#ffe066', '#6ee98a', '#6aa8ff', '#c9a2ff'].forEach((c, i) => {
+      x.strokeStyle = c; x.globalAlpha = .16; x.lineWidth = R * .045;
+      x.beginPath(); x.arc(cx, cy, R - i * R * .045, Math.PI, 0); x.stroke();
+    });
+    x.globalAlpha = 1;
+    bgHills(x, W, H, H * .88, H * .04, '#2a1a52', rnd);
+    bgHills(x, W, H, H * .95, H * .03, '#170e33', rnd);
+  },
   night(x, W, H, rnd) {
     bgHills(x, W, H, H * .8, H * .06, '#2a1d58', rnd);
     bgPines(x, W, H * .8, H * .03, H * .06, '#22174a', rnd, 9);
@@ -2093,6 +2117,7 @@ const Scene = {
     const set = new Set(); let sx = 0, sy = 0, n = 0;
     for (const cells of gr) for (const [x, y] of cells) { set.add(y * this.cols + x); sx += x; sy += y; n++; }
     this.pop = set; this.popT = 0; this.idleT = 0;
+    this.peak = Math.max(this.peak || 0, this.g.flat().filter(Boolean).length);
     if (this.chain >= 2) this.texts.push({ x: sx / n + .5, y: sy / n + .5, str: this.chain + 'れんさ!', n: this.chain, t: 0 });
   },
   finishPop() {
@@ -2116,6 +2141,40 @@ const Scene = {
       }
     }
     this.dirty = true;
+    if ((this.peak || 0) >= 10 && this.g.every(r => r.every(v => !v))) this.allClear();
+  },
+  // ひみつ：背景のぷるはタップで消せる（つながっていればまとめて）。タップしているあいだは、次のぷるが少し降りにくくなる
+  tap(px, py) {
+    if (this.pop) return;
+    const x = Math.floor((px - this.ox) / this.S), y = Math.floor((py - this.oy) / this.S);
+    if (x < 0 || x >= this.cols || y < 0 || y >= this.rows || !this.g[y][x]) return;
+    const c = this.g[y][x], seen = new Set([y * this.cols + x]), st = [[x, y]];
+    while (st.length) {
+      const [cx, cy] = st.pop();
+      for (const [dx, dy] of DIRS) {
+        const nx = cx + dx, ny = cy + dy, k = ny * this.cols + nx;
+        if (nx < 0 || nx >= this.cols || ny < 0 || ny >= this.rows || seen.has(k) || this.g[ny][nx] !== c) continue;
+        seen.add(k); st.push([nx, ny]);
+      }
+    }
+    this.spawnT = Math.max(this.spawnT, .9);
+    this.peak = Math.max(this.peak || 0, this.g.flat().filter(Boolean).length);
+    this.pop = seen; this.popT = 0; this.idleT = 0; this.chain = 0;
+    Snd.tone(620 + seen.size * 40, .12, 'triangle', .07);
+  },
+  // 画面のぷるがぜんぶ消えたら：ぜんけし！（はじめてならひみつのステージが開く）
+  allClear() {
+    this.peak = 0;
+    this.texts.push({ x: this.cols / 2, y: this.rows * .55, str: 'ぜんけし!', n: 9, t: 0 });
+    for (let i = 0; i < 60; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 9;
+      this.parts.push({ x: this.cols / 2, y: this.rows * .55, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 3, t: 0, life: 1 + Math.random() * .6, col: ['#ff7b7b', '#6ee98a', '#6aa8ff', '#ffe066', '#c9a2ff'][i % 5], r: .08 + Math.random() * .1 });
+    }
+    Snd.init(); Snd.allClear();
+    if (!Hidden.secret()) {
+      store.set('purutto.secret', true);
+      setTimeout(() => { banner('ひみつのステージが開いた!', 2400); refreshTitle(); }, 700);
+    }
   },
   update(dt) {
     this.t += dt;
@@ -2192,6 +2251,7 @@ const Scene = {
   },
 };
 addEventListener('resize', () => { if (Scene.on) Scene.resize(); });
+Scene.cv.addEventListener('pointerdown', e => { if (Scene.on && $('#ovTitle').classList.contains('show')) Scene.tap(e.clientX, e.clientY); });
 
 /* ================= ループ ================= */
 let last = 0;
@@ -2228,22 +2288,23 @@ function refreshTitle() {
   document.querySelectorAll('#segLv button').forEach(b => b.classList.toggle('on', +b.dataset.lv === G.cpuLv));
   const best = store.get('purutto.best', { score: 0, chain: 0 });
   $('#bestText').textContent = best.score ? `HI-SCORE ${best.score.toLocaleString()} ／ 最大 ${best.chain} れんさ` : '';
-  const hb = $('#btnHidden'), open = Hidden.unlocked(), done = Hidden.cleared().filter(Boolean).length;
+  const hb = $('#btnHidden'), open = Hidden.unlocked(), cl = Hidden.cleared(), done = cl.slice(0, MAIN_STAGES).filter(Boolean).length;
   hb.classList.toggle('locked', !open); hb.disabled = !open;
   $('#hiddenLabel').textContent = open ? '★ 隠しステージ' : '？？？';
   $('#hiddenSub').textContent = open
-    ? (done === STAGES.length ? '全クリア! おめでとう' : `クリア ${done} / ${STAGES.length}`)
+    ? (done === MAIN_STAGES ? '全クリア! おめでとう' : `クリア ${done} / ${MAIN_STAGES}`) + (Hidden.secret() ? (cl[MAIN_STAGES] ? '　★にじ' : '　＋ひみつ') : '')
     : `つよいCPUに3回勝つと…（いま ${Math.min(3, Hidden.wins())} / 3）`;
 }
 function openStages() {
   const list = $('#stageList'), cl = Hidden.cleared();
   list.innerHTML = '';
   STAGES.forEach((st, i) => {
+    if (st.secret && !Hidden.secret()) return;
     const open = Hidden.isOpen(i), b = document.createElement('button');
     b.className = 'stage' + (open ? '' : ' locked');
     b.style.setProperty('--s1', st.s[0]); b.style.setProperty('--s2', st.s[1]);
-    b.innerHTML = `<span class="num">${i + 1}</span><span class="tx"><div class="nm">${open ? st.name : '？？？'}</div>`
-      + `<div class="ds">${open ? st.desc : '前のステージをクリアすると開く'}</div>${open ? `<div class="bs">ボス：${st.boss}</div>` : ''}</span>`
+    b.innerHTML = `<span class="num">${st.secret ? '★' : i + 1}</span><span class="tx"><div class="nm">${open ? st.name : '？？？'}</div>`
+      + `<div class="ds">${open ? st.desc : i === 0 ? 'つよいCPUに3回勝つと開く' : '前のステージをクリアすると開く'}</div>${open ? `<div class="bs">ボス：${st.boss}</div>` : ''}</span>`
       + `<span class="st${cl[i] ? ' clear' : ''}">${cl[i] ? '★ クリア' : open ? '挑戦' : '🔒'}</span>`;
     if (open) b.onclick = () => { Snd.init(); G.stage = i; G.start('boss'); };
     list.appendChild(b);
@@ -2275,7 +2336,7 @@ $('#btnRestart').onclick = () => G.start();
 $('#btnToTitle').onclick = toTitle;
 $('#btnAgain').onclick = () => {
   if (G.mode === 'online') Net.again();
-  else if (G.mode === 'boss' && G.lastWin && G.stage < STAGES.length - 1) { G.stage++; G.start('boss'); }
+  else if (G.mode === 'boss' && G.lastWin && G.stage < MAIN_STAGES - 1) { G.stage++; G.start('boss'); }
   else G.start();
 };
 $('#btnHidden').onclick = () => { if (Hidden.unlocked()) openStages(); };
