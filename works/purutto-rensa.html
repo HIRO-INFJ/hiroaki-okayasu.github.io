@@ -24,7 +24,8 @@ body {
   touch-action: none; user-select: none; -webkit-user-select: none;
 }
 button { font: inherit; color: inherit; cursor: pointer; }
-#app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top); }
+#bg { position: fixed; inset: 0; z-index: 0; }
+#app { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top); }
 #topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; flex: none; }
 .logo { font-weight: 800; letter-spacing: .04em; font-size: 17px; }
 .logo b { color: var(--accent); }
@@ -36,6 +37,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .player.hidden { display: none; }
 canvas { display: block; }
 .side { width: calc(var(--c) * 2.5); display: flex; flex-direction: column; gap: calc(var(--c) * .22); padding-top: calc(var(--c) * .8); font-size: max(10px, calc(var(--c) * .36)); }
+.side { text-shadow: 0 1px 3px rgba(0,0,0,.7); }
 .side .lbl { color: var(--muted); font-size: .85em; letter-spacing: .06em; }
 .side .v { font-weight: 800; font-size: 1.25em; font-variant-numeric: tabular-nums; word-break: break-all; }
 .side .name { font-weight: 800; color: var(--accent); }
@@ -176,6 +178,7 @@ canvas { display: block; }
 </style>
 </head>
 <body>
+<canvas id="bg" aria-hidden="true"></canvas>
 <div id="app">
   <div id="topbar">
     <div class="logo">ぷるっと<b>連鎖</b></div>
@@ -403,17 +406,17 @@ function applyRule(r) {
 // 隠しステージ（CPU「つよい」に3回勝つと出現）。1つクリアすると次が開く。ルールは自分にもボスにもかかる
 // ボスはどれも「つよい」より強く、先へ進むほど強い（「つよい」と同じ考え方で、置くのが速く、返し撃ち・とどめを使う）
 const STAGES = [
-  { name: 'ちびぷるの森', boss: 'もりのちびっこ', desc: '8列×14段。ぷるが小さい', s: ['#2f7a4f', '#173d28'],
+  { name: 'ちびぷるの森', theme: 'forest', boss: 'もりのちびっこ', desc: '8列×14段。ぷるが小さい', s: ['#2f7a4f', '#173d28'],
     rule: { cols: 8, rows: 15, bg: ['#1f4a33', '#10281c'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .06, first: .14, counter: 6, kill: 6 } },
-  { name: 'むっつ星の塔', boss: 'ほしよみ', desc: '6つつなげないと消えない', s: ['#4a46a8', '#1e1c52'],
+  { name: 'むっつ星の塔', theme: 'stars', boss: 'ほしよみ', desc: '6つつなげないと消えない', s: ['#4a46a8', '#1e1c52'],
     rule: { clearN: 6, bg: ['#2b2a66', '#141238'] }, cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .05, first: .12, counter: 6, kill: 5 } },
-  { name: 'こおりの洞くつ', boss: 'ひえひえ', desc: 'おじゃまが凍っている。となりで2回消すと砕ける', s: ['#3b86b8', '#163a5c'],
+  { name: 'こおりの洞くつ', theme: 'ice', boss: 'ひえひえ', desc: 'おじゃまが凍っている。となりで2回消すと砕ける', s: ['#3b86b8', '#163a5c'],
     rule: { ice: true, bg: ['#1d4566', '#0d2238'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .05, first: .1, counter: 6, kill: 5 } },
-  { name: 'ゆれる火山', boss: 'ドドド', desc: 'ときどき地震で盤面がグラグラゆれる', s: ['#b24a2a', '#4f1a10'],
+  { name: 'ゆれる火山', theme: 'volcano', boss: 'ドドド', desc: 'ときどき地震で盤面がグラグラゆれる', s: ['#b24a2a', '#4f1a10'],
     rule: { quake: true, bg: ['#5a2219', '#2a0f0b'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .04, first: .1, counter: 6, kill: 5 } },
-  { name: 'やみの館', boss: 'よるのぬし', desc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える', s: ['#5a3480', '#1f1030'],
+  { name: 'やみの館', theme: 'mansion', boss: 'よるのぬし', desc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える', s: ['#5a3480', '#1f1030'],
     rule: { dark: true, bg: ['#2a1838', '#120a1c'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .045, first: .1, counter: 6, kill: 5 } },
-  { name: 'ぷるの王', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震', s: ['#c99a2e', '#5a3c0a'],
+  { name: 'ぷるの王', theme: 'castle', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震', s: ['#c99a2e', '#5a3c0a'],
     rule: { ice: true, quake: true, bg: ['#5a4316', '#2a1d08'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .03, first: .07, counter: 6, kill: 5 } },
 ];
 const Hidden = {
@@ -950,6 +953,7 @@ const G = {
     Input.reset();
     hideOverlays();
     Scene.show(false);
+    Bg.set(boss ? st.theme : 'night');
     layout();
     this.running = true; this.paused = false;
     if (boss) banner(`STAGE ${this.stage + 1}`, 900, () => banner(st.name, 900, () => banner('スタート!', 500)));
@@ -1729,6 +1733,246 @@ $('#skinClear').onclick = () => {
 };
 $('#skinClose').onclick = () => { refreshTitle(); showOverlay('#ovTitle'); };
 
+/* ================= プレイ中の背景：ぷるは描かず、ステージの景色だけ =================
+   動かない部分（空・月・星・山や建物のシルエット）は1回だけ描いておき、毎フレームは粒（光・雪・火の粉など）だけ動かす。 */
+const BG_THEMES = {
+  night:   { sky: ['#140f36', '#2b1d5e', '#4a2a72'], glow: 'rgba(255,170,240,.16)', moon: [.84, .12], stars: 90, parts: 'orb' },
+  forest:  { sky: ['#0a1d18', '#11372a', '#22553a'], glow: 'rgba(190,255,170,.12)', moon: [.16, .12], stars: 45, parts: 'firefly' },
+  stars:   { sky: ['#060a28', '#141a52', '#2c2a7a'], glow: 'rgba(160,170,255,.18)', moon: null, stars: 220, parts: 'shoot' },
+  ice:     { sky: ['#0a2036', '#154468', '#2a6e95'], glow: 'rgba(180,235,255,.16)', moon: null, stars: 25, parts: 'snow' },
+  volcano: { sky: ['#160705', '#3a110a', '#6e2210'], glow: 'rgba(255,120,60,.24)', moon: null, stars: 15, parts: 'ember' },
+  mansion: { sky: ['#0b0613', '#1d112e', '#34204a'], glow: 'rgba(200,170,255,.12)', moon: [.8, .14], stars: 55, parts: 'fog' },
+  castle:  { sky: ['#190f2e', '#3a2160', '#7a4a3a'], glow: 'rgba(255,215,120,.24)', moon: null, stars: 70, parts: 'gold' },
+};
+function bgHills(x, W, H, base, amp, col, rnd) {
+  const ph = [rnd() * 7, rnd() * 7, rnd() * 7], f = [1.3 + rnd(), 2.7 + rnd() * 2, 5 + rnd() * 3];
+  x.fillStyle = col; x.beginPath(); x.moveTo(0, H);
+  for (let i = 0; i <= 80; i++) {
+    const u = i / 80;
+    x.lineTo(u * W, base - amp * (Math.sin(u * f[0] * 3 + ph[0]) * .55 + Math.sin(u * f[1] * 3 + ph[1]) * .3 + Math.sin(u * f[2] * 3 + ph[2]) * .15));
+  }
+  x.lineTo(W, H); x.closePath(); x.fill();
+}
+function bgPines(x, W, base, hMin, hMax, col, rnd, n) {
+  x.fillStyle = col;
+  for (let i = 0; i < n; i++) {
+    const cx = rnd() * W, h = hMin + rnd() * (hMax - hMin), w = h * .45, by = base + rnd() * h * .15;
+    for (let k = 0; k < 3; k++) {
+      const yy = by - h * k * .27, ww = w * (1 - k * .24);
+      x.beginPath(); x.moveTo(cx - ww / 2, yy); x.lineTo(cx, yy - h * .46); x.lineTo(cx + ww / 2, yy); x.closePath(); x.fill();
+    }
+    x.fillRect(cx - w * .06, by - 1, w * .12, h * .12);
+  }
+}
+function bgWindows(x, list, col) {
+  x.save(); x.fillStyle = col; x.shadowColor = col; x.shadowBlur = 10;
+  for (const [wx, wy, ww, wh] of list) x.fillRect(wx, wy, ww, wh);
+  x.restore();
+}
+function bgTower(x, cx, base, w, h, col, win) {
+  x.fillStyle = col;
+  x.fillRect(cx - w / 2, base - h, w, h);
+  x.beginPath(); x.moveTo(cx - w * .7, base - h); x.lineTo(cx, base - h - w * 1.3); x.lineTo(cx + w * .7, base - h); x.closePath(); x.fill();
+  const ws = [];
+  for (let y = base - h + w * .5; y < base - w * .4; y += w * .9) ws.push([cx - w * .13, y, w * .26, w * .36]);
+  bgWindows(x, ws, win);
+}
+function bgCastle(x, cx, base, s, col, win, flag) {
+  x.fillStyle = col;
+  x.fillRect(cx - s * 1.6, base - s * 1.1, s * 3.2, s * 1.1);                       // 城壁
+  for (let i = -1.6; i < 1.6; i += .32) x.fillRect(cx + i * s, base - s * 1.25, s * .18, s * .16);
+  for (const [dx, h, w] of [[-1.5, 1.9, .5], [1.5, 1.9, .5], [-.55, 2.5, .55], [.55, 2.5, .55], [0, 3.1, .6]]) {
+    const tx = cx + dx * s;
+    x.fillRect(tx - w * s / 2, base - h * s, w * s, h * s);
+    x.beginPath(); x.moveTo(tx - w * s * .7, base - h * s); x.lineTo(tx, base - h * s - w * s * 1.4); x.lineTo(tx + w * s * .7, base - h * s); x.closePath(); x.fill();
+    x.fillStyle = flag; x.beginPath(); x.moveTo(tx, base - h * s - w * s * 1.4); x.lineTo(tx, base - h * s - w * s * 2); x.lineTo(tx + s * .35, base - h * s - w * s * 1.85); x.closePath(); x.fill();
+    x.fillStyle = col;
+  }
+  bgWindows(x, [[cx - s * .08, base - s * 2.4, s * .16, s * .26], [cx - s * .63, base - s * 1.9, s * .14, s * .22], [cx + s * .49, base - s * 1.9, s * .14, s * .22]], win);
+}
+function bgMansion(x, cx, base, s, col, win) {
+  x.fillStyle = col;
+  x.fillRect(cx - s * 1.4, base - s * 1.3, s * 2.8, s * 1.3);
+  x.beginPath(); x.moveTo(cx - s * 1.6, base - s * 1.3); x.lineTo(cx, base - s * 2.1); x.lineTo(cx + s * 1.6, base - s * 1.3); x.closePath(); x.fill();
+  for (const dx of [-1.25, 1.25]) {
+    x.fillRect(cx + dx * s - s * .25, base - s * 2.1, s * .5, s * 2.1);
+    x.beginPath(); x.moveTo(cx + dx * s - s * .38, base - s * 2.1); x.lineTo(cx + dx * s, base - s * 2.9); x.lineTo(cx + dx * s + s * .38, base - s * 2.1); x.closePath(); x.fill();
+  }
+  const ws = [];
+  for (const dx of [-.8, -.35, .35, .8]) ws.push([cx + dx * s - s * .1, base - s * 1.05, s * .2, s * .3]);
+  ws.push([cx - s * 1.33, base - s * 1.7, s * .16, s * .24]);
+  bgWindows(x, ws, win);
+}
+function bgVolcano(x, cx, base, w, h, col) {
+  x.fillStyle = col; x.beginPath();
+  x.moveTo(cx - w / 2, base); x.lineTo(cx - w * .1, base - h); x.lineTo(cx + w * .1, base - h); x.lineTo(cx + w / 2, base); x.closePath(); x.fill();
+  const g = x.createRadialGradient(cx, base - h, 0, cx, base - h, w * .4);
+  g.addColorStop(0, 'rgba(255,150,50,.6)'); g.addColorStop(1, 'rgba(255,80,20,0)');
+  x.fillStyle = g; x.fillRect(cx - w * .5, base - h - w * .4, w, w * .8);
+  x.strokeStyle = 'rgba(255,110,40,.55)'; x.lineWidth = Math.max(1.5, w * .012); x.lineCap = 'round';
+  for (const k of [-.06, .02, .07]) { x.beginPath(); x.moveTo(cx + k * w, base - h); x.quadraticCurveTo(cx + k * w * 2.2, base - h * .6, cx + k * w * 3.2, base - h * .25); x.stroke(); }
+}
+const SCENERY = {
+  night(x, W, H, rnd) {
+    bgHills(x, W, H, H * .8, H * .06, '#2a1d58', rnd);
+    bgPines(x, W, H * .8, H * .03, H * .06, '#22174a', rnd, 9);
+    bgHills(x, W, H, H * .88, H * .05, '#1c1342', rnd);
+    bgHills(x, W, H, H * .95, H * .04, '#140d31', rnd);
+  },
+  forest(x, W, H, rnd) {
+    bgHills(x, W, H, H * .76, H * .05, '#17402e', rnd);
+    bgPines(x, W, H * .78, H * .1, H * .18, '#123526', rnd, 18);
+    bgPines(x, W, H * .9, H * .13, H * .24, '#0b261b', rnd, 12);
+    bgHills(x, W, H, H * .97, H * .03, '#071a12', rnd);
+  },
+  stars(x, W, H, rnd) {
+    bgHills(x, W, H, H * .86, H * .04, '#1b1a4a', rnd);
+    const w = Math.max(16, W * .035);
+    bgTower(x, W * .1, H * .9, w, H * .42, '#15143c', 'rgba(255,220,140,.85)');
+    bgTower(x, W * .9, H * .9, w * .85, H * .32, '#15143c', 'rgba(255,220,140,.85)');
+    bgHills(x, W, H, H * .95, H * .03, '#0e0d2b', rnd);
+  },
+  ice(x, W, H, rnd) {
+    x.fillStyle = 'rgba(200,240,255,.16)';                                           // つらら
+    for (let i = 0; i < 26; i++) { const cx = rnd() * W, w = 8 + rnd() * 22, h = H * (.04 + rnd() * .12); x.beginPath(); x.moveTo(cx - w / 2, 0); x.lineTo(cx, h); x.lineTo(cx + w / 2, 0); x.closePath(); x.fill(); }
+    bgHills(x, W, H, H * .84, H * .04, '#1d5277', rnd);
+    x.fillStyle = 'rgba(190,235,255,.22)';                                           // 氷の結晶
+    for (let i = 0; i < 16; i++) { const cx = rnd() * W, h = H * (.05 + rnd() * .1), w = h * .35, by = H * (.88 + rnd() * .06); x.beginPath(); x.moveTo(cx - w / 2, by); x.lineTo(cx - w * .2, by - h); x.lineTo(cx + w * .15, by - h * 1.05); x.lineTo(cx + w / 2, by); x.closePath(); x.fill(); }
+    bgHills(x, W, H, H * .95, H * .03, '#123a58', rnd);
+  },
+  volcano(x, W, H, rnd) {
+    bgVolcano(x, W * .12, H * .9, Math.max(220, W * .42), H * .34, '#2a0b07');
+    bgVolcano(x, W * .9, H * .92, Math.max(180, W * .34), H * .26, '#240a06');
+    bgHills(x, W, H, H * .9, H * .04, '#1c0805', rnd);
+    const lg = x.createLinearGradient(0, H * .9, 0, H);
+    lg.addColorStop(0, 'rgba(255,90,30,.18)'); lg.addColorStop(1, 'rgba(255,60,20,0)');
+    x.fillStyle = lg; x.fillRect(0, H * .9, W, H * .1);
+  },
+  mansion(x, W, H, rnd) {
+    bgHills(x, W, H, H * .86, H * .04, '#20122f', rnd);
+    const s = Math.max(30, Math.min(W, H) * .07);
+    bgMansion(x, W * .14, H * .88, s, '#140b20', 'rgba(255,200,110,.6)');
+    bgMansion(x, W * .88, H * .9, s * .8, '#140b20', 'rgba(255,200,110,.5)');
+    bgHills(x, W, H, H * .95, H * .03, '#0c0614', rnd);
+  },
+  castle(x, W, H, rnd) {
+    bgHills(x, W, H, H * .86, H * .04, '#3a2048', rnd);
+    const s = Math.max(26, Math.min(W, H) * .06);
+    bgCastle(x, W * .14, H * .9, s, '#24123a', 'rgba(255,215,120,.85)', '#ffd84d');
+    bgCastle(x, W * .87, H * .91, s * .8, '#24123a', 'rgba(255,215,120,.8)', '#ff6b6b');
+    bgHills(x, W, H, H * .95, H * .03, '#170b26', rnd);
+  },
+};
+const Bg = {
+  cv: $('#bg'), theme: '', layer: null, W: 0, H: 0, t: 0, parts: [], tw: [], shootT: 2,
+  set(theme) { if (theme !== this.theme) { this.theme = theme; this.build(); } },
+  resize() { this.W = innerWidth; this.H = innerHeight; sizeCanvas(this.cv, this.W, this.H); if (this.theme) this.build(); },
+  build() {
+    const th = BG_THEMES[this.theme] || BG_THEMES.night, W = this.W, H = this.H, d = DPR();
+    if (!W || !H) return;
+    const L = this.layer = document.createElement('canvas');
+    L.width = Math.round(W * d); L.height = Math.round(H * d);
+    const x = L.getContext('2d'); x.scale(d, d);
+    const rnd = mulberry32([...this.theme].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0);
+    const sky = x.createLinearGradient(0, 0, 0, H);
+    th.sky.forEach((c, i) => sky.addColorStop(i / (th.sky.length - 1), c));
+    x.fillStyle = sky; x.fillRect(0, 0, W, H);
+    const gl = x.createRadialGradient(W / 2, H * .75, 0, W / 2, H * .75, Math.max(W, H) * .7);
+    gl.addColorStop(0, th.glow); gl.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = gl; x.fillRect(0, 0, W, H);
+    this.tw = [];
+    x.fillStyle = '#fff';
+    for (let i = 0; i < th.stars; i++) {
+      const sx = rnd() * W, sy = rnd() * H * .62, r = .3 + rnd() * 1.1;
+      x.globalAlpha = .2 + rnd() * .45; x.beginPath(); x.arc(sx, sy, r, 0, 7); x.fill();
+      if (i % 4 === 0) this.tw.push({ x: sx, y: sy, r: r + .5, p: rnd() * 7 });
+    }
+    x.globalAlpha = 1;
+    if (th.moon) {
+      const [mx, my] = th.moon, R = Math.max(14, Math.min(W, H) * .045);
+      const mg = x.createRadialGradient(mx * W, my * H, R * .8, mx * W, my * H, R * 4.5);
+      mg.addColorStop(0, 'rgba(255,248,225,.22)'); mg.addColorStop(1, 'rgba(255,248,225,0)');
+      x.fillStyle = mg; x.fillRect(0, 0, W, H);
+      x.fillStyle = '#fff6dc'; x.beginPath(); x.arc(mx * W, my * H, R, 0, 7); x.fill();
+      x.fillStyle = 'rgba(200,190,170,.35)';
+      x.beginPath(); x.arc(mx * W - R * .3, my * H - R * .2, R * .2, 0, 7); x.arc(mx * W + R * .35, my * H + R * .25, R * .14, 0, 7); x.fill();
+    }
+    (SCENERY[this.theme] || SCENERY.night)(x, W, H, rnd);
+    const vg = x.createLinearGradient(0, H * .5, 0, H);                                 // 下ほど少し暗く
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.3)');
+    x.fillStyle = vg; x.fillRect(0, 0, W, H);
+    this.parts = []; this.shootT = 2;
+  },
+  spawn(type, init) {
+    const W = this.W, H = this.H, r = Math.random;
+    switch (type) {
+      case 'orb': return { x: r() * W, y: init ? r() * H : H + 10, vx: (r() - .5) * 6, vy: -(5 + r() * 9), r: 2 + r() * 4, a: .12 + r() * .2, col: ['#ffb3c1', '#b8f5c8', '#b9d4ff', '#fff1a8'][r() * 4 | 0], p: r() * 7 };
+      case 'firefly': return { x: r() * W, y: H * (.35 + r() * .6), vx: (r() - .5) * 14, vy: (r() - .5) * 10, r: 1.4 + r() * 1.2, a: .9, col: '#e6ff8a', p: r() * 7 };
+      case 'snow': return { x: r() * W, y: init ? r() * H : -6, vx: 0, vy: 14 + r() * 26, r: .8 + r() * 1.8, a: .45 + r() * .4, col: '#ffffff', p: r() * 7 };
+      case 'ember': return { x: r() * W, y: init ? H * (.4 + r() * .6) : H + 6, vx: (r() - .5) * 12, vy: -(18 + r() * 40), r: 1 + r() * 1.6, a: .9, col: ['#ffb347', '#ff7a3d', '#ffd36b'][r() * 3 | 0], p: r() * 7, life: 3 + r() * 5, t: 0 };
+      case 'fog': return { x: init ? r() * W : -W * .3, y: H * (.72 + r() * .24), vx: 5 + r() * 8, vy: 0, rx: W * (.18 + r() * .2), ry: H * (.03 + r() * .03), a: .05 + r() * .05, col: '#d8c8ff', p: r() * 7 };
+      case 'gold': return { x: r() * W, y: r() * H * .85, vx: 0, vy: -4, r: 2 + r() * 3, a: 1, col: '#ffe9a0', life: .7 + r() * 1.2, t: 0, p: 0 };
+    }
+    return null;
+  },
+  update(dt) {
+    this.t += dt;
+    const type = (BG_THEMES[this.theme] || BG_THEMES.night).parts, W = this.W, H = this.H;
+    const want = { orb: 16, firefly: 20, snow: 55, ember: 32, fog: 6, gold: 22, shoot: 0 }[type] || 0;
+    while (this.parts.filter(p => p.kind !== 'shoot').length < want) { const p = this.spawn(type, this.t < .1); if (!p) break; this.parts.push(p); }
+    for (const p of this.parts) {
+      if (p.kind === 'shoot') { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; continue; }
+      if (type === 'firefly') { p.vx += (Math.random() - .5) * 30 * dt; p.vy += (Math.random() - .5) * 30 * dt; p.vx *= .99; p.vy *= .99; }
+      if (type === 'snow') p.vx = Math.sin(this.t * .8 + p.p) * 10;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.life) p.t += dt;
+    }
+    this.parts = this.parts.filter(p => p.kind === 'shoot' ? p.t < .9
+      : p.life ? p.t < p.life && p.y > -10
+      : p.y > -12 && p.y < H + 12 && p.x > -W * .6 && p.x < W * 1.4);
+    // 流れ星（星空と、ふつうの夜空のときだけ）
+    if (type === 'shoot' || type === 'orb') {
+      if ((this.shootT -= dt) <= 0) {
+        this.shootT = (type === 'shoot' ? 2.5 : 7) + Math.random() * 5;
+        const sp = 500 + Math.random() * 300;
+        this.parts.push({ kind: 'shoot', x: Math.random() * W * .8 + W * .1, y: Math.random() * H * .3, vx: -sp * .8, vy: sp * .45, t: 0 });
+      }
+    }
+  },
+  draw() {
+    const ctx = this.cv.getContext('2d');
+    if (!this.layer) return;
+    ctx.drawImage(this.layer, 0, 0, this.W, this.H);
+    ctx.fillStyle = '#fff';
+    for (const s of this.tw) { ctx.globalAlpha = .35 + .5 * (.5 + .5 * Math.sin(this.t * 2 + s.p)); ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill(); }
+    for (const p of this.parts) {
+      if (p.kind === 'shoot') {
+        const k = 1 - p.t / .9, len = 70;
+        const g = ctx.createLinearGradient(p.x, p.y, p.x - p.vx / 900 * len * 1.2, p.y - p.vy / 900 * len * 1.2);
+        g.addColorStop(0, `rgba(255,255,255,${.9 * k})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.globalAlpha = 1; ctx.strokeStyle = g; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx / 900 * len * 1.2, p.y - p.vy / 900 * len * 1.2); ctx.stroke();
+        continue;
+      }
+      let a = p.a;
+      if (p.life) a *= Math.sin(Math.min(1, p.t / p.life) * Math.PI);
+      if (p.col === '#e6ff8a') a *= .35 + .65 * (.5 + .5 * Math.sin(this.t * 3 + p.p));   // ホタルの点滅
+      ctx.fillStyle = p.col;
+      if (p.rx) { ctx.globalAlpha = a; ctx.beginPath(); ctx.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, 7); ctx.fill(); continue; }
+      if (p.col === '#ffe9a0') {                                                          // 金のきらめき（十字）
+        ctx.globalAlpha = a; const r = p.r;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y - r * 2); ctx.lineTo(p.x + r * .35, p.y); ctx.lineTo(p.x, p.y + r * 2); ctx.lineTo(p.x - r * .35, p.y); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(p.x - r * 2, p.y); ctx.lineTo(p.x, p.y + r * .35); ctx.lineTo(p.x + r * 2, p.y); ctx.lineTo(p.x, p.y - r * .35); ctx.closePath(); ctx.fill();
+        continue;
+      }
+      ctx.globalAlpha = a * .3; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 3, 0, 7); ctx.fill();   // にじみ
+      ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  },
+};
+addEventListener('resize', () => Bg.resize());
+
 /* ================= タイトルの背景：ぷるが降りつもり、4つそろうと消えて連鎖する ================= */
 const Scene = {
   on: false, cv: $('#scene'), W: 0, H: 0, S: 48, cols: 0, rows: 0, ox: 0, oy: 0, maxH: 4, g: null,
@@ -1901,7 +2145,11 @@ function frame(t) {
   }
   if (!G.paused) for (const p of G.active()) p.updateFx(dt);
   if (Scene.on) { Scene.update(dt); Scene.draw(); }
-  else for (const p of G.active()) { drawBoard(p); drawNext(p); updateStats(p); }
+  else {
+    if (!G.paused) Bg.update(dt);
+    Bg.draw();
+    for (const p of G.active()) { drawBoard(p); drawNext(p); updateStats(p); }
+  }
   requestAnimationFrame(frame);
 }
 
@@ -1983,6 +2231,7 @@ paintSound();
 
 refreshTitle();
 paintSkinBtn();
+Bg.resize();
 layout();
 Scene.show(true);
 requestAnimationFrame(frame);
