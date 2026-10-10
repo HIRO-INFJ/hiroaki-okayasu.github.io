@@ -85,6 +85,8 @@ canvas { display: block; }
 .new { color: var(--accent); font-weight: 800; }
 .fld { display: block; text-align: left; margin-top: 10px; font-size: 13px; color: var(--muted); }
 .fld input { display: block; width: 100%; margin-top: 4px; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: #17142f; color: var(--text); font: inherit; font-size: 16px; user-select: text; -webkit-user-select: text; touch-action: manipulation; }
+.fld select { display: block; width: 100%; margin-top: 4px; padding: 11px 10px; border-radius: 12px; border: 1px solid var(--line); background: #17142f; color: var(--text); font: inherit; font-size: 16px; }
+.fld select:disabled { opacity: .75; }
 .fld input:focus { outline: 2px solid #8a82e0; outline-offset: 0; }
 .fld input:disabled { opacity: .6; }
 .row2 { display: flex; gap: 8px; }
@@ -278,6 +280,7 @@ canvas { display: block; }
       <li>ひとりが「部屋をつくる」、もうひとりが同じ<b>部屋の名前</b>と<b>合言葉</b>で「部屋に入る」。</li>
       <li>合言葉がちがうと入れない。1つの部屋で遊べるのは2人まで。</li>
       <li>対戦中は一時停止できない。結果画面で2人とも「もう一度」を押すと、同じ部屋で続けて遊べる。</li>
+      <li>どちらかが隠しステージのボスをたおしていれば、そのステージのルールでも対戦できる（部屋をつくった人が選ぶ）。</li>
     </ul>
     <h3>隠しステージ</h3>
     <ul>
@@ -322,6 +325,11 @@ canvas { display: block; }
       <button class="btn" id="btnJoin">部屋に入る</button>
     </div>
     <div class="status" id="onStatus"></div>
+    <div id="onPickBox" hidden>
+      <label class="fld">ステージ（どちらかがボスをたおしたステージを選べます）<span class="pickWrap"></span></label>
+      <p class="note pickDesc"></p>
+      <button class="btn main" id="btnOnStart">はじめる</button>
+    </div>
     <button class="btn" id="btnOnBack">もどる</button>
     <p class="note">端末どうしを直接つなぎます（WebRTC）。会社や学校のネットワークなど、環境によってはつながらないことがあります。</p>
   </div>
@@ -392,6 +400,7 @@ let COLS = 6, ROWS = 13;              // 0行目はいちばん上の見えに�
 let SPAWN_X = 2, CLEAR_N = 4;         // 組ぷるが出てくる列（ここがうまると負け）・消えるのに必要な数
 const OJ = 9;                         // おじゃま
 const ICE = 8;                        // 凍ったおじゃま（となりで1回消えると、ふつうのおじゃまになる）
+const ROCKS = 4;                      // 地震のたびに降ってくる岩（おじゃま）の数
 const TOPU = 0.8;                     // 盤面上のおじゃま予告欄の高さ（マス単位）
 const LOCK_T = 0.5, POP_T = 0.5, DAS = 0.16, ARR = 0.045;
 const OJAMA_RATE = 70;
@@ -412,12 +421,12 @@ const STAGES = [
     rule: { clearN: 6, bg: ['#2b2a66', '#141238'] }, cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .05, first: .12, counter: 6, kill: 5 } },
   { name: 'こおりの洞くつ', theme: 'ice', boss: 'ひえひえ', desc: 'おじゃまが凍っている。となりで2回消すと砕ける', s: ['#3b86b8', '#163a5c'],
     rule: { ice: true, bg: ['#1d4566', '#0d2238'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .05, first: .1, counter: 6, kill: 5 } },
-  { name: 'ゆれる火山', theme: 'volcano', boss: 'ドドド', desc: 'ときどき地震で盤面がグラグラゆれる', s: ['#b24a2a', '#4f1a10'],
+  { name: 'ゆれる火山', theme: 'volcano', boss: 'ドドド', desc: 'ときどき地震。ゆれるたびに両方へ岩が4つ降ってくる', s: ['#b24a2a', '#4f1a10'],
     rule: { quake: true, bg: ['#5a2219', '#2a0f0b'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .04, first: .1, counter: 6, kill: 5 } },
   { name: 'やみの館', theme: 'mansion', boss: 'よるのぬし', desc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える', s: ['#5a3480', '#1f1030'],
     rule: { dark: true, bg: ['#2a1838', '#120a1c'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .045, first: .1, counter: 6, kill: 5 } },
-  { name: 'ぷるの王', theme: 'castle', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震', s: ['#c99a2e', '#5a3c0a'],
-    rule: { ice: true, quake: true, bg: ['#5a4316', '#2a1d08'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .03, first: .07, counter: 6, kill: 5 } },
+  { name: 'ぷるの王', theme: 'castle', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震（落石も凍っている）', s: ['#c99a2e', '#5a3c0a'],
+    rule: { ice: true, quake: true, bg: ['#5a4316', '#2a1d08'] }, cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .025, first: .06, counter: 4, kill: 6 } },
 ];
 const Hidden = {
   wins() { const rec = store.get('purutto.vs', [[0, 0], [0, 0], [0, 0]]); return (rec[2] && rec[2][0]) || 0; },
@@ -557,7 +566,7 @@ class Player {
     this.piece = null; this.state = 'idle'; this.timer = 0;
     this.falling = []; this.fallOj = false; this.popInfo = null;
     this.particles = []; this.texts = []; this.softDrop = false;
-    this.lockT = 0; this.resets = 0; this.dead = false; this.shake = 0; this.ic = 0; this.spot = null;
+    this.lockT = 0; this.resets = 0; this.dead = false; this.shake = 0; this.ic = 0; this.spot = null; this.rocks = 0;
   }
   opp() { return G.versus() ? G.players[1 - this.idx] : null; }
   inChain() { return this.remote ? !!this.ic : this.chain > 0 && (this.state === 'gravity' || this.state === 'pop'); }
@@ -728,12 +737,13 @@ class Player {
       }
     }
     this.chain = 0;
-    const o = this.opp();
-    if (this.pending > 0 && !(o && o.inChain())) { this.dropOjama(); return; }
+    const o = this.opp(), canPend = this.pending > 0 && !(o && o.inChain());
+    if (canPend || this.rocks > 0) { this.dropOjama(canPend); return; }
     this.state = 'spawnWait'; this.timer = .04;
   }
-  dropOjama() {
-    const n = Math.min(this.pending, 30); this.pending -= n;
+  dropOjama(withPending) {
+    let n = Math.min(this.rocks, 30); this.rocks -= n;          // 落石は相殺できない
+    if (withPending) { const m = Math.min(this.pending, 30 - n); this.pending -= m; n += m; }
     const per = new Array(COLS).fill(Math.floor(n / COLS));
     const order = Array.from({ length: COLS }, (_, i) => i).sort(() => Math.random() - .5);
     for (let i = 0; i < n % COLS; i++) per[order[i]]++;
@@ -761,7 +771,7 @@ class Player {
       p: p && this.state === 'fall' ? [p.x, p.y, p.rot, +p.sub.toFixed(2), p.c[0], p.c[1]] : null,
       f: this.falling.map(f => [f.x, +f.y.toFixed(2), f.c]),
       pk: this.popInfo ? [...this.popInfo.set] : null, pt: +this.timer.toFixed(2),
-      pe: this.pending, sc: this.score, mc: this.maxChain, ic: this.inChain() ? 1 : 0,
+      pe: this.pending + this.rocks, sc: this.score, mc: this.maxChain, ic: this.inChain() ? 1 : 0,
     };
   }
   applySnap(s) {
@@ -934,13 +944,17 @@ const G = {
   start(mode, seed) {
     this.mode = mode || this.mode;
     if (this.mode === 'online' && seed == null) return;
-    const boss = this.mode === 'boss', st = STAGES[this.stage];
-    applyRule(boss ? st.rule : null);      // 盤面の大きさが変わるので、players の reset より先に
-    this.quake = 0; this.quakeT = 7 + Math.random() * 4; this.darkOn = 0; this.darkT = 9 + Math.random() * 4; this.darkK = 0;
-    this.rng = mulberry32(seed != null ? seed : (Math.random() * 2 ** 32) >>> 0);
+    const boss = this.mode === 'boss', online = this.mode === 'online';
+    // ボス戦はそのステージ、オンラインは部屋をつくった人が選んだステージ（-1 はふつう）のルール
+    const st = boss ? STAGES[this.stage] : online && Net.pick >= 0 ? STAGES[Net.pick] : null;
+    applyRule(st ? st.rule : null);        // 盤面の大きさが変わるので、players の reset より先に
+    const sd = seed != null ? seed : (Math.random() * 2 ** 32) >>> 0;
+    this.rng = mulberry32(sd);
+    this.grng = mulberry32((sd ^ 0x5bd1e995) >>> 0);   // 地震・停電のタイミング（オンラインでは2人でそろう）
+    this.quake = 0; this.quakeT = 7 + this.grng() * 4; this.darkOn = 0; this.darkT = 9 + this.grng() * 4; this.darkK = 0;
     this.first3 = [1, 2, 3, 4].sort(() => this.rng() - .5).slice(0, 3);
     this.seq = []; this.time = 0; this.endTimer = -1; this.loser = null; this.draw = false;
-    const vs = this.versus(), online = this.mode === 'online';
+    const vs = this.versus();
     for (const p of this.players) { p.reset(); p.shown = {}; }
     this.players[0].cpu = null;
     this.players[1].cpu = this.mode === 'vs' ? new CPU(this.cpuLv) : boss ? new CPU(st.cpu) : null;
@@ -953,22 +967,28 @@ const G = {
     Input.reset();
     hideOverlays();
     Scene.show(false);
-    Bg.set(boss ? st.theme : 'night');
+    Bg.set(st ? st.theme : 'night');
     layout();
     this.running = true; this.paused = false;
     if (boss) banner(`STAGE ${this.stage + 1}`, 900, () => banner(st.name, 900, () => banner('スタート!', 500)));
+    else if (st) banner(st.name, 1100, () => banner('スタート!', 500));
     else banner('よーい…', 700, () => banner('スタート!', 500));
     if (boss) for (const p of this.active()) p.timer = 2.4;
+    else if (st) for (const p of this.active()) p.timer = 1.6;
   },
   // 地震・停電のギミック
   tickGimmicks(dt) {
     if (RULE.quake) {
       if (this.quake > 0) this.quake -= dt;
-      else if ((this.quakeT -= dt) <= 0) { this.quake = 1.8; this.quakeT = 10 + Math.random() * 6; Snd.quake(); }
+      else if ((this.quakeT -= dt) <= 0) {
+        this.quake = 1.8; this.quakeT = 10 + this.grng() * 6; Snd.quake();
+        // 落石：両方の盤面に岩が降る（次にぷるを置いたあと、相手の連鎖とは関係なく落ちる）
+        for (const p of this.active()) if (!p.remote && p.state !== 'over' && p.state !== 'idle') { p.rocks += ROCKS; p.addText(COLS / 2, 3.5, '落石!', '#ffb36b', 1.1); }
+      }
     }
     if (RULE.dark) {
       if (this.darkOn > 0) this.darkOn -= dt;
-      else if ((this.darkT -= dt) <= 0) { this.darkOn = 3.6; this.darkT = 11 + Math.random() * 6; Snd.dark(); }
+      else if ((this.darkT -= dt) <= 0) { this.darkOn = 3.6; this.darkT = 11 + this.grng() * 6; Snd.dark(); }
     }
     this.darkK += ((this.darkOn > 0 ? 1 : 0) - this.darkK) * Math.min(1, dt * 6);
   },
@@ -1009,7 +1029,9 @@ const G = {
         row('あなたの最大れんさ', me.maxChain) +
         row('あいての最大れんさ', op.maxChain) +
         row('この部屋での戦績', Net.score[0] + '勝 ' + Net.score[1] + '敗' + (Net.score[2] ? ' ' + Net.score[2] + '分' : '')) +
+        (Net.avail.length ? `<label class="fld">次のステージ${Net.role === 'host' ? '' : '（部屋をつくった人が選びます）'}<span class="pickWrap"></span></label><p class="note pickDesc"></p>` : '') +
         '<p id="againStatus"></p>';
+      Net.paintPick();
       Net.againStatus();
     } else if (this.mode === 'boss') {
       const st = STAGES[this.stage], win = this.lastWin = this.loser !== me, last = this.stage === STAGES.length - 1;
@@ -1068,7 +1090,7 @@ const row = (k, v) => `<div class="res-row"><span>${k}</span><b>${v}</b></div>`;
    部屋の名前から決まるIDで「部屋をつくる」側が待ち受け、「部屋に入る」側がそこへ直接つなぐ。
    合言葉は部屋をつくった側が確かめる。盤面はそれぞれが自分の分だけ動かし、
    相手には盤面の様子（20回/秒）と、おじゃま・連鎖・負けの知らせだけを送る。 */
-const PROTO = 1;
+const PROTO = 2;                      // 2：ステージを選べるようになった（1 とはつながらない）
 const PEERJS_URLS = ['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
 function cyrb53(str, seed = 0) {
   let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
@@ -1081,6 +1103,7 @@ const norm = s => String(s || '').normalize('NFKC').trim().toLowerCase();
 const Net = {
   peer: null, conn: null, role: null, phase: 'off', room: '', pwHash: '', opName: 'あいて',
   score: [0, 0, 0], me: { again: false }, op: { again: false }, lastRecv: 0, snapT: 0, joinTO: 0,
+  pick: -1, avail: [], opCleared: [],   // 選んだステージ（-1 はふつう）・選べるステージ・相手がクリアしたステージ
   nick: '',
   myName() { return this.nick || 'ゲスト'; },
   status(msg, err) { const el = $('#onStatus'); el.textContent = msg; el.classList.toggle('err', !!err); },
@@ -1138,10 +1161,10 @@ const Net = {
       this.fail(msg);
     });
   },
-  fail(msg) { this.leave(); this.busy(false); this.status(msg, true); },
+  fail(msg) { this.leave(); this.busy(false); this.status(msg, true); $('#onPickBox').hidden = true; },
   attach(c) {
     if (this.role === 'guest') this.conn = c;           // 部屋に入る側は、この接続だけを使う
-    c.on('open', () => { if (this.role === 'guest') c.send({ t: 'hello', v: PROTO, pw: this.pwHash, name: this.myName() }); });
+    c.on('open', () => { if (this.role === 'guest') c.send({ t: 'hello', v: PROTO, pw: this.pwHash, name: this.myName(), cl: Hidden.cleared() }); });
     c.on('data', d => this.onData(c, d));
     const gone = () => { if (c === this.conn) this.lost('相手との接続が切れました'); };
     c.on('close', gone); c.on('error', gone);
@@ -1160,19 +1183,22 @@ const Net = {
         if (r) { c.send({ t: 'reject', r }); setTimeout(() => { try { c.close(); } catch (_) {} }, 500); return; }
         this.conn = c;
         this.opName = String(d.name || 'あいて').slice(0, 10);
-        c.send({ t: 'welcome', v: PROTO, name: this.myName() });
+        this.opCleared = Array.isArray(d.cl) ? d.cl : [];
+        c.send({ t: 'welcome', v: PROTO, name: this.myName(), cl: Hidden.cleared() });
         this.matched();
         break;
       }
       case 'welcome':
         if (this.role !== 'guest') return;
         this.opName = String(d.name || 'あいて').slice(0, 10);
+        this.opCleared = Array.isArray(d.cl) ? d.cl : [];
         this.matched();
         break;
       case 'reject':
         this.fail(d.r === 'pw' ? '合言葉がちがいます' : d.r === 'full' ? 'その部屋はもう2人そろっています' : '相手とゲームのバージョンがちがいます。ページを読みこみなおしてください');
         break;
-      case 'start': if (this.role === 'guest') this.begin(d.seed); break;
+      case 'start': if (this.role === 'guest') { this.pick = d.s >= 0 && d.s < STAGES.length ? d.s : -1; this.begin(d.seed); } break;
+      case 'pick': if (this.role === 'guest') { this.pick = d.s >= 0 && d.s < STAGES.length ? d.s : -1; this.paintPick(); } break;
       case 's': if (online && !G.loser) op.applySnap(d); break;
       case 'atk': if (online && !G.loser) G.players[0].pending += d.n; break;
       case 'fx':
@@ -1189,13 +1215,37 @@ const Net = {
   matched() {
     clearTimeout(this.joinTO);
     this.phase = 'matched';
-    this.status(`${this.opName} さんとつながりました!`);
-    if (this.role === 'host') setTimeout(() => this.hostStart(), 1200);
+    // どちらかがボスをたおしたステージは、オンラインでもそのルールで遊べる
+    const mine = Hidden.cleared();
+    this.avail = STAGES.map((_, i) => i).filter(i => mine[i] || this.opCleared[i]);
+    this.pick = -1;
+    if (!this.avail.length) {
+      this.status(`${this.opName} さんとつながりました!`);
+      if (this.role === 'host') setTimeout(() => this.hostStart(), 1200);
+      return;
+    }
+    this.status(`${this.opName} さんとつながりました!\n` + (this.role === 'host' ? 'ステージを選んで「はじめる」を押してください' : '部屋をつくった人がステージを選んでいます…'));
+    $('#onPickBox').hidden = false;
+    $('#btnOnStart').hidden = this.role !== 'host';
+    document.querySelectorAll('.pickWrap').forEach(w => { w.innerHTML = ''; });   // 相手が変わると選べるステージも変わる
+    this.paintPick();
   },
+  pickSelect() {
+    const opts = ['<option value="-1">ふつう（いつものルール）</option>']
+      .concat(this.avail.map(i => `<option value="${i}">${i + 1}. ${STAGES[i].name}</option>`));
+    return `<select class="pickSel">${opts.join('')}</select>`;
+  },
+  paintPick() {
+    document.querySelectorAll('.pickWrap').forEach(w => { if (!w.querySelector('.pickSel')) w.innerHTML = this.pickSelect(); });
+    document.querySelectorAll('.pickSel').forEach(sel => { sel.value = String(this.pick); sel.disabled = this.role !== 'host'; });
+    const st = this.pick >= 0 ? STAGES[this.pick] : null;
+    document.querySelectorAll('.pickDesc').forEach(el => { el.textContent = st ? st.desc : 'ふつうのルールで対戦します'; });
+  },
+  setPick(v) { if (this.role !== 'host') return; this.pick = v; this.send({ t: 'pick', s: v }); this.paintPick(); },
   hostStart() {
     if (!this.conn) return;
     const seed = (Math.random() * 2 ** 32) >>> 0;
-    this.send({ t: 'start', seed });
+    this.send({ t: 'start', seed, s: this.pick });
     this.begin(seed);
   },
   begin(seed) { this.phase = 'game'; this.resetAgain(); G.start('online', seed); },
@@ -1417,7 +1467,7 @@ function drawNotice(ctx, n, c, W) {
 function drawBoard(pl) {
   const ctx = pl.els.board.getContext('2d'), c = CELL, oy = TOPU * c, W = COLS * c, H = ROWS * c, r = c * .46;
   ctx.clearRect(0, 0, W, oy + H);
-  drawNotice(ctx, pl.pending, c, W);
+  drawNotice(ctx, pl.pending + (pl.rocks || 0), c, W);
   ctx.save();
   if (pl.shake > 0) ctx.translate(0, Math.sin(pl.shake * 60) * c * .12 * (pl.shake / .25));
   if (G.quake > 0 && G.running) {         // 地震：盤面ごとグラグラゆらす
@@ -2196,7 +2246,7 @@ function toTitle() {
 function openLobby() {
   $('#onNick').value = store.get('purutto.nick', '');
   $('#onRoom').value = store.get('purutto.room', '');
-  Net.busy(false); Net.status('');
+  Net.busy(false); Net.status(''); $('#onPickBox').hidden = true;
   showOverlay('#ovOnline');
 }
 let howtoBack = '#ovTitle';
@@ -2221,6 +2271,8 @@ $('#btnStagesBack').onclick = () => { refreshTitle(); showOverlay('#ovTitle'); }
 $('#btnOnline').onclick = () => { Snd.init(); openLobby(); };
 $('#btnCreate').onclick = () => { Snd.init(); Net.open('host'); };
 $('#btnJoin').onclick = () => { Snd.init(); Net.open('guest'); };
+$('#btnOnStart').onclick = () => { $('#btnOnStart').disabled = true; Net.hostStart(); setTimeout(() => { $('#btnOnStart').disabled = false; }, 1500); };
+document.addEventListener('change', e => { if (e.target.classList && e.target.classList.contains('pickSel')) Net.setPick(+e.target.value); });
 $('#btnOnBack').onclick = () => { Net.leave(); Net.busy(false); Net.status(''); showOverlay('#ovTitle'); };
 ['#onNick', '#onRoom', '#onPw'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) e.target.blur(); }));
 $('#btnResTitle').onclick = () => { if (G.mode === 'boss') { G.running = false; G.endTimer = -1; openStages(); } else toTitle(); };
