@@ -401,19 +401,20 @@ function applyRule(r) {
   COLS = RULE.cols; ROWS = RULE.rows; CLEAR_N = RULE.clearN; SPAWN_X = Math.floor((COLS - 1) / 2);
 }
 // 隠しステージ（CPU「つよい」に3回勝つと出現）。1つクリアすると次が開く。ルールは自分にもボスにもかかる
+// ボスはどれも「つよい」より強く、先へ進むほど強い（「つよい」と同じ考え方で、置くのが速く、返し撃ち・とどめを使う）
 const STAGES = [
   { name: 'ちびぷるの森', boss: 'もりのちびっこ', desc: '8列×14段。ぷるが小さい', s: ['#2f7a4f', '#173d28'],
-    rule: { cols: 8, rows: 15, bg: ['#1f4a33', '#10281c'] }, cpu: { depth: 1, pot: true, fire: 3, noise: 40, delay: .13, first: .3 } },
+    rule: { cols: 8, rows: 15, bg: ['#1f4a33', '#10281c'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .06, first: .14, counter: 6, kill: 6 } },
   { name: 'むっつ星の塔', boss: 'ほしよみ', desc: '6つつなげないと消えない', s: ['#4a46a8', '#1e1c52'],
-    rule: { clearN: 6, bg: ['#2b2a66', '#141238'] }, cpu: { depth: 1, pot: true, fire: 2, noise: 30, delay: .12, first: .3 } },
+    rule: { clearN: 6, bg: ['#2b2a66', '#141238'] }, cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .05, first: .12, counter: 6, kill: 5 } },
   { name: 'こおりの洞くつ', boss: 'ひえひえ', desc: 'おじゃまが凍っている。となりで2回消すと砕ける', s: ['#3b86b8', '#163a5c'],
-    rule: { ice: true, bg: ['#1d4566', '#0d2238'] }, cpu: { depth: 1, pot: true, fire: 3, noise: 25, delay: .11, first: .3 } },
+    rule: { ice: true, bg: ['#1d4566', '#0d2238'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .05, first: .1, counter: 6, kill: 5 } },
   { name: 'ゆれる火山', boss: 'ドドド', desc: 'ときどき地震で盤面がグラグラゆれる', s: ['#b24a2a', '#4f1a10'],
-    rule: { quake: true, bg: ['#5a2219', '#2a0f0b'] }, cpu: { depth: 2, pot: true, fire: 4, noise: 30, delay: .1, first: .25 } },
+    rule: { quake: true, bg: ['#5a2219', '#2a0f0b'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .04, first: .1, counter: 6, kill: 5 } },
   { name: 'やみの館', boss: 'よるのぬし', desc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える', s: ['#5a3480', '#1f1030'],
-    rule: { dark: true, bg: ['#2a1838', '#120a1c'] }, cpu: { depth: 1, pot: true, fire: 3, noise: 40, delay: .13, first: .3 } },
+    rule: { dark: true, bg: ['#2a1838', '#120a1c'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .045, first: .1, counter: 6, kill: 5 } },
   { name: 'ぷるの王', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震', s: ['#c99a2e', '#5a3c0a'],
-    rule: { ice: true, quake: true, bg: ['#5a4316', '#2a1d08'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .08, first: .15 } },
+    rule: { ice: true, quake: true, bg: ['#5a4316', '#2a1d08'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .03, first: .07, counter: 6, kill: 5 } },
 ];
 const Hidden = {
   wins() { const rec = store.get('purutto.vs', [[0, 0], [0, 0], [0, 0]]); return (rec[2] && rec[2][0]) || 0; },
@@ -842,16 +843,23 @@ function potential(g) {
   }
   return best;
 }
-function think(pl, cfg) {
+// 置き場所を考える。1つめの置き方を1通り調べるごとに yield して、何フレームかに分けて考える（スマホで引っかからないように）
+function* think(pl, cfg) {
   const g = pl.grid, [a, b] = pl.piece.c, [na, nb] = G.pair(pl.qi);
   const h = heights(g);
   const danger = Math.max(...h) >= ROWS - 3 || h[SPAWN_X] >= ROWS - 4 || pl.pending >= 12;
+  const op = pl.opp();
+  // 返し撃ち：おじゃまが来ていたら、小さい連鎖でも撃って打ち消す
+  const counter = cfg.counter && pl.pending >= cfg.counter;
+  // とどめ：相手の盤面が高ければ、小さい連鎖でも撃つ
+  const kill = cfg.kill && op && Math.max(...heights(op.grid)) >= ROWS - cfg.kill;
   const imm = r => {
     if (!r.chain) return 0;
     if (r.chain >= cfg.fire || danger) return r.score / 6 + r.chain * 160;
+    if ((counter || kill) && r.chain >= 2) return r.score / 6 + r.chain * 120;
     return -260;
   };
-  let best = { x: 2, rot: 0 }, bestV = -Infinity;
+  let best = { x: SPAWN_X, rot: 0 }, bestV = -Infinity;
   for (let rot = 0; rot < 4; rot++) for (let x = 0; x < COLS; x++) {
     if (!placementOK(g, x, rot)) continue;
     const g1 = cloneGrid(g); dropPair(g1, x, rot, a, b);
@@ -875,15 +883,22 @@ function think(pl, cfg) {
     }
     v += (Math.random() - .5) * cfg.noise;
     if (v > bestV) { bestV = v; best = { x, rot }; }
+    yield;
   }
   return best;
 }
 class CPU {
   constructor(lv) { this.cfg = typeof lv === 'object' ? lv : CPU_CFG[lv]; this.target = null; }
-  plan(pl) { this.target = think(pl, this.cfg); this.t = -this.cfg.first; this.stuck = 0; }
+  plan(pl) { this.gen = think(pl, this.cfg); this.target = null; this.t = -this.cfg.first; this.stuck = 0; }
   update(pl, dt) {
-    if (!this.target) return;
-    this.t += dt; if (this.t < this.cfg.delay) return; this.t = 0;
+    this.t += dt;
+    if (this.gen) {                 // 1フレームに考えるのは 4ms まで
+      const t0 = performance.now(); let r;
+      do { r = this.gen.next(); } while (!r.done && performance.now() - t0 < 4);
+      if (r.done) { this.target = r.value; this.gen = null; }
+    }
+    if (!this.target || this.t < this.cfg.delay) return;
+    this.t = 0;
     const p = pl.piece, tg = this.target;
     if (this.stuck > 5) { pl.softDrop = true; return; }
     if (p.rot !== tg.rot) { const d = (tg.rot - p.rot + 4) % 4; if (!pl.rotate(d === 3 ? -1 : 1)) this.stuck++; }
