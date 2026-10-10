@@ -60,6 +60,7 @@ canvas { display: block; }
 #pad button[data-k="L"] { grid-column: 1 / span 2; grid-row: 2; }
 #pad button[data-k="D"] { grid-column: 3 / span 2; grid-row: 2; }
 #pad button[data-k="R"] { grid-column: 5 / span 2; grid-row: 2; }
+body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタンを左下に寄せる */
 @media (pointer: coarse), (max-width: 760px) {
   #pad { display: flex; }
   #keys { display: none; }
@@ -355,6 +356,7 @@ canvas { display: block; }
       <p class="note" id="skinHint"></p>
       <button class="btn" id="skinClear">このプリセットを空にする</button>
     </div>
+    <label class="chk"><input type="checkbox" id="optLefty"><span>スマホのボタンを左に寄せる（左利き用）</span></label>
     <button class="btn main" id="skinClose">これで遊ぶ</button>
   </div>
 </div>
@@ -406,7 +408,7 @@ const LOCK_T = 0.5, POP_T = 0.5, DAS = 0.16, ARR = 0.045;
 const OJAMA_RATE = 70;
 
 /* ===== ステージのルール ===== */
-const RULE_DEFAULT = { cols: 6, rows: 13, clearN: 4, ice: false, quake: false, dark: false, bg: null };
+const RULE_DEFAULT = { cols: 6, rows: 13, clearN: 4, ice: false, quake: false, dark: false, bg: null, lv: 0 };   // lv：はじめから落ちる速さを何段階上げるか
 let RULE = RULE_DEFAULT;
 function applyRule(r) {
   RULE = Object.assign({}, RULE_DEFAULT, r || {});
@@ -423,10 +425,12 @@ const STAGES = [
     rule: { ice: true, bg: ['#1d4566', '#0d2238'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .05, first: .1, counter: 6, kill: 5 } },
   { name: 'ゆれる火山', theme: 'volcano', boss: 'ドドド', desc: 'ときどき地震。ゆれるたびに両方へ岩が4つ降ってくる', s: ['#b24a2a', '#4f1a10'],
     rule: { quake: true, bg: ['#5a2219', '#2a0f0b'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .04, first: .1, counter: 6, kill: 5 } },
-  { name: 'やみの館', theme: 'mansion', boss: 'よるのぬし', desc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える', s: ['#5a3480', '#1f1030'],
-    rule: { dark: true, bg: ['#2a1838', '#120a1c'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .045, first: .1, counter: 6, kill: 5 } },
-  { name: 'ぷるの王', theme: 'castle', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震（落石も凍っている）', s: ['#c99a2e', '#5a3c0a'],
-    rule: { ice: true, quake: true, bg: ['#5a4316', '#2a1d08'] }, cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .025, first: .06, counter: 4, kill: 6 } },
+  { name: 'やみの館', theme: 'mansion', boss: 'よるのぬし', desc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える。はじめから落ちるのが速く、ボスのおじゃまは1.3倍', s: ['#5a3480', '#1f1030'],
+    rule: { dark: true, lv: 2, bg: ['#2a1838', '#120a1c'] }, atk: 1.3,
+    cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .035, first: .08, counter: 6, kill: 5, harass: 26 } },
+  { name: 'ぷるの王', theme: 'castle', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震（落石も凍っている）。はじめから落ちるのが速く、ボスのおじゃまは1.5倍', s: ['#c99a2e', '#5a3c0a'],
+    rule: { ice: true, quake: true, lv: 3, bg: ['#5a4316', '#2a1d08'] }, atk: 1.5,
+    cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .02, first: .05, counter: 4, kill: 6, harass: 22 } },
 ];
 const Hidden = {
   wins() { const rec = store.get('purutto.vs', [[0, 0], [0, 0], [0, 0]]); return (rec[2] && rec[2][0]) || 0; },
@@ -705,8 +709,9 @@ class Player {
   }
   allClearFx() { this.addText(3, 6, 'ぜんけし!', '#7ff0ff', 1.4); Snd.allClear(); }
   attack(s) {
-    let n = Math.floor((s + this.leftover) / OJAMA_RATE);
-    this.leftover = (s + this.leftover) % OJAMA_RATE;
+    const rate = OJAMA_RATE / (this.atk || 1);       // ボスは atk 倍のおじゃまを送る
+    let n = Math.floor((s + this.leftover) / rate);
+    this.leftover = s + this.leftover - n * rate;
     if (this.allClear) { n += 30; this.allClear = false; }
     const off = Math.min(n, this.pending);
     this.pending -= off; n -= off;
@@ -866,10 +871,13 @@ function* think(pl, cfg) {
   const counter = cfg.counter && pl.pending >= cfg.counter;
   // とどめ：相手の盤面が高ければ、小さい連鎖でも撃つ
   const kill = cfg.kill && op && Math.max(...heights(op.grid)) >= ROWS - cfg.kill;
+  // けずり：相手のぷるが一定数たまったら、組みかけの連鎖を小さい連鎖で崩しにいく
+  const harass = cfg.harass && op && !danger && op.grid.flat().filter(v => v >= 1 && v <= 4).length >= cfg.harass;
   const imm = r => {
     if (!r.chain) return 0;
     if (r.chain >= cfg.fire || danger) return r.score / 6 + r.chain * 160;
     if ((counter || kill) && r.chain >= 2) return r.score / 6 + r.chain * 120;
+    if (harass && r.chain >= 2) return r.score / 6 + r.chain * 90;
     return -260;
   };
   let best = { x: SPAWN_X, rot: 0 }, bestV = -Infinity;
@@ -938,7 +946,7 @@ const G = {
     }
     return this.seq[i];
   },
-  level(p) { return this.versus() ? 1 + Math.floor(this.time / 30) : 1 + Math.floor(p.pieces / 20); },
+  level(p) { return (this.versus() ? 1 + Math.floor(this.time / 30) : 1 + Math.floor(p.pieces / 20)) + (RULE.lv || 0); },
   fallInterval(p) { return Math.max(.06, .8 * Math.pow(.86, Math.min(this.level(p), 20) - 1)); },
   // seed：オンラインでは両者が同じ seed から同じ順番の組ぷるを作る
   start(mode, seed) {
@@ -958,6 +966,7 @@ const G = {
     for (const p of this.players) { p.reset(); p.shown = {}; }
     this.players[0].cpu = null;
     this.players[1].cpu = this.mode === 'vs' ? new CPU(this.cpuLv) : boss ? new CPU(st.cpu) : null;
+    this.players[0].atk = 1; this.players[1].atk = boss ? st.atk || 1 : 1;
     this.players[1].remote = online;
     $('#pl1').classList.toggle('hidden', !vs);
     this.players[0].els.name.textContent = online ? Net.myName() : vs ? 'あなた' : '';
@@ -1781,6 +1790,9 @@ $('#skinClear').onclick = () => {
   if (!confirm(`「${p.name || 'プリセット' + Skin.data.active}」の画像をすべて消しますか？`)) return;
   p.img = [null, null, null, null, null]; p.name = ''; p.frame = true; Skin.save(); Skin.load(); paintSkin();
 };
+const applyLefty = on => { document.body.classList.toggle('lefty', on); $('#optLefty').checked = on; };
+applyLefty(!!store.get('purutto.lefty', false));
+$('#optLefty').addEventListener('change', e => { store.set('purutto.lefty', e.target.checked); applyLefty(e.target.checked); });
 $('#skinClose').onclick = () => { refreshTitle(); showOverlay('#ovTitle'); };
 
 /* ================= プレイ中の背景：ぷるは描かず、ステージの景色だけ =================
