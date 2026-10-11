@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>黄昏迷宮の道具屋</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0910; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  #game {
+    display: block;
+    width: min(100vw, calc(100vh * 1.6));
+    height: auto;
+    aspect-ratio: 16 / 10;
+    image-rendering: pixelated;
+    background: #000;
+  }
+  #boot { position: fixed; color: #a59fb3; font: 16px "DotGothic16", monospace; }
+</style>
+  <script type="module" crossorigin src="./assets/index-CXbgIxjI.js"></script>
+</head>
+<body>
+<canvas id="game" tabindex="0"></canvas>
+<div id="boot">よみこみ中…</div>
+</body>
+</html>
