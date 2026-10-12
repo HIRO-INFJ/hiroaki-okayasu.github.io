@@ -4,11 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="refresh" content="0; url=https://twilight-maze-shop.vercel.app/">
 <title>黄昏迷宮の道具屋</title>
 </head>
 <body style="background:#0b0910;color:#f2c23a;font-family:sans-serif;text-align:center;padding-top:30vh">
 <p>ゲームは 新しい場所に 引っ越しました。</p>
-<p><a style="color:#f2c23a" href="https://twilight-maze-shop.vercel.app/" rel="noreferrer">黄昏迷宮の道具屋へ</a></p>
+<p><a id="go" style="color:#f2c23a" href="https://twilight-maze-shop.vercel.app/" rel="noreferrer">黄昏迷宮の道具屋へ</a></p>
+<script>
+  // この場所で遊んでいた記録を、新しい場所へ持っていく（# のあとは サーバーに送られない）
+  var url = 'https://twilight-maze-shop.vercel.app/';
+  try {
+    var data = {};
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf('twilight-maze-shop/') === 0) data[k] = localStorage.getItem(k);
+    }
+    if (Object.keys(data).length) {
+      url += '#import=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(data)))));
+    }
+  } catch (e) {}
+  document.getElementById('go').href = url;
+  location.replace(url);
+</script>
 </body>
 </html>
