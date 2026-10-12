@@ -1102,7 +1102,7 @@
     function unlockSecret(rec) {
       $('.ttl-t', rec.el).textContent = 'secret — secret.txt';
       rec.el.style.width = Math.min(520, innerWidth - 24) + 'px'; rec.el.style.height = Math.min(440, innerHeight - 120) + 'px';
-      rec.body.innerHTML = `<div class="letter selectable"><h2>🎉 見つけてくれてありがとう。</h2><p>ここまで辿り着いたあなたは、きっと細部にこだわる人。僕もそうです。</p><p>このサイトは「作ること」がとにかく好き、という気持ちだけで作っています。もし何か一緒に作れたら、それ以上に嬉しいことはありません。</p><p>— Hiro</p><p style="margin-top:14px"><button class="btn primary" id="sec-mail">Hiro に連絡する</button></p><div class="attic">🗝 ひみつの部屋にだけ置いてあるゲーム<br><a class="link" href="works/twilight-maze-shop/index.html" target="_blank" rel="noopener">黄昏迷宮の道具屋</a> — 迷宮で拾って、店で売って、100日間 村を守るローグライク（PC・キーボードで遊べます）</div></div>`;
+      rec.body.innerHTML = `<div class="letter selectable"><h2>🎉 見つけてくれてありがとう。</h2><p>ここまで辿り着いたあなたは、きっと細部にこだわる人。僕もそうです。</p><p>このサイトは「作ること」がとにかく好き、という気持ちだけで作っています。もし何か一緒に作れたら、それ以上に嬉しいことはありません。</p><p>— Hiro</p><p style="margin-top:14px"><button class="btn primary" id="sec-mail">Hiro に連絡する</button></p><div class="attic">🗝 ひみつの部屋にだけ置いてあるゲーム<br><a class="link" href="https://twilight-maze-shop.vercel.app/" target="_blank" rel="noopener noreferrer">黄昏迷宮の道具屋</a> — 迷宮で拾って、店で売って、100日間 村を守るローグライク（PC・スマホ横向きで遊べます）</div></div>`;
       $('#sec-mail', rec.body).addEventListener('click', () => openApp('mail'));
     }
 

@@ -2,74 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="refresh" content="0; url=https://twilight-maze-shop.vercel.app/">
 <title>黄昏迷宮の道具屋</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Yuji+Syuku&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<meta name="theme-color" content="#2a1630">
-<meta property="og:image" content="icons/icon-512.png">
-<style>
-  html, body { margin: 0; height: 100%; height: 100dvh; background: #0b0910; overflow: hidden; }
-  body { display: flex; align-items: center; justify-content: center; }
-  #game {
-    display: block;
-    width: min(100vw, calc(100vh * 1.6));
-    /* スマホではアドレスバーの分を引いた、実際に見えている高さに合わせる */
-    width: min(100dvw, calc(100dvh * 1.6));
-    height: auto;
-    aspect-ratio: 16 / 10;
-    image-rendering: pixelated;
-    background: #000;
-  }
-  #boot { position: fixed; color: #a59fb3; font: 16px "DotGothic16", monospace; }
-  /* ---- スマホ・タブレットのタッチ操作 ---- */
-  body.touch { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-  #touch { position: fixed; inset: 0; pointer-events: none; z-index: 10; font-family: "DotGothic16", monospace; }
-  #touch .pad {
-    position: fixed; left: calc(14px + env(safe-area-inset-left)); bottom: 14px; width: 132px; height: 132px;
-    pointer-events: auto; touch-action: none;
-  }
-  #touch .pad-ring {
-    position: absolute; inset: 0; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
-    border: 2px solid rgba(242,194,58,0.45);
-  }
-  #touch .pad-knob {
-    position: absolute; left: 41px; top: 41px; width: 50px; height: 50px; border-radius: 50%;
-    background: rgba(242,194,58,0.55); border: 2px solid rgba(255,240,200,0.7);
-  }
-  #touch .btns {
-    position: fixed; right: calc(10px + env(safe-area-inset-right)); bottom: 10px; width: 196px;
-    display: flex; flex-wrap: wrap-reverse; justify-content: flex-end; gap: 6px; pointer-events: none;
-  }
-  #touch .tb {
-    pointer-events: auto; touch-action: none; color: #f4ecd8; font: inherit; line-height: 1.1;
-    background: rgba(30,26,48,0.62); border: 2px solid rgba(242,194,58,0.5); border-radius: 10px;
-  }
-  #touch .tb.big { width: 74px; height: 74px; border-radius: 50%; font-size: 14px; }
-  #touch .tb.small { width: 60px; height: 34px; font-size: 11px; }
-  #touch .tb.down, #touch .tb.on { background: rgba(242,194,58,0.6); color: #1a1420; }
-  body[data-touch-ctx="play"] #touch .ctx-inv, body[data-touch-ctx="inv"] #touch .ctx-play { display: none; }
-  #touch .menu {
-    position: fixed; right: calc(10px + env(safe-area-inset-right)); top: 10px; width: 68px; height: 30px; font-size: 11px;
-  }
-  #touch .fs {
-    position: fixed; left: calc(10px + env(safe-area-inset-left)); top: 10px; width: 66px; height: 30px; font-size: 11px; white-space: nowrap;
-  }
-  #rotate {
-    display: none; position: fixed; inset: 0; align-items: center; justify-content: center;
-    background: #0b0910; color: #f2c23a; font-size: 18px; pointer-events: auto;
-  }
-  @media (orientation: portrait) { body.touch #rotate { display: flex; } }
-</style>
-  <script type="module" crossorigin src="./assets/index-ZJX96weq.js"></script>
 </head>
-<body>
-<canvas id="game" tabindex="0"></canvas>
-<div id="boot">よみこみ中…</div>
+<body style="background:#0b0910;color:#f2c23a;font-family:sans-serif;text-align:center;padding-top:30vh">
+<p>ゲームは 新しい場所に 引っ越しました。</p>
+<p><a style="color:#f2c23a" href="https://twilight-maze-shop.vercel.app/" rel="noreferrer">黄昏迷宮の道具屋へ</a></p>
 </body>
 </html>
