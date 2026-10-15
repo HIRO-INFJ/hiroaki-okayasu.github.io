@@ -109,6 +109,7 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
 .status.err { color: #ffb3b3; }
 .btn:disabled { opacity: .5; cursor: default; }
 .note { font-size: 12px !important; }
+body:not(.padmode) #lblLefty { display: none; }   /* 左寄せはボタン操作のときだけ選べる */
 /* ===== タイトル画面 ===== */
 #scene { position: fixed; inset: 0; z-index: 9; display: none; }
 #scene.show { display: block; }
@@ -382,7 +383,7 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
       <button class="btn" id="skinClear">このプリセットを空にする</button>
     </div>
     <label class="chk"><input type="checkbox" id="optPad"><span>スマホはボタンで操作する（ジェスチャーを使わない）</span></label>
-    <label class="chk"><input type="checkbox" id="optLefty"><span>スマホのボタンを左に寄せる（左利き用）</span></label>
+    <label class="chk" id="lblLefty"><input type="checkbox" id="optLefty"><span>スマホのボタンを左に寄せる（左利き用）</span></label>
     <button class="btn main" id="skinClose">これで遊ぶ</button>
   </div>
 </div>
