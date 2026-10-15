@@ -122,7 +122,7 @@ body:not(.padmode) #lblLefty { display: none; }   /* 左寄せはボタン操作
 .title-sound { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 12px; width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(20,14,48,.5); font-size: 17px; }
 .title-catch { font-family: "Mochiy Pop One", "Hiragino Maru Gothic ProN", sans-serif; color: #ffe9a8; font-size: clamp(12px, 3.6vw, 16px); letter-spacing: .14em; text-shadow: 0 2px 0 #2a1460, 0 0 12px rgba(255,200,120,.5); animation: rise .5s .1s both; }
 .title-logo { margin: 0; line-height: 0; animation: logoIn .75s cubic-bezier(.2, 1.6, .4, 1) both; }
-.title-logo img { display: block; width: min(92vw, 520px); height: auto; max-height: 34vh; object-fit: contain; filter: drop-shadow(0 10px 16px rgba(0,0,0,.45)); animation: float 3.2s ease-in-out .8s infinite; }
+.title-logo img { display: block; width: min(81vw, 458px); height: auto; max-height: 30vh; object-fit: contain; filter: drop-shadow(0 10px 16px rgba(0,0,0,.45)); animation: float 3.2s ease-in-out .8s infinite; }
 .title-best { font-size: 13px; font-weight: 800; color: #fff3c4; background: rgba(20,14,48,.6); border: 1px solid rgba(255,216,77,.5); border-radius: 999px; padding: 5px 14px; animation: rise .5s .25s both; }
 .title-best:empty { display: none; }
 .title-menu { width: min(340px, 100%); display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 24px; background: rgba(20,14,48,.55); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 16px 40px rgba(0,0,0,.35); }
@@ -2347,8 +2347,15 @@ const Scene = {
     const wrap = $('#ovTitle .title-wrap'), menu = $('#ovTitle .title-menu');
     if (!wrap || !this.W || !$('#ovTitle').classList.contains('show')) return;
     wrap.style.paddingBottom = `calc(${this.S}px + env(safe-area-inset-bottom))`;
+    // 画面に入りきらないと上が切れるので、ロゴを縮めて入れる（ハイスコアが出ると1行ぶん高くなる）
+    const img = $('#titleLogoImg'), cs = getComputedStyle(wrap);
+    img.style.maxHeight = '';
+    // 出てくるときの動き（transform）に左右されないよう、offsetTop で測る
+    const over = menu.offsetTop + menu.offsetHeight - $('#ovTitle .title-catch').offsetTop
+      - (this.H - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom));
+    if (over > 0) img.style.maxHeight = Math.max(this.H * .16, img.offsetHeight - over - 2) + 'px';
     const base = Math.max(3, Math.floor(this.rows * .38));
-    this.maxH = Math.max(1, Math.min(base, Math.floor((this.H - menu.getBoundingClientRect().bottom) / this.S)));
+    this.maxH = Math.max(1, Math.min(base, Math.floor((this.H - (menu.offsetTop + menu.offsetHeight - wrap.scrollTop)) / this.S)));
   },
   top(x) { for (let y = 0; y < this.rows; y++) if (this.g[y][x]) return y; return this.rows; },
   spawn() {
