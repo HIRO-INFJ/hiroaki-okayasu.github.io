@@ -331,8 +331,8 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
     <h2>オンライン対戦</h2>
     <p>ひとりが「部屋をつくる」、もうひとりが同じ<b>部屋の名前</b>と<b>合言葉</b>で「部屋に入る」を押すと対戦がはじまります。</p>
     <label class="fld">あなたの名前<input id="onNick" maxlength="10" placeholder="ゲスト" autocomplete="nickname"></label>
-    <label class="fld">部屋の名前<input id="onRoom" maxlength="24" placeholder="例：ひろの部屋" autocomplete="off"></label>
-    <label class="fld">合言葉<input id="onPw" maxlength="24" placeholder="例：テニス" autocomplete="off"></label>
+    <label class="fld">部屋の名前<input id="onRoom" maxlength="24" placeholder="例：ぷるの部屋" autocomplete="off"></label>
+    <label class="fld">合言葉<input id="onPw" maxlength="24" placeholder="例：いちご" autocomplete="off"></label>
     <div class="row2">
       <button class="btn main" id="btnCreate">部屋をつくる</button>
       <button class="btn" id="btnJoin">部屋に入る</button>
@@ -438,10 +438,10 @@ const STAGES = [
     rule: { ice: true, bg: ['#1d4566', '#0d2238'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .05, first: .1, counter: 6, kill: 5 } },
   { name: 'ゆれる火山', theme: 'volcano', boss: 'ドドド', desc: 'ときどき地震。ゆれるたびに両方へ岩が4つ降ってくる', s: ['#b24a2a', '#4f1a10'],
     rule: { quake: true, bg: ['#5a2219', '#2a0f0b'] }, cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .04, first: .1, counter: 6, kill: 5 } },
-  { name: 'やみの館', theme: 'mansion', boss: 'よるのぬし', desc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える。はじめから落ちるのが速く、ボスのおじゃまは1.3倍', s: ['#5a3480', '#1f1030'],
+  { name: 'やみの館', theme: 'mansion', boss: 'よるのぬし', desc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える。はじめから落ちるのが速く、ボスのおじゃまは1.3倍', vsDesc: 'ときどき明かりが消える。落ちてくるぷるのまわりだけ見える。はじめから落ちるのが速い', s: ['#5a3480', '#1f1030'],
     rule: { dark: true, lv: 2, bg: ['#2a1838', '#120a1c'] }, atk: 1.3,
     cpu: { depth: 2, pot: true, fire: 5, noise: 0, delay: .035, first: .08, counter: 6, kill: 5, harass: 26 } },
-  { name: 'ぷるの王', theme: 'castle', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震（落石も凍っている）。はじめから落ちるのが速く、ボスのおじゃまは1.5倍', s: ['#c99a2e', '#5a3c0a'],
+  { name: 'ぷるの王', theme: 'castle', boss: 'ぷるキング', desc: '最終ステージ。凍ったおじゃま＋地震（落石も凍っている）。はじめから落ちるのが速く、ボスのおじゃまは1.5倍', vsDesc: '凍ったおじゃま＋地震（落石も凍っている）。はじめから落ちるのが速い', s: ['#c99a2e', '#5a3c0a'],
     rule: { ice: true, quake: true, lv: 3, bg: ['#5a4316', '#2a1d08'] }, atk: 1.5,
     cpu: { depth: 2, pot: true, fire: 4, noise: 0, delay: .02, first: .05, counter: 4, kill: 6, harass: 22 } },
   // ひみつのステージ：タイトル背景のぷるを「ぜんけし」すると開く。開くまで一覧にも出さない
@@ -1273,7 +1273,7 @@ const Net = {
     document.querySelectorAll('.pickWrap').forEach(w => { if (!w.querySelector('.pickSel')) w.innerHTML = this.pickSelect(); });
     document.querySelectorAll('.pickSel').forEach(sel => { sel.value = String(this.pick); sel.disabled = this.role !== 'host'; });
     const st = this.pick >= 0 ? STAGES[this.pick] : null;
-    document.querySelectorAll('.pickDesc').forEach(el => { el.textContent = st ? st.desc : 'ふつうのルールで対戦します'; });
+    document.querySelectorAll('.pickDesc').forEach(el => { el.textContent = st ? st.vsDesc || st.desc : 'ふつうのルールで対戦します'; });   // オンラインはボスの話を出さない
   },
   setPick(v) { if (this.role !== 'host') return; this.pick = v; this.send({ t: 'pick', s: v }); this.paintPick(); },
   hostStart() {
@@ -2159,7 +2159,16 @@ const Scene = {
     }
     this.ox = (W - cols * S) / 2; this.oy = H - rows * S;
     this.maxH = Math.max(3, Math.floor(rows * .38));
+    this.fit();
     if (!this.stars.length) this.stars = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random() * .65, r: .4 + Math.random() * 1.4, p: Math.random() * 7 }));
+  },
+  // タイトルのメニューの下に、ぷる1つ分の場所をあける。ぷるはメニューの下にだけ積もらせる（メニューの裏に積もると押せないため）
+  fit() {
+    const wrap = $('#ovTitle .title-wrap'), menu = $('#ovTitle .title-menu');
+    if (!wrap || !this.W || !$('#ovTitle').classList.contains('show')) return;
+    wrap.style.paddingBottom = `calc(${this.S}px + env(safe-area-inset-bottom))`;
+    const base = Math.max(3, Math.floor(this.rows * .38));
+    this.maxH = Math.max(1, Math.min(base, Math.floor((this.H - menu.getBoundingClientRect().bottom) / this.S)));
   },
   top(x) { for (let y = 0; y < this.rows; y++) if (this.g[y][x]) return y; return this.rows; },
   spawn() {
@@ -2334,6 +2343,7 @@ const Scene = {
   },
 };
 addEventListener('resize', () => { if (Scene.on) Scene.resize(); });
+if (document.fonts) document.fonts.ready.then(() => Scene.fit());
 Scene.cv.addEventListener('pointerdown', e => { if (Scene.on && $('#ovTitle').classList.contains('show')) Scene.tap(e.clientX, e.clientY); });
 
 /* ================= ループ ================= */
@@ -2377,6 +2387,7 @@ function refreshTitle() {
   $('#hiddenSub').textContent = open
     ? (done === MAIN_STAGES ? '全クリア! おめでとう' : `クリア ${done} / ${MAIN_STAGES}`) + (Hidden.secret() ? (cl[MAIN_STAGES] ? '　★にじ' : '　＋ひみつ') : '')
     : `つよいCPUに3回勝つと…（いま ${Math.min(3, Hidden.wins())} / 3）`;
+  requestAnimationFrame(() => Scene.fit());
 }
 function openStages() {
   const list = $('#stageList'), cl = Hidden.cleared();
