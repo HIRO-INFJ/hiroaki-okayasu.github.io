@@ -1657,10 +1657,11 @@ function layoutMulti(st, W, H) {
     const fitW = (W - (others - 1) * 8) / (others * COLS);   // 小さい盤面が横に並びきるように
     if (mc > fitW) { mc = fitW; c = Math.min(W / (COLS + gapU + sideU), (H - nameH - 8 - uh * mc) / uh); }
   } else {
-    const m = .5, unitsW = COLS + gapU + sideU + .6 + others * (COLS * m + .3);
+    const m = .9, unitsW = COLS + gapU + sideU + .6 + others * (COLS * m + .3);   // 横長の画面は、自分の9割の大きさで横に並べる
     c = Math.min(W / unitsW, H / uh); mc = c * m;
   }
-  c = Math.max(12, Math.min(46, Math.floor(c))); mc = Math.max(6, Math.floor(mc));
+  c = Math.max(12, Math.min(46, Math.floor(c)));
+  mc = Math.max(6, Math.floor(top ? Math.min(mc, c * .45) : c * .9));   // 自分の盤面の大きさの上限に合わせる
   CELL = c;
   document.documentElement.style.setProperty('--c', c + 'px');
   document.documentElement.style.setProperty('--mc', mc + 'px');
