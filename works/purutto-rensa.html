@@ -48,7 +48,8 @@ canvas { display: block; }
 #stage.compact .side .next { grid-row: 1 / span 3; grid-column: 1; }
 #stage.compact .side > div:not(.name):not(.lbl) { display: flex; gap: 6px; align-items: baseline; }
 #stage.compact .side .v { font-size: 1.15em; }
-#keys { text-align: center; color: var(--muted); font-size: 12px; padding: 4px 8px 10px; flex: none; }
+#keys, #gkeys { text-align: center; color: var(--muted); font-size: 12px; padding: 4px 8px 10px; flex: none; }
+#gkeys { display: none; padding-bottom: calc(8px + env(safe-area-inset-bottom)); line-height: 1.5; }
 /* 右手の親指1本で操作できるよう、右下に互い違いでまとめる。指を離さずに滑らせるとボタンが切りかわる */
 #pad { display: none; flex: none; justify-content: flex-end; padding: 4px 12px calc(10px + env(safe-area-inset-bottom)); }
 #padIn { width: min(300px, 82vw); display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: 56px 60px; gap: 6px; touch-action: none; }
@@ -61,8 +62,11 @@ canvas { display: block; }
 #pad button[data-k="D"] { grid-column: 3 / span 2; grid-row: 2; }
 #pad button[data-k="R"] { grid-column: 5 / span 2; grid-row: 2; }
 body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタンを左下に寄せる */
+/* スマホはふだん盤面のジェスチャーで操作する。きせかえ画面で「ボタンで操作」にしたときだけボタンを出す */
 @media (pointer: coarse), (max-width: 760px) {
-  #pad { display: flex; }
+  body.padmode #pad { display: flex; }
+  body:not(.padmode):not(.ghint-off) #gkeys { display: block; }   /* ジェスチャーで5回遊んだら、次に開いたときから出さない（盤面を大きくする） */
+  body.ghint-off:not(.padmode) #stage { padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
   #keys { display: none; }
 }
 .overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(12, 10, 30, .72); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); z-index: 10; padding: 16px; }
@@ -219,6 +223,7 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
     </div>
   </div>
   <div id="keys">←→・AD 移動　↓・S 速く落とす　Z 左回転　X・↑・W 右回転　P 一時停止</div>
+  <div id="gkeys">左右ドラッグ 移動　下ドラッグ 速く落とす<br>上スワイプ 左回転　タップ 右回転</div>
   <div id="pad">
     <div id="padIn">
       <button data-k="A" aria-label="左回転" tabindex="-1">↺</button>
@@ -301,7 +306,10 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
     <h3>操作</h3>
     <ul>
       <li>PC：← →（A D）移動、↓（S）速く落とす、Z 左回転、X・↑（W）右回転、P 一時停止</li>
-      <li>スマホ：右下のボタン。上の段が回転（↺ ↻）、下の段が移動（◀ ▼ ▶）。指を離さずに滑らせると、そのまま次のボタンを押せる。</li>
+      <li>スマホ：画面を指でなぞる。<b>左右にドラッグ</b>で移動（動かした分だけ続けて動く）、<b>上にスワイプ</b>で左回転、<b>タップ</b>で右回転、<b>下にドラッグ</b>で速く落とす（指を離すと止まる）。</li>
+      <li>ドラッグしながら、もう1本の指でタップしても右回転できる。</li>
+      <li>最初に動かした向きは指を離すまで変わらない（ななめに動かしても、横移動のとちゅうで回ったりしない）。</li>
+      <li>ボタンのほうがよければ、きせかえ画面の「スマホはボタンで操作する」にチェック。</li>
       <li>左右がふさがった縦向きのときは、回転を2回すばやく押すと上下が入れかわる。</li>
     </ul>
     <button class="btn main" id="btnHowtoClose">とじる</button>
@@ -360,6 +368,7 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
       <p class="note" id="skinHint"></p>
       <button class="btn" id="skinClear">このプリセットを空にする</button>
     </div>
+    <label class="chk"><input type="checkbox" id="optPad"><span>スマホはボタンで操作する（ジェスチャーを使わない）</span></label>
     <label class="chk"><input type="checkbox" id="optLefty"><span>スマホのボタンを左に寄せる（左利き用）</span></label>
     <button class="btn main" id="skinClose">これで遊ぶ</button>
   </div>
@@ -988,6 +997,7 @@ const G = {
     this.players[1].els.name.textContent = online ? Net.opName : boss ? 'ボス：' + st.boss : vs ? 'CPU（' + CPU_CFG[this.cpuLv].name + '）' : '';
     for (const p of this.players) p.els.lvbox.style.display = vs ? 'none' : '';
     for (const p of this.active()) { p.state = 'spawnWait'; p.timer = 1.0; }
+    if (matchMedia('(pointer: coarse)').matches && !document.body.classList.contains('padmode')) store.set('purutto.ghint', store.get('purutto.ghint', 0) + 1);
     Input.reset();
     hideOverlays();
     Scene.show(false);
@@ -1313,7 +1323,7 @@ addEventListener('pagehide', () => { if (Net.conn) Net.send({ t: 'bye' }); });
 /* ================= 入力 ================= */
 const Input = {
   held: { L: false, R: false, D: false }, dir: 0, das: 0,
-  reset() { this.held = { L: false, R: false, D: false }; this.dir = 0; padPtrs.clear(); const p = G.human(); if (p) p.softDrop = false; padOn(); },
+  reset() { this.held = { L: false, R: false, D: false }; this.dir = 0; padPtrs.clear(); Gesture.cancel(); const p = G.human(); if (p) p.softDrop = false; padOn(); },
   press(k) {
     Snd.init();
     if (!G.running || G.paused) return;
@@ -1326,7 +1336,7 @@ const Input = {
   },
   release(k) {
     if (k === 'L' || k === 'R') { this.held[k] = false; this.dir = this.held.L ? -1 : this.held.R ? 1 : 0; this.das = DAS; }
-    else if (k === 'D') { this.held.D = false; G.human().softDrop = false; }
+    else if (k === 'D') { this.held.D = false; const p = G.human(); if (p) p.softDrop = false; }
     padOn();
   },
   update(dt) {
@@ -1392,6 +1402,72 @@ padIn.addEventListener('pointerup', padUp);
 padIn.addEventListener('pointercancel', padUp);
 padIn.addEventListener('lostpointercapture', padUp);
 padIn.addEventListener('contextmenu', e => e.preventDefault());
+
+/* --- ジェスチャー（スマホのふだんの操作・操作仕様 v1.1） ---
+   左右ドラッグ：横に GESTURE.step px ごとに1列動く（戻せば戻る）／上スワイプ：左回転を1回（離すまで追加なし）
+   タップ：GESTURE.tap px 以内で離すと右回転／下ドラッグ：GESTURE.drop px で速く落とし始め、離すと止める
+   最初に決まった向き（横・上・下）は指を離すまで変えない。ななめに動かしても別の操作が出ないように。
+   閾値は実機で詰める前提の初期値。
+   タップは tapMs 以内に離したときだけ（指を置いたまま考えてから離しても回らない）。
+   1本目で操作しているあいだに2本目の指でタップしても右回転（ドラッグで動かしながら回せる）。それ以外の2本目は無視する。 */
+const GESTURE = { tap: 10, tapMs: 350, rot: 30, step: 30, drop: 30 };
+const Gesture = {
+  id: null, x0: 0, y0: 0, t0: 0, max: 0, dir: null, cols: 0, sub: new Map(),   // sub: 2本目以降の指 → {x, y, t, max}
+  active() { return !document.body.classList.contains('padmode') && G.running && !G.paused && !!G.human(); },
+  down(e) {
+    if (e.pointerType === 'mouse') return;
+    if (e.target.closest && e.target.closest('#topbar, #pad')) return;
+    Snd.init();
+    if (!this.active()) return;
+    e.preventDefault();
+    if (this.id != null) { this.sub.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now(), max: 0 }); return; }
+    this.id = e.pointerId; this.x0 = e.clientX; this.y0 = e.clientY; this.t0 = performance.now(); this.max = 0; this.dir = null; this.cols = 0;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+  },
+  move(e) {
+    const q = this.sub.get(e.pointerId);
+    if (q) { q.max = Math.max(q.max, Math.hypot(e.clientX - q.x, e.clientY - q.y)); return; }
+    if (e.pointerId !== this.id) return;
+    if (!this.active()) { this.cancel(); return; }
+    const dx = e.clientX - this.x0, dy = e.clientY - this.y0;
+    this.max = Math.max(this.max, Math.hypot(dx, dy));
+    if (!this.dir) {
+      // 閾値をこえた向きのうち、いちばん大きく動いた向きに決める
+      const h = Math.abs(dx) >= GESTURE.step ? Math.abs(dx) : 0;
+      const u = -dy >= GESTURE.rot ? -dy : 0, d = dy >= GESTURE.drop ? dy : 0;
+      if (!h && !u && !d) return;
+      this.dir = h >= u && h >= d ? 'h' : u >= d ? 'up' : 'down';
+      if (this.dir === 'up') G.human().rotate(-1);
+      else if (this.dir === 'down') Input.press('D');
+    }
+    if (this.dir === 'h') {
+      const p = G.human(), want = Math.trunc((e.clientX - this.x0) / GESTURE.step);
+      while (this.cols !== want) {
+        const s = Math.sign(want - this.cols);
+        if (p.move(s)) this.cols += s;
+        // 壁などで動けないときは、行きすぎた分だけ起点をずらす（1列分もどせば、すぐ1列もどる）
+        else { this.x0 = e.clientX - (this.cols * GESTURE.step + s * (GESTURE.step - 1)); break; }
+      }
+    }
+  },
+  isTap(max, t, e) { return max <= GESTURE.tap && performance.now() - t <= GESTURE.tapMs && e.type === 'pointerup' && this.active(); },
+  up(e) {
+    const q = this.sub.get(e.pointerId);
+    if (q) { this.sub.delete(e.pointerId); if (this.isTap(q.max, q.t, e)) G.human().rotate(1); return; }
+    if (e.pointerId !== this.id) return;
+    if (!this.dir && this.isTap(this.max, this.t0, e)) G.human().rotate(1);
+    this.cancel(true);
+  },
+  cancel(keepSub) {
+    if (this.dir === 'down') Input.release('D');
+    this.id = null; this.dir = null;
+    if (!keepSub) this.sub.clear();
+  },
+};
+const gArea = $('#app');
+gArea.addEventListener('pointerdown', e => Gesture.down(e));
+gArea.addEventListener('pointermove', e => Gesture.move(e));
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => gArea.addEventListener(t, e => Gesture.up(e)));
 
 /* ================= 描画 ================= */
 const DPR = () => Math.min(window.devicePixelRatio || 1, 2);
@@ -1809,6 +1885,10 @@ $('#skinClear').onclick = () => {
 const applyLefty = on => { document.body.classList.toggle('lefty', on); $('#optLefty').checked = on; };
 applyLefty(!!store.get('purutto.lefty', false));
 $('#optLefty').addEventListener('change', e => { store.set('purutto.lefty', e.target.checked); applyLefty(e.target.checked); });
+const applyPad = on => { document.body.classList.toggle('padmode', on); $('#optPad').checked = on; Input.reset(); layout(); };
+applyPad(!!store.get('purutto.pad', false));
+document.body.classList.toggle('ghint-off', store.get('purutto.ghint', 0) >= 5);
+$('#optPad').addEventListener('change', e => { store.set('purutto.pad', e.target.checked); applyPad(e.target.checked); });
 $('#skinClose').onclick = () => { refreshTitle(); showOverlay('#ovTitle'); };
 
 /* ================= プレイ中の背景：ぷるは描かず、ステージの景色だけ =================
