@@ -48,6 +48,15 @@ canvas { display: block; }
 #stage.compact .side .next { grid-row: 1 / span 3; grid-column: 1; }
 #stage.compact .side > div:not(.name):not(.lbl) { display: flex; gap: 6px; align-items: baseline; }
 #stage.compact .side .v { font-size: 1.15em; }
+/* 3〜4人のオンライン対戦：ほかの人は小さな盤面で並べる（縦長の画面は上、横長の画面は右） */
+#minis { display: none; gap: 8px; justify-content: center; align-items: flex-start; order: 1; }
+#stage.multi #minis { display: flex; }
+#stage.multi.top { flex-direction: column; gap: 8px; }
+#stage.multi.top #minis { order: -1; }
+#stage .player.mini { flex-direction: column-reverse; align-items: center; gap: 2px; }
+#stage .player.mini .side { width: auto; padding: 0; display: block; font-size: 12px; }
+#stage .player.mini .side > :not(.name) { display: none; }
+#stage .player.mini .name { max-width: calc(var(--mc) * var(--cols, 6)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
 #keys, #gkeys { text-align: center; color: var(--muted); font-size: 12px; padding: 4px 8px 10px; flex: none; }
 #gkeys { display: none; padding-bottom: calc(8px + env(safe-area-inset-bottom)); line-height: 1.5; }
 /* 右手の親指1本で操作できるよう、右下に互い違いでまとめる。指を離さずに滑らせるとボタンが切りかわる */
@@ -210,6 +219,7 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
         <div class="lvbox"><div class="lbl">LEVEL</div><div class="v lv">1</div></div>
       </div>
     </div>
+    <div id="minis"></div>
     <div class="player p1 hidden" id="pl1">
       <canvas class="board"></canvas>
       <div class="side">
@@ -329,17 +339,20 @@ body.lefty #pad { justify-content: flex-start; }   /* 左利き用：ボタン�
 <div class="overlay" id="ovOnline">
   <div class="card">
     <h2>オンライン対戦</h2>
-    <p>ひとりが「部屋をつくる」、もうひとりが同じ<b>部屋の名前</b>と<b>合言葉</b>で「部屋に入る」を押すと対戦がはじまります。</p>
+    <p>ひとりが「部屋をつくる」、ほかの人が同じ<b>部屋の名前</b>と<b>合言葉</b>で「部屋に入る」を押すと対戦がはじまります。</p>
     <label class="fld">あなたの名前<input id="onNick" maxlength="10" placeholder="ゲスト" autocomplete="nickname"></label>
     <label class="fld">部屋の名前<input id="onRoom" maxlength="24" placeholder="例：ぷるの部屋" autocomplete="off"></label>
     <label class="fld">合言葉<input id="onPw" maxlength="24" placeholder="例：いちご" autocomplete="off"></label>
+    <div class="fld">人数（部屋をつくるとき）
+      <div class="seg" id="segCap"><button data-cap="2">2人</button><button data-cap="3">3人</button><button data-cap="4">4人</button></div>
+    </div>
     <div class="row2">
       <button class="btn main" id="btnCreate">部屋をつくる</button>
       <button class="btn" id="btnJoin">部屋に入る</button>
     </div>
     <div class="status" id="onStatus"></div>
     <div id="onPickBox" hidden>
-      <label class="fld">ステージ（どちらかがボスをたおしたステージを選べます）<span class="pickWrap"></span></label>
+      <label class="fld">ステージ（だれかがボスをたおしたステージを選べます）<span class="pickWrap"></span></label>
       <p class="note pickDesc"></p>
       <button class="btn main" id="btnOnStart">はじめる</button>
     </div>
@@ -595,6 +608,7 @@ class Player {
     this.lockT = 0; this.resets = 0; this.dead = false; this.shake = 0; this.ic = 0; this.spot = null; this.rocks = 0;
   }
   opp() { return G.versus() ? G.players[1 - this.idx] : null; }
+  opps() { return G.versus() ? G.active().filter(q => q !== this) : []; }   // 3〜4人のオンラインでは相手が何人もいる
   inChain() { return this.remote ? !!this.ic : this.chain > 0 && (this.state === 'gravity' || this.state === 'pop'); }
   net() { return G.mode === 'online' && !this.remote; }   // 自分の盤面の出来事を相手へ送るか
 
@@ -738,7 +752,7 @@ class Player {
     const off = Math.min(n, this.pending);
     this.pending -= off; n -= off;
     if (n <= 0) return;
-    if (G.mode === 'online') Net.send({ t: 'atk', n });
+    if (G.mode === 'online') Net.send({ t: 'atk', n });   // 残っている相手みんなに同じ数だけ送る
     else this.opp().pending += n;
   }
   finishPop() {
@@ -764,7 +778,8 @@ class Player {
       }
     }
     this.chain = 0;
-    const o = this.opp(), canPend = this.pending > 0 && !(o && o.inChain());
+    // 相手が連鎖しているあいだは、おじゃまは落ちてこない（3〜4人では、だれかが連鎖しているあいだ）
+    const canPend = this.pending > 0 && !this.opps().some(o => o.state !== 'over' && o.inChain());
     if (canPend || this.rocks > 0) { this.dropOjama(canPend); return; }
     this.state = 'spawnWait'; this.timer = .04;
   }
@@ -956,11 +971,21 @@ class CPU {
 const G = {
   mode: 'solo', cpuLv: store.get('purutto.cpuLv', 1),
   players: [new Player(0, $('#pl0')), new Player(1, $('#pl1'))],
-  seq: [], rng: Math.random, running: false, paused: false, time: 0, endTimer: -1, loser: null, draw: false,
+  n: 2,                                  // 対戦の人数（3〜4人はオンラインだけ）
+  seq: [], rng: Math.random, running: false, paused: false, time: 0, endTimer: -1, loser: null, draw: false, deaths: [], winner: null,
   stage: 0, lastWin: false, quake: 0, quakeT: 0, darkOn: 0, darkT: 0, darkK: 0,
   versus() { return this.mode === 'vs' || this.mode === 'online' || this.mode === 'boss'; },
   human() { return this.players[0]; },
-  active() { return this.versus() ? this.players : [this.players[0]]; },
+  active() { return this.versus() ? this.players.slice(0, this.n) : [this.players[0]]; },
+  // 3人目・4人目の盤面は、2人目の盤面をまねて作る
+  ensurePlayers(n) {
+    while (this.players.length < n) {
+      const i = this.players.length, root = $('#pl1').cloneNode(true);
+      root.id = 'pl' + i; $('#stage').appendChild(root);
+      this.players.push(new Player(i, root));
+    }
+  },
+  multi() { return this.mode === 'online' && this.n > 2; },
   pair(i) {
     while (this.seq.length <= i) {
       const n = this.seq.length;
@@ -985,16 +1010,23 @@ const G = {
     this.grng = mulberry32((sd ^ 0x5bd1e995) >>> 0);   // 地震・停電のタイミング（オンラインでは2人でそろう）
     this.quake = 0; this.quakeT = 7 + this.grng() * 4; this.darkOn = 0; this.darkT = 9 + this.grng() * 4; this.darkK = 0;
     this.first3 = [1, 2, 3, 4].sort(() => this.rng() - .5).slice(0, 3);
-    this.seq = []; this.time = 0; this.endTimer = -1; this.loser = null; this.draw = false;
+    this.seq = []; this.time = 0; this.endTimer = -1; this.loser = null; this.draw = false; this.deaths = []; this.winner = null;
     const vs = this.versus();
-    for (const p of this.players) { p.reset(); p.shown = {}; }
-    this.players[0].cpu = null;
+    // オンラインは部屋の人数。自分が players[0]、ほかの人はスロット順に players[1〜]
+    const others = online ? Net.inGame.filter(m => m.slot !== Net.slot) : [];
+    this.n = online ? 1 + others.length : 2;
+    this.ensurePlayers(this.n);
+    for (const p of this.players) { p.reset(); p.shown = {}; p.slot = -1; p.cpu = null; p.atk = 1; p.remote = false; }
     this.players[1].cpu = this.mode === 'vs' ? new CPU(this.cpuLv) : boss ? new CPU(st.cpu) : null;
-    this.players[0].atk = 1; this.players[1].atk = boss ? st.atk || 1 : 1;
-    this.players[1].remote = online;
-    $('#pl1').classList.toggle('hidden', !vs);
+    this.players[1].atk = boss ? st.atk || 1 : 1;
+    this.players[0].slot = Net.slot; this.players[0].pname = online ? Net.myName() : 'あなた';
+    others.forEach((m, i) => { const p = this.players[i + 1]; p.remote = true; p.slot = m.slot; p.pname = m.name; });
+    this.players.forEach((p, i) => { p.mini = this.multi() && i > 0; p.root.classList.toggle('mini', p.mini); p.root.classList.toggle('hidden', i > 0 && !(vs && i < this.n)); });
+    $('#stage').classList.toggle('multi', this.multi());
+    for (const p of this.players.slice(1)) (p.mini ? $('#minis') : $('#stage')).appendChild(p.root);
     this.players[0].els.name.textContent = online ? Net.myName() : vs ? 'あなた' : '';
-    this.players[1].els.name.textContent = online ? Net.opName : boss ? 'ボス：' + st.boss : vs ? 'CPU（' + CPU_CFG[this.cpuLv].name + '）' : '';
+    this.players[1].els.name.textContent = online ? this.players[1].pname : boss ? 'ボス：' + st.boss : vs ? 'CPU（' + CPU_CFG[this.cpuLv].name + '）' : '';
+    for (const p of this.players.slice(2, this.n)) p.els.name.textContent = p.pname;
     for (const p of this.players) p.els.lvbox.style.display = vs ? 'none' : '';
     for (const p of this.active()) { p.state = 'spawnWait'; p.timer = 1.0; }
     if (matchMedia('(pointer: coarse)').matches && !document.body.classList.contains('padmode')) store.set('purutto.ghint', store.get('purutto.ghint', 0) + 1);
@@ -1026,16 +1058,27 @@ const G = {
     }
     this.darkK += ((this.darkOn > 0 ? 1 : 0) - this.darkK) * Math.min(1, dt * 6);
   },
+  // 3〜4人では、負けた人から抜けていき、最後に残った1人が勝ち
   onDeath(p) {
-    if (this.loser) {                 // オンラインで両者がほぼ同時に負けたら引き分け
-      if (this.loser !== p) this.draw = true;
+    if (this.deaths.includes(p)) return;
+    this.deaths.push(p);
+    if (this.mode === 'online' && !p.remote) Net.send({ t: 'dead' });
+    const alive = this.active().filter(q => !this.deaths.includes(q));
+    if (this.loser) {                 // 決着のあと、残った人も（通信の遅れの間に）負けていたら引き分け
+      if (!alive.length) { this.draw = true; this.winner = null; }
       return;
     }
     Snd.over();
-    if (this.versus()) { for (const q of this.players) if (q !== p && q.state !== 'over') { q.state = 'idle'; q.piece = null; } }
-    if (this.mode === 'online' && !p.remote) Net.send({ t: 'dead' });
+    if (this.versus() && alive.length > 1) return;   // まだ2人以上残っている：続ける
+    for (const q of alive) { q.state = 'idle'; q.piece = null; }
     this.endTimer = this.mode === 'online' ? 1.6 : 1.3;
-    this.loser = p;
+    this.loser = p; this.winner = alive[0] || null; this.draw = this.versus() && !alive.length;
+  },
+  // オンラインで部屋から抜けた人は、その場で負けにする
+  dropOut(p) {
+    if (!this.running || !p || this.deaths.includes(p)) return;
+    p.state = 'over'; p.piece = null; p.ic = 0;
+    this.onDeath(p);
   },
   finish() {
     this.running = false;
@@ -1054,21 +1097,25 @@ const G = {
         row('置いた数', me.pieces) +
         row('ベストスコア', Math.max(best.score, me.score).toLocaleString());
     } else if (this.mode === 'online') {
-      const win = !this.draw && this.loser !== me, op = this.players[1];
+      const win = !this.draw && this.winner === me, op = this.players[1];
       if (win) Snd.win();
       Net.score[this.draw ? 2 : win ? 0 : 1]++;
-      $('#resTitle').textContent = this.draw ? 'ひきわけ' : win ? 'かち!' : 'まけ…';
-      body.innerHTML =
-        row('あいて', esc(Net.opName)) +
-        row('あなたの最大れんさ', me.maxChain) +
-        row('あいての最大れんさ', op.maxChain) +
-        row('この部屋での戦績', Net.score[0] + '勝 ' + Net.score[1] + '敗' + (Net.score[2] ? ' ' + Net.score[2] + '分' : '')) +
+      // 順位：勝った人、あとは負けたのがおそい順
+      const order = (this.winner ? [this.winner] : []).concat(this.deaths.slice().reverse().filter(q => q !== this.winner));
+      const rank = order.indexOf(me) + 1;
+      $('#resTitle').textContent = this.draw ? 'ひきわけ' : win ? 'かち!' : this.multi() ? `${rank}位` : 'まけ…';
+      body.innerHTML = (this.multi()
+        ? order.map((q, i) => row(`${this.draw && i < 2 ? '-' : i + 1 + '位'}　${esc(q.pname)}${q === me ? '（あなた）' : ''}`, `最大 ${q.maxChain} れんさ`)).join('')
+        : row('あいて', esc(op.pname)) +
+          row('あなたの最大れんさ', me.maxChain) +
+          row('あいての最大れんさ', op.maxChain)) +
+        row('この部屋での戦績', Net.score[0] + (this.multi() ? '回 1位 ／ ' + (Net.score[0] + Net.score[1] + Net.score[2]) + '戦' : '勝 ' + Net.score[1] + '敗' + (Net.score[2] ? ' ' + Net.score[2] + '分' : ''))) +
         (Net.avail.length ? `<label class="fld">次のステージ${Net.role === 'host' ? '' : '（部屋をつくった人が選びます）'}<span class="pickWrap"></span></label><p class="note pickDesc"></p>` : '') +
         '<p id="againStatus"></p>';
       Net.paintPick();
       Net.againStatus();
     } else if (this.mode === 'boss') {
-      const st = STAGES[this.stage], win = this.lastWin = this.loser !== me, last = this.stage >= MAIN_STAGES - 1;
+      const st = STAGES[this.stage], win = this.lastWin = this.winner === me, last = this.stage >= MAIN_STAGES - 1;
       const first = win && !Hidden.cleared()[this.stage];
       if (win) { Snd.win(); Hidden.setCleared(this.stage); }
       $('#resTitle').textContent = !win ? 'まけ…' : st.secret ? 'にじの間をクリア!' : last ? 'ぷるの王をたおした!' : 'STAGE CLEAR!';
@@ -1082,7 +1129,7 @@ const G = {
       $('#btnAgain').textContent = win && !last ? '次のステージへ' : 'もう一度';
       $('#btnResTitle').textContent = 'ステージえらびへ';
     } else {
-      const win = this.loser !== me;
+      const win = this.winner === me;
       if (win) Snd.win();
       const rec = store.get('purutto.vs', [[0, 0], [0, 0], [0, 0]]);
       rec[this.cpuLv][win ? 0 : 1]++; store.set('purutto.vs', rec);
@@ -1124,7 +1171,7 @@ const row = (k, v) => `<div class="res-row"><span>${k}</span><b>${v}</b></div>`;
    部屋の名前から決まるIDで「部屋をつくる」側が待ち受け、「部屋に入る」側がそこへ直接つなぐ。
    合言葉は部屋をつくった側が確かめる。盤面はそれぞれが自分の分だけ動かし、
    相手には盤面の様子（20回/秒）と、おじゃま・連鎖・負けの知らせだけを送る。 */
-const PROTO = 2;                      // 2：ステージを選べるようになった（1 とはつながらない）
+const PROTO = 3;                      // 3：3〜4人で遊べるようになった（2 以前とはつながらない）
 const PEERJS_URLS = ['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];
 function cyrb53(str, seed = 0) {
   let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
@@ -1134,15 +1181,22 @@ function cyrb53(str, seed = 0) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
 const norm = s => String(s || '').normalize('NFKC').trim().toLowerCase();
+const RELAY = new Set(['s', 'atk', 'fx', 'dead', 'again']);   // 部屋をつくった人が、ほかの人へ取りつぐ知らせ
 const Net = {
-  peer: null, conn: null, role: null, phase: 'off', room: '', pwHash: '', opName: 'あいて',
-  score: [0, 0, 0], me: { again: false }, op: { again: false }, lastRecv: 0, snapT: 0, joinTO: 0,
-  pick: -1, avail: [], opCleared: [],   // 選んだステージ（-1 はふつう）・選べるステージ・相手がクリアしたステージ
+  peer: null, role: null, phase: 'off', room: '', pwHash: '',
+  conn: null, lastRecv: 0,              // 部屋に入る側：部屋をつくった人との接続
+  guests: new Map(),                    // 部屋をつくる側：接続 → { slot, name, cl, last }
+  slot: 0, cap: 2, capPick: store.get('purutto.cap', 2),
+  members: [], inGame: [],              // 部屋にいる人・いま（さっき）対戦した人 [{ slot, name, cl }]
+  score: [0, 0, 0], ready: new Set(), snapT: 0, joinTO: 0, autoTO: 0,
+  pick: -1, avail: [],                  // 選んだステージ（-1 はふつう）・選べるステージ
   nick: '',
   myName() { return this.nick || 'ゲスト'; },
+  linked() { return this.role === 'host' ? this.guests.size > 0 : !!this.conn; },
   status(msg, err) { const el = $('#onStatus'); el.textContent = msg; el.classList.toggle('err', !!err); },
   busy(on) {
     ['#onNick', '#onRoom', '#onPw', '#btnCreate', '#btnJoin'].forEach(id => { $(id).disabled = on; });
+    document.querySelectorAll('#segCap button').forEach(b => { b.disabled = on; });
     $('#btnOnBack').textContent = on ? 'やめる' : 'もどる';
   },
   loadLib() {
@@ -1165,13 +1219,15 @@ const Net = {
     try { await this.loadLib(); } catch (e) { this.busy(false); return this.status('通信の部品を読みこめませんでした。ネットにつながっているか確認してください', true); }
     const r = norm(room), id = 'purutto-rensa-' + cyrb53('room:' + r, 1) + cyrb53('room:' + r, 2);
     this.pwHash = cyrb53(r + '\n' + norm(pw), 3) + cyrb53(r + '\n' + norm(pw), 4);
-    this.room = room.trim(); this.role = role; this.phase = 'lobby'; this.score = [0, 0, 0]; this.opName = 'あいて';
+    this.room = room.trim(); this.role = role; this.phase = 'lobby'; this.score = [0, 0, 0];
+    this.slot = role === 'host' ? 0 : -1; this.cap = role === 'host' ? this.capPick : 2;
+    this.members = role === 'host' ? [this.meEntry()] : [];
     let peer;
     try { peer = this.peer = role === 'host' ? new Peer(id, { debug: 0 }) : new Peer({ debug: 0 }); }
     catch (e) { this.busy(false); return this.status('このブラウザはオンライン対戦に対応していません', true); }
     peer.on('open', () => {
       if (this.peer !== peer) return;
-      if (role === 'host') this.status(`部屋「${this.room}」をつくりました。\n相手が同じ部屋の名前と合言葉で「部屋に入る」を押すのを待っています…`);
+      if (role === 'host') this.status(`部屋「${this.room}」（${this.cap}人）をつくりました。\nほかの人が同じ部屋の名前と合言葉で「部屋に入る」を押すのを待っています…`);
       else {
         this.status('部屋をさがしています…');
         this.attach(peer.connect(id, { reliable: true }));
@@ -1182,10 +1238,11 @@ const Net = {
       }
     });
     peer.on('connection', c => { if (this.peer === peer && role === 'host') this.attach(c); });
-    peer.on('disconnected', () => { if (this.peer === peer && this.phase === 'lobby' && !peer.destroyed) { try { peer.reconnect(); } catch (_) {} } });
+    peer.on('disconnected', () => { if (this.peer === peer && !peer.destroyed && (role === 'host' || this.phase === 'lobby')) { try { peer.reconnect(); } catch (_) {} } });
     peer.on('error', e => {
       if (this.peer !== peer) return;
-      if (this.conn && this.phase !== 'lobby') return;   // つながったあとは、相手との直接の接続が生きていれば続ける
+      if (this.linked() && this.phase !== 'lobby') return;   // つながったあとは、直接の接続が生きていれば続ける
+      if (role === 'host' && this.phase === 'lobby' && e && e.type === 'peer-unavailable') return;
       const t = e && e.type;
       const msg = t === 'unavailable-id' ? 'この名前の部屋はもうあります。「部屋に入る」を押すか、別の名前にしてください'
         : t === 'peer-unavailable' ? 'その名前の部屋が見つかりません。部屋の名前を確かめるか、「部屋をつくる」を押してください'
@@ -1195,73 +1252,142 @@ const Net = {
       this.fail(msg);
     });
   },
+  meEntry() { return { slot: this.slot, name: this.myName(), cl: Hidden.cleared() }; },
+  nameOf(slot) { const m = this.members.find(m => m.slot === slot) || this.inGame.find(m => m.slot === slot); return m ? m.name : 'あいて'; },
+  others() { return this.members.filter(m => m.slot !== this.slot); },
   fail(msg) { this.leave(); this.busy(false); this.status(msg, true); $('#onPickBox').hidden = true; },
   attach(c) {
     if (this.role === 'guest') this.conn = c;           // 部屋に入る側は、この接続だけを使う
     c.on('open', () => { if (this.role === 'guest') c.send({ t: 'hello', v: PROTO, pw: this.pwHash, name: this.myName(), cl: Hidden.cleared() }); });
     c.on('data', d => this.onData(c, d));
-    const gone = () => { if (c === this.conn) this.lost('相手との接続が切れました'); };
+    const gone = () => {
+      if (this.role === 'host') { const g = this.guests.get(c); if (g) this.removeGuest(c, `${g.name} さんとの接続が切れました`); }
+      else if (c === this.conn) this.lost('部屋をつくった人との接続が切れました');
+    };
     c.on('close', gone); c.on('error', gone);
   },
-  send(m) { const c = this.conn; if (c && c.open) { try { c.send(m); } catch (_) {} } },
+  sendTo(c, m) { if (c && c.open) { try { c.send(m); } catch (_) {} } },
+  // 部屋をつくった人はみんなへ、部屋に入った人は部屋をつくった人へ送る
+  send(m, except) {
+    if (this.role === 'host') { for (const c of this.guests.keys()) if (c !== except) this.sendTo(c, m); }
+    else this.sendTo(this.conn, m);
+  },
   sendSnap() { this.snapT = 0; this.send(G.players[0].snap()); },
   onData(c, d) {
     if (!d || typeof d !== 'object') return;
-    if (c !== this.conn && d.t !== 'hello') return;   // 断った相手（合言葉ちがい・3人目）の知らせは無視する
-    this.lastRecv = performance.now();
-    const online = G.mode === 'online' && G.running, op = G.players[1];
-    switch (d.t) {
-      case 'hello': {
-        if (this.role !== 'host') return;
-        const r = this.conn ? 'full' : d.v !== PROTO ? 'ver' : d.pw !== this.pwHash ? 'pw' : null;
-        if (r) { c.send({ t: 'reject', r }); setTimeout(() => { try { c.close(); } catch (_) {} }, 500); return; }
-        this.conn = c;
-        this.opName = String(d.name || 'あいて').slice(0, 10);
-        this.opCleared = Array.isArray(d.cl) ? d.cl : [];
-        c.send({ t: 'welcome', v: PROTO, name: this.myName(), cl: Hidden.cleared() });
-        this.matched();
-        break;
-      }
-      case 'welcome':
-        if (this.role !== 'guest') return;
-        this.opName = String(d.name || 'あいて').slice(0, 10);
-        this.opCleared = Array.isArray(d.cl) ? d.cl : [];
-        this.matched();
-        break;
-      case 'reject':
-        this.fail(d.r === 'pw' ? '合言葉がちがいます' : d.r === 'full' ? 'その部屋はもう2人そろっています' : '相手とゲームのバージョンがちがいます。ページを読みこみなおしてください');
-        break;
-      case 'start': if (this.role === 'guest') { this.pick = d.s >= 0 && d.s < STAGES.length ? d.s : -1; this.begin(d.seed); } break;
-      case 'pick': if (this.role === 'guest') { this.pick = d.s >= 0 && d.s < STAGES.length ? d.s : -1; this.paintPick(); } break;
-      case 's': if (online && !G.loser) op.applySnap(d); break;
-      case 'atk': if (online && !G.loser) G.players[0].pending += d.n; break;
-      case 'fx':
-        if (!online) break;
-        if (d.k === 'c') op.chainFx(d.n, d.x, d.y);
-        else if (d.k === 'ac') op.allClearFx();
-        else if (d.k === 'oj') op.shake = .25;
-        break;
-      case 'dead': if (online) { op.state = 'over'; op.piece = null; G.onDeath(op); } break;
-      case 'again': this.op.again = true; this.againStatus(); this.maybeRestart(); break;
-      case 'bye': this.lost('相手が部屋を出ました'); break;
-    }
-  },
-  matched() {
-    clearTimeout(this.joinTO);
-    this.phase = 'matched';
-    // どちらかがボスをたおしたステージは、オンラインでもそのルールで遊べる
-    const mine = Hidden.cleared();
-    this.avail = STAGES.map((_, i) => i).filter(i => mine[i] || this.opCleared[i]);
-    this.pick = -1;
-    if (!this.avail.length) {
-      this.status(`${this.opName} さんとつながりました!`);
-      if (this.role === 'host') setTimeout(() => this.hostStart(), 1200);
+    if (this.role === 'host') {
+      if (d.t === 'hello') { this.hello(c, d); return; }
+      const g = this.guests.get(c); if (!g) return;      // 断った相手（合言葉ちがい・満員）の知らせは無視する
+      g.last = performance.now();
+      if (RELAY.has(d.t)) { this.send(Object.assign({}, d, { from: g.slot }), c); this.handle(g.slot, d); }
+      else if (d.t === 'bye') this.removeGuest(c, `${g.name} さんが部屋を出ました`);
       return;
     }
-    this.status(`${this.opName} さんとつながりました!\n` + (this.role === 'host' ? 'ステージを選んで「はじめる」を押してください' : '部屋をつくった人がステージを選んでいます…'));
-    $('#onPickBox').hidden = false;
-    $('#btnOnStart').hidden = this.role !== 'host';
-    document.querySelectorAll('.pickWrap').forEach(w => { w.innerHTML = ''; });   // 相手が変わると選べるステージも変わる
+    if (c !== this.conn) return;
+    this.lastRecv = performance.now();
+    switch (d.t) {
+      case 'welcome':
+        clearTimeout(this.joinTO);
+        this.slot = d.slot; this.cap = d.cap;
+        break;
+      case 'members':
+        this.cap = d.cap; this.members = Array.isArray(d.list) ? d.list : [];
+        if (this.phase === 'lobby' || this.phase === 'matched') this.matched();
+        else this.againStatus();
+        break;
+      case 'reject':
+        this.fail(d.r === 'pw' ? '合言葉がちがいます' : d.r === 'full' ? `その部屋はもう${d.cap || ''}人そろっています` : d.r === 'busy' ? 'その部屋は対戦中です。終わってからもう一度ためしてください' : '相手とゲームのバージョンがちがいます。ページを読みこみなおしてください');
+        break;
+      case 'start':
+        this.pick = d.s >= 0 && d.s < STAGES.length ? d.s : -1;
+        this.inGame = Array.isArray(d.ids) ? d.ids : this.members.slice();
+        this.begin(d.seed);
+        break;
+      case 'pick': this.pick = d.s >= 0 && d.s < STAGES.length ? d.s : -1; this.paintPick(); break;
+      case 'left': this.left(d.slot, d.msg); break;
+      case 'bye': this.lost('部屋をつくった人が部屋を出ました'); break;
+      default: if (RELAY.has(d.t)) this.handle(d.from == null ? 0 : d.from, d);
+    }
+  },
+  // 対戦中の知らせ（from：送ってきた人のスロット）
+  handle(from, d) {
+    const online = G.mode === 'online' && G.running, me = G.players[0];
+    const p = online ? G.active().find(q => q.remote && q.slot === from) : null;
+    switch (d.t) {
+      case 's': if (p && !G.loser) p.applySnap(d); break;
+      case 'atk': if (online && !G.loser && me.state !== 'over') me.pending += d.n; break;
+      case 'fx':
+        if (!p) break;
+        if (d.k === 'c') p.chainFx(d.n, d.x, d.y);
+        else if (d.k === 'ac') p.allClearFx();
+        else if (d.k === 'oj') p.shake = .25;
+        break;
+      case 'dead': if (p) { p.state = 'over'; p.piece = null; p.ic = 0; G.onDeath(p); } break;
+      case 'again': this.ready.add(from); this.againStatus(); this.maybeRestart(); break;
+    }
+  },
+  // 部屋をつくる側：入ってきた人を確かめて、席（スロット）を決める
+  hello(c, d) {
+    if (this.guests.has(c)) return;
+    const used = new Set(this.members.map(m => m.slot));
+    const r = d.v !== PROTO ? 'ver' : d.pw !== this.pwHash ? 'pw' : this.members.length >= this.cap ? 'full' : this.phase === 'game' || this.phase === 'ended' ? 'busy' : null;
+    if (r) { this.sendTo(c, { t: 'reject', r, cap: this.cap }); setTimeout(() => { try { c.close(); } catch (_) {} }, 500); return; }
+    let slot = 1; while (used.has(slot)) slot++;
+    const g = { slot, name: String(d.name || 'あいて').slice(0, 10), cl: Array.isArray(d.cl) ? d.cl : [], last: performance.now() };
+    this.guests.set(c, g);
+    this.members.push({ slot, name: g.name, cl: g.cl });
+    this.members.sort((a, b) => a.slot - b.slot);
+    this.sendTo(c, { t: 'welcome', v: PROTO, slot, cap: this.cap });
+    this.sendMembers();
+    this.matched();
+  },
+  sendMembers() { this.send({ t: 'members', cap: this.cap, list: this.members }); },
+  removeGuest(c, msg) {
+    const g = this.guests.get(c); if (!g) return;
+    this.guests.delete(c);
+    setTimeout(() => { try { c.close(); } catch (_) {} }, 200);
+    this.send({ t: 'left', slot: g.slot, msg });
+    this.left(g.slot, msg);
+    this.sendMembers();
+  },
+  // だれかが部屋を出た
+  left(slot, msg) {
+    this.members = this.members.filter(m => m.slot !== slot);
+    this.ready.delete(slot);
+    if (this.phase === 'lobby' || this.phase === 'matched') { this.matched(); if (msg) this.status(msg + '\n' + $('#onStatus').textContent); return; }
+    if (this.phase !== 'game') return;
+    if (this.members.length < 2) { this.end(this.inGame.length > 2 ? 'みんな部屋を出ました' : msg || '相手が部屋を出ました'); return; }
+    const p = G.active().find(q => q.remote && q.slot === slot);
+    if (G.running && p) { G.dropOut(p); if (msg) banner(msg, 1400); }
+    this.againStatus(); this.maybeRestart();
+  },
+  matched() {
+    clearTimeout(this.autoTO);
+    const n = this.members.length, full = n >= this.cap, host = this.role === 'host';
+    this.phase = n >= 2 ? 'matched' : 'lobby';
+    if (n < 2) {
+      $('#onPickBox').hidden = true;
+      if (host) this.status(`部屋「${this.room}」（${this.cap}人）をつくりました。\nほかの人が同じ部屋の名前と合言葉で「部屋に入る」を押すのを待っています…`);
+      return;
+    }
+    // だれかがボスをたおしたステージは、オンラインでもそのルールで遊べる
+    this.avail = STAGES.map((_, i) => i).filter(i => this.members.some(m => m.cl && m.cl[i]));
+    if (!this.avail.includes(this.pick)) this.pick = -1;
+    const names = this.others().map(m => m.name + ' さん').join('・');
+    const head = this.cap > 2 ? `そろった人（${n} / ${this.cap}人）：${names}` : `${names}とつながりました!`;
+    if (full && !this.avail.length) {
+      this.status(head + (this.cap > 2 ? '\nまもなくはじまります' : ''));
+      $('#onPickBox').hidden = true;
+      if (host) this.autoTO = setTimeout(() => { if (this.phase === 'matched' && this.members.length >= this.cap) this.hostStart(); }, 1200);
+      return;
+    }
+    const wait = full ? 'ステージを選んで「はじめる」を押してください' : `あと${this.cap - n}人を待っています。この人数ではじめることもできます`;
+    this.status(head + '\n' + (host ? wait : full ? '部屋をつくった人がステージを選んでいます…' : `あと${this.cap - n}人を待っています…`));
+    $('#onPickBox').hidden = !host && !this.avail.length;
+    $('#onPickBox .fld').hidden = !this.avail.length; $('#onPickBox .pickDesc').hidden = !this.avail.length;
+    $('#btnOnStart').hidden = !host;
+    $('#btnOnStart').textContent = full ? 'はじめる' : `${n}人ではじめる`;
+    document.querySelectorAll('.pickWrap').forEach(w => { w.innerHTML = ''; });   // 人が変わると選べるステージも変わる
     this.paintPick();
   },
   pickSelect() {
@@ -1277,48 +1403,67 @@ const Net = {
   },
   setPick(v) { if (this.role !== 'host') return; this.pick = v; this.send({ t: 'pick', s: v }); this.paintPick(); },
   hostStart() {
-    if (!this.conn) return;
+    if (this.role !== 'host' || this.members.length < 2) return;
+    clearTimeout(this.autoTO);
     const seed = (Math.random() * 2 ** 32) >>> 0;
-    this.send({ t: 'start', seed, s: this.pick });
+    this.inGame = this.members.map(({ slot, name }) => ({ slot, name }));
+    this.send({ t: 'start', seed, s: this.pick, ids: this.inGame });
     this.begin(seed);
   },
-  begin(seed) { this.phase = 'game'; this.resetAgain(); G.start('online', seed); },
-  again() { this.me.again = true; this.send({ t: 'again' }); this.againStatus(); this.maybeRestart(); },
-  resetAgain() { this.me.again = false; this.op.again = false; },
+  begin(seed) { this.phase = 'game'; this.ready.clear(); G.start('online', seed); },
+  again() { this.ready.add(this.slot); this.send({ t: 'again' }); this.againStatus(); this.maybeRestart(); },
   againStatus() {
-    $('#btnAgain').disabled = this.me.again;
+    $('#btnAgain').disabled = this.ready.has(this.slot);
     const el = $('#againStatus'); if (!el) return;
-    el.textContent = this.me.again ? (this.op.again ? 'はじめます…' : '相手を待っています…') : this.op.again ? `${this.opName} さんはもう一度やるつもりです` : '';
+    const mine = this.ready.has(this.slot), others = this.others(), ready = others.filter(m => this.ready.has(m.slot));
+    if (others.length === 1) {
+      const op = others[0].name;
+      el.textContent = mine ? (ready.length ? 'はじめます…' : '相手を待っています…') : ready.length ? `${op} さんはもう一度やるつもりです` : '';
+    } else {
+      const k = ready.length + (mine ? 1 : 0), total = others.length + 1;
+      el.textContent = mine ? (k >= total ? 'はじめます…' : `みんなを待っています（${k} / ${total}人）`) : ready.length ? `${ready.map(m => m.name).join('・')} さんはもう一度やるつもりです` : '';
+    }
   },
-  maybeRestart() { if (this.role === 'host' && this.me.again && this.op.again) setTimeout(() => this.hostStart(), 600); },
+  maybeRestart() {
+    if (this.role === 'host' && this.members.length >= 2 && this.members.every(m => this.ready.has(m.slot))) setTimeout(() => this.hostStart(), 600);
+  },
+  // 部屋そのものが続けられなくなった（部屋をつくった人がいなくなった・みんな出た）
   lost(msg) {
-    const c = this.conn; this.conn = null;
-    try { if (c) c.close(); } catch (_) {}
     if (this.phase === 'lobby' || this.phase === 'matched') { this.fail(msg); return; }
     if (this.phase === 'off') return;
+    this.end(msg);
+  },
+  end(msg) {
     this.phase = 'ended';
     G.abort(msg);
   },
   leave() {
-    clearTimeout(this.joinTO);
-    const c = this.conn, p = this.peer;
-    if (c) { this.send({ t: 'bye' }); setTimeout(() => { try { c.close(); } catch (_) {} }, 200); }
-    this.conn = null; this.peer = null; this.phase = 'off'; this.resetAgain();
+    clearTimeout(this.joinTO); clearTimeout(this.autoTO);
+    const p = this.peer, conns = this.role === 'host' ? [...this.guests.keys()] : this.conn ? [this.conn] : [];
+    this.send({ t: 'bye' });
+    setTimeout(() => { for (const c of conns) { try { c.close(); } catch (_) {} } }, 200);
+    this.conn = null; this.guests = new Map(); this.peer = null; this.phase = 'off'; this.ready.clear(); this.members = [];
     if (p) setTimeout(() => { try { p.destroy(); } catch (_) {} }, 300);
   },
   tick(dt) {
-    if (G.mode !== 'online' || !G.running || !this.conn) return;
+    if (G.mode !== 'online' || !G.running || !this.linked()) return;
     this.snapT += dt;
-    if (this.snapT >= .05) this.sendSnap();
+    if (this.snapT >= (G.n > 2 ? .066 : .05)) this.sendSnap();   // 3〜4人は少し間引く（部屋をつくった人が全員分を取りつぐため）
   },
 };
-// 相手が黙ったまま（タブを閉じた・電波が切れた）を見つける。rAF が止まる裏タブでも動くよう setInterval で
+// 黙ったまま（タブを閉じた・電波が切れた）の人を見つける。rAF が止まる裏タブでも動くよう setInterval で
 setInterval(() => {
-  if (!Net.conn || Net.phase === 'lobby') return;
-  Net.send({ t: 'ping' });
-  if (performance.now() - Net.lastRecv > 12000) Net.lost('相手から応答がありません');
+  if (Net.phase === 'off') return;
+  const now = performance.now();
+  if (Net.role === 'host') {
+    Net.send({ t: 'ping' });
+    for (const [c, g] of Net.guests) if (now - g.last > 12000) Net.removeGuest(c, `${g.name} さんから応答がありません`);
+  } else if (Net.conn && Net.phase !== 'lobby') {
+    Net.send({ t: 'ping' });
+    if (now - Net.lastRecv > 12000) { const c = Net.conn; Net.conn = null; try { c.close(); } catch (_) {} Net.lost('部屋をつくった人から応答がありません'); }
+  }
 }, 2000);
-addEventListener('pagehide', () => { if (Net.conn) Net.send({ t: 'bye' }); });
+addEventListener('pagehide', () => { if (Net.linked()) Net.send({ t: 'bye' }); });
 
 /* ================= 入力 ================= */
 const Input = {
@@ -1479,6 +1624,8 @@ function sizeCanvas(cv, w, h) {
 }
 function layout() {
   const st = $('#stage'), W = st.clientWidth - 16, H = st.clientHeight - 8;
+  if (G.multi()) return layoutMulti(st, W, H);
+  st.classList.remove('top');
   const vs = G.versus(), sideU = 2.5, gapU = .25;
   const unitsW = vs ? 2 * (COLS + gapU + sideU) + .6 : COLS + gapU + sideU;
   // 縦長の狭い画面の対戦は、NEXT・スコアを盤面の上に置いて盤面を大きくする
@@ -1490,9 +1637,39 @@ function layout() {
   document.documentElement.style.setProperty('--c', c + 'px');
   document.documentElement.style.setProperty('--cols', COLS);
   for (const p of G.players) {
+    p.cell = 0;
     sizeCanvas(p.els.board, COLS * c, (ROWS + TOPU) * c);
     if (G.compact) sizeCanvas(p.els.next, 2.4 * c, 2.2 * c);
     else sizeCanvas(p.els.next, sideU * c, 4.4 * c);
+  }
+}
+// 3〜4人：自分の盤面は大きく、ほかの人は小さく（縦長の画面は上に、横長の画面は右に）並べる
+function layoutMulti(st, W, H) {
+  const others = G.n - 1, sideU = 2.5, gapU = .25, uh = ROWS + TOPU, nameH = 18;
+  const top = W < H * 1.15;
+  st.classList.remove('compact'); G.compact = false;
+  st.classList.toggle('top', top);
+  let c, mc;
+  if (top) {
+    let m = .45;
+    c = Math.min(W / (COLS + gapU + sideU), (H - nameH - 8) / (uh * (1 + m)));
+    mc = c * m;
+    const fitW = (W - (others - 1) * 8) / (others * COLS);   // 小さい盤面が横に並びきるように
+    if (mc > fitW) { mc = fitW; c = Math.min(W / (COLS + gapU + sideU), (H - nameH - 8 - uh * mc) / uh); }
+  } else {
+    const m = .5, unitsW = COLS + gapU + sideU + .6 + others * (COLS * m + .3);
+    c = Math.min(W / unitsW, H / uh); mc = c * m;
+  }
+  c = Math.max(12, Math.min(46, Math.floor(c))); mc = Math.max(6, Math.floor(mc));
+  CELL = c;
+  document.documentElement.style.setProperty('--c', c + 'px');
+  document.documentElement.style.setProperty('--mc', mc + 'px');
+  document.documentElement.style.setProperty('--cols', COLS);
+  for (const p of G.players) {
+    p.cell = p.mini ? mc : 0;
+    const k = p.cell || c;
+    sizeCanvas(p.els.board, COLS * k, (ROWS + TOPU) * k);
+    sizeCanvas(p.els.next, sideU * c, 4.4 * c);
   }
 }
 addEventListener('resize', layout);
@@ -1565,7 +1742,7 @@ function drawNotice(ctx, n, c, W) {
   ctx.fillText(n, W - c * .2, TOPU * c * .5);
 }
 function drawBoard(pl) {
-  const ctx = pl.els.board.getContext('2d'), c = CELL, oy = TOPU * c, W = COLS * c, H = ROWS * c, r = c * .46;
+  const ctx = pl.els.board.getContext('2d'), c = pl.cell || CELL, oy = TOPU * c, W = COLS * c, H = ROWS * c, r = c * .46;
   ctx.clearRect(0, 0, W, oy + H);
   drawNotice(ctx, pl.pending + (pl.rocks || 0), c, W);
   ctx.save();
@@ -1666,6 +1843,7 @@ const mix = v => MIX[v];
 function drawNext(pl) {
   const cv = pl.els.next, ctx = cv.getContext('2d'), c = CELL;
   ctx.clearRect(0, 0, cv.width, cv.height);
+  if (pl.mini) return;
   if (pl.state === 'idle' && !G.running) return;
   const n1 = G.pair(pl.qi), n2 = G.pair(pl.qi + 1);
   if (G.compact) {
@@ -2414,8 +2592,11 @@ function openLobby() {
   $('#onNick').value = store.get('purutto.nick', '');
   $('#onRoom').value = store.get('purutto.room', '');
   Net.busy(false); Net.status(''); $('#onPickBox').hidden = true;
+  paintCap();
   showOverlay('#ovOnline');
 }
+const paintCap = () => document.querySelectorAll('#segCap button').forEach(b => b.classList.toggle('on', +b.dataset.cap === Net.capPick));
+document.querySelectorAll('#segCap button').forEach(b => b.onclick = () => { Net.capPick = +b.dataset.cap; store.set('purutto.cap', Net.capPick); paintCap(); });
 let howtoBack = '#ovTitle';
 $('#btnSolo').onclick = () => { Snd.init(); G.start('solo'); };
 $('#btnVs').onclick = () => { Snd.init(); G.start('vs'); };
